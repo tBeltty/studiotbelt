@@ -2,7 +2,8 @@
 from pathlib import Path
 import os,json,time
 import av,numpy as np,requests
-RATE=44100
+from config import setting
+RATE=int(setting('AUDIO_SAMPLE_RATE', '44100'))
 
 def read_audio(path):
     parts=[];res=av.AudioResampler(format='fltp',layout='stereo',rate=RATE)
@@ -26,12 +27,14 @@ def separate(src,folder,status=print):
     if (folder/'audio-manifest.json').exists():return
     status('Audio · extracting original track');original=read_audio(src);write_audio(folder/'original-audio.wav',original)
     token=os.getenv('REPLICATE_API_TOKEN')
+    demucs_model = setting('DEMUCS_MODEL', 'htdemucs')
     if token:
         try:
             headers={'Authorization':'Bearer '+token}
             with (folder/'original-audio.wav').open('rb') as f:r=requests.post('https://api.replicate.com/v1/files',headers=headers,files={'content':f},timeout=120)
             r.raise_for_status();url=r.json()['urls']['get'];status('Audio · separating vocals and original music')
-            r=requests.post('https://api.replicate.com/v1/predictions',headers=headers,json={'version':'25a173108cff36ef9f80f854c162d01df9e6528be175794b81158fa03836d953','input':{'audio':url,'model_name':'htdemucs','output_format':'wav'}},timeout=60);r.raise_for_status();j=r.json()
+            demucs_version = setting('REPLICATE_DEMUCS_VERSION', '25a173108cff36ef9f80f854c162d01df9e6528be175794b81158fa03836d953')
+            r=requests.post('https://api.replicate.com/v1/predictions',headers=headers,json={'version':demucs_version,'input':{'audio':url,'model_name':demucs_model,'output_format':'wav'}},timeout=60);r.raise_for_status();j=r.json()
             (folder/'audio-prediction.json').write_text(json.dumps(j,indent=2))
             for _ in range(180):
                 if j['status'] in ['succeeded','failed','canceled']:break
@@ -46,7 +49,7 @@ def separate(src,folder,status=print):
                     for name,a in stems.items():
                         if name!='vocals':n=min(music.shape[1],a.shape[1]);music[:,:n]+=a[:,:n]
                     write_audio(folder/'music.wav',np.clip(music,-1,1))
-                    (folder/'audio-manifest.json').write_text(json.dumps({'prediction_id':j['id'],'seedance_video':'composite-silent.mp4','seedance_audio':'vocals.wav','final_audio':'upload.mp4 (entire original audio track)','discard_seedance_audio':True,'separation':'Demucs htdemucs Cloud'},indent=2))
+                    (folder/'audio-manifest.json').write_text(json.dumps({'prediction_id':j['id'],'seedance_video':'composite-silent.mp4','seedance_audio':'vocals.wav','final_audio':'upload.mp4 (entire original audio track)','discard_seedance_audio':True,'separation':f'Demucs {demucs_model} Cloud'},indent=2))
                     return
         except Exception as e:
             status(f'Cloud separation failed ({e}); falling back to local audio')
@@ -57,7 +60,7 @@ def separate(src,folder,status=print):
     demucs_out = folder/'demucs_out'
     separated_ok = False
     try:
-        cmd = [sys.executable, '-m', 'demucs.separate', '--two-stems', 'vocals', '-n', 'htdemucs', '-o', str(demucs_out), str(folder/'original-audio.wav')]
+        cmd = [sys.executable, '-m', 'demucs.separate', '--two-stems', 'vocals', '-n', demucs_model, '-o', str(demucs_out), str(folder/'original-audio.wav')]
         subprocess.run(cmd, check=True, capture_output=True, timeout=180)
         found_vocals = list(demucs_out.glob('**/vocals.wav'))
         found_other = list(demucs_out.glob('**/no_vocals.wav'))
@@ -78,7 +81,7 @@ def separate(src,folder,status=print):
         'seedance_audio':'vocals.wav',
         'final_audio':'upload.mp4 (entire original audio track)',
         'discard_seedance_audio':True,
-        'separation':'Local Demucs (htdemucs)' if separated_ok else 'Clean original audio stem'
+        'separation':f'Local Demucs ({demucs_model})' if separated_ok else 'Clean original audio stem'
     }, indent=2))
 
 def finish_preview(generated,folder):
@@ -93,7 +96,7 @@ def finish_preview(generated,folder):
         padded=folder/'seedance-duration-aligned.mp4'
         with av.open(str(generated)) as inp,av.open(str(padded),'w') as out:
             video=inp.streams.video[0];rate=video.average_rate or Fraction(24,1)
-            stream=out.add_stream('libx264',rate=rate);stream.width=video.width;stream.height=video.height;stream.pix_fmt='yuv420p';stream.options={'crf':'18'}
+            stream=out.add_stream('libx264',rate=rate);stream.width=video.width;stream.height=video.height;stream.pix_fmt='yuv420p';stream.options={'crf':setting('FFMPEG_CRF','18')}
             frames=list(inp.decode(video=0));count=max(1, round(sd*float(rate)))
             for i in range(count):
                 f=av.VideoFrame.from_ndarray(frames[min(i,len(frames)-1)].to_ndarray(format='rgb24'),format='rgb24');f.pts=i;f.time_base=1/rate
@@ -112,21 +115,37 @@ def finish_preview(generated,folder):
             if p.dts is not None:p.stream=astream;out.mux(p)
     return target
 
-def prepare_seedance_video(folder, semitones=3):
-    """Embed +3-semitone isolated vocals into the colored-depth composite."""
+def prepare_seedance_video(folder, semitones=None):
+    """Embed pitch-shifted isolated vocals into the guidance composite."""
     import subprocess
     from config import find_binary
     folder=Path(folder)
-    binary = find_binary('rubberband')
+    if semitones is None:
+        semitones = int(setting('PITCH_SEMITONES', '3'))
     pitched=folder/f'vocals-plus{semitones}.wav'
-    subprocess.run([binary,'--fine','--pitch',str(semitones),'--time','1',str(folder/'vocals.wav'),str(pitched)],check=True,capture_output=True)
+    try:
+        binary = find_binary('rubberband')
+        subprocess.run([binary,'--fine','--pitch',str(semitones),'--time','1',str(folder/'vocals.wav'),str(pitched)],check=True,capture_output=True)
+    except Exception:
+        # Fallback to FFmpeg native pitch filter (asetrate shifts pitch/speed, atempo restores duration)
+        ffmpeg = find_binary('ffmpeg')
+        factor = 2.0 ** (semitones / 12.0)
+        new_rate = round(RATE * factor)
+        tempo = 1.0 / factor
+        cmd = [
+            ffmpeg, '-y', '-i', str(folder / 'vocals.wav'),
+            '-filter:a', f'asetrate={new_rate},atempo={tempo:.6f},aresample={RATE}',
+            str(pitched)
+        ]
+        subprocess.run(cmd, check=True, capture_output=True)
     original=read_audio(folder/'vocals.wav');samples=read_audio(pitched)
     n=original.shape[1]
     samples=np.pad(samples,((0,0),(0,max(0,n-samples.shape[1]))))[:,:n]
     write_audio(pitched,samples)
     target=folder/'seedance-input.mp4'
     with av.open(str(folder/'composite-silent.mp4')) as video,av.open(str(target),'w') as out:
-        vs=out.add_stream_from_template(video.streams.video[0]);audio=out.add_stream('aac',rate=RATE);audio.layout='stereo';audio.bit_rate=192000
+        bitrate = int(setting('AUDIO_BITRATE', '192000'))
+        vs=out.add_stream_from_template(video.streams.video[0]);audio=out.add_stream('aac',rate=RATE);audio.layout='stereo';audio.bit_rate=bitrate
         for packet in video.demux(video=0):
             if packet.dts is not None:packet.stream=vs;out.mux(packet)
         for i in range(0,n,4096):

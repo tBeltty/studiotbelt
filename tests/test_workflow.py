@@ -81,5 +81,46 @@ class WorkflowTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     seedance_bridge.submit_hd(p)
 
+    def test_submit_raises_when_no_provider_configured(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d)
+            (p / 'audio-manifest.json').write_text('{}')
+            with patch('mask_review.require_approved'), \
+                 patch('providers.get_active_provider', return_value=None), \
+                 patch('providers.is_provider_configured', return_value=False):
+                with self.assertRaises(ValueError) as ctx:
+                    seedance_bridge.submit(p, 'prompt', 'reference.png')
+                self.assertIn('No generative AI provider configured', str(ctx.exception))
+
+    def test_get_active_provider_agnostic(self):
+        import providers
+        with patch.dict('os.environ', {}, clear=True), \
+             patch('providers.setting', return_value=''), \
+             patch('providers.is_provider_configured', return_value=False):
+            self.assertIsNone(providers.get_active_provider())
+
+        with patch.dict('os.environ', {'ACTIVE_PROVIDER': 'enhancor'}), \
+             patch('providers.setting', return_value=''), \
+             patch('providers.is_provider_configured', return_value=True):
+            self.assertEqual(providers.get_active_provider(), 'enhancor')
+
+        with patch.dict('os.environ', {'ACTIVE_PROVIDER': 'replicate'}), \
+             patch('providers.setting', return_value=''), \
+             patch('providers.is_provider_configured', return_value=True):
+            self.assertEqual(providers.get_active_provider(), 'replicate')
+
+    def test_cli_prepare_and_submit_args(self):
+        import workflow
+        parser = workflow.p
+        args = parser.parse_args(['prepare', 'input.mp4', '--provider', 'local', '--mode', 'face_mesh'])
+        self.assertEqual(args.command, 'prepare')
+        self.assertEqual(args.provider, 'local')
+        self.assertEqual(args.mode, 'face_mesh')
+
+        args_submit = parser.parse_args(['submit', 'a'*32, '--prompt', 'test prompt', '--reference', 'ref.png'])
+        self.assertEqual(args_submit.command, 'submit')
+        self.assertEqual(args_submit.prompt, 'test prompt')
+        self.assertEqual(args_submit.reference, 'ref.png')
+
 if __name__ == '__main__':
     unittest.main()

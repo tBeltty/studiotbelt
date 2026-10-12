@@ -4,7 +4,7 @@ from config import ROOT
 
 def main():
     executable=shutil.which('cloudflared')
-    if not executable:raise SystemExit('Install cloudflared or configure ENHANCOR_WEBHOOK_URL. See docs/SETUP-AGENT.md.')
+    if not executable:raise SystemExit('Install cloudflared or configure ENHANCOR_WEBHOOK_URL. See docs/SETUP.md.')
     route='/callback/'+secrets.token_urlsafe(24)
     class Handler(http.server.BaseHTTPRequestHandler):
         def log_message(self,*args):pass

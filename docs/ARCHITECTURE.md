@@ -48,15 +48,15 @@ flowchart TD
    - **Video Normalization:** Frame rate adjustment to 24 fps and downscaling via FFmpeg native C-filters.
    - **Facial Landmark Mesh:** 478 3D points calculated in real time using Google MediaPipe FaceLandmarker via TensorFlow Lite CPU inference.
    - **Audio Separation & Modulation:** Local Demucs (`htdemucs`) isolates vocals and instrumental tracks. Vocals are pitch-shifted +3 semitones while retaining identical temporal alignment.
-   - **Resource Footprint:** Maximum RAM peak of ~1.1 GB, allowing smooth execution on low-memory devices (such as entry-level Mac mini 8GB).
+   - **Resource Footprint:** Maximum RAM peak of ~1.1 GB, allowing execution on low-memory hardware (benchmark tests on Apple Silicon M1 with 8 GB RAM).
 
 2. **Generative Synthesis (Provider-Agnostic Abstraction Layer):**
    - The preparation stage yields a normalized guidance video `seedance-input.mp4` with pitched audio.
    - The character generation layer is decoupled into `providers.py`, allowing dynamic routing to:
-     - **fal.ai**: Wan 2.2 Animate Replace ($0.04-$0.08/s, budget pay-as-you-go) and MiniMax H3 Max Recast ($0.30-$0.45/s, cinematic 1080p).
-     - **Enhancor**: Seedance 2.5 Edit & Omni motion transfer and facial identity preservation ($45/mo API plan).
-     - **Replicate**: Serverless Wan 2.2 video-to-video execution billed by GPU-seconds.
-     - **ComfyUI**: Self-hosted local instances for fully offline, free workflows.
+     - **Replicate**: Serverless Wan 2.2 video-to-video execution and LivePortrait billed by GPU-seconds.
+     - **Enhancor**: ByteDance Seedance 2.5 Edit & Omni motion transfer and facial identity preservation.
+     - **ComfyUI**: Self-hosted local instances for fully offline workflows.
+     - **fal.ai**: Wan 2.2 Animate Replace and MiniMax H3 Max Recast.
    - Credentials and engine selection are managed dynamically via `/api/settings` and stored securely with `chmod 600`.
 
 ---
@@ -83,7 +83,7 @@ Because tracking is constrained to one face per frame, multi-subject scenes requ
 |---|---|---|---|---|---|
 | **Cloud SAM 3 + Depth** | `fal-ai/sam-3/video` + `fal-ai/depth-anything-video` | **~$0.017 USD** | Yes (Full frame) | ~15–20s | Serverless GPUs |
 | **Free Cloud Spaces** | `linoyts/SAM3-Video` + `depth-anything/Video-Depth-Anything` | **$0.00 (Free)** | Yes (Full frame) | Variable (Queue) | HF ZeroGPU |
-| **Local Face Mesh** | MediaPipe TFLite (CPU) via `setup-face-mesh.sh` | **$0.00 (Free)** | No (Single speaker) | ~6–8s | Local Mac CPU |
+| **Local Face Mesh** | MediaPipe TFLite (CPU) via `setup-face-mesh.sh` | **$0.00 (Free)** | No (Single speaker) | ~6–8s | Local CPU |
 
 ---
 

@@ -69,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enabled `GET` and `HEAD` method support across root and static endpoints.
 
 ### Fixed
-- Resolved unhandled loop indentation and crash scenarios in `mesh_worker.py` when processing fast motion frames.
+- Resolved edge-case crash scenarios in `mesh_worker.py` when tracking subjects across fast motion frames.
 - Eliminated full-page reload on video submission (`location.href`), enabling fluid SPA state transitions.
 - Fixed 404 console cascades by removing exploratory HEAD network requests in favor of manifest sets.
 

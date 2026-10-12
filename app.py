@@ -11,7 +11,8 @@ from pipeline import run
 ROOT=Path(__file__).resolve().parent
 RUNS=ROOT/'runs';RUNS.mkdir(exist_ok=True)
 jobs={}
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix='studio_worker')
+max_workers = int(config.setting('STUDIO_MAX_WORKERS', '2'))
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix='studio_worker')
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -118,7 +119,7 @@ def seedance(ident:str,prompt:str=Form(...),sirio:UploadFile=File(...),tein:Uplo
             paths.append(None)
             continue
         suffix=Path(upload.filename or '').suffix.lower()
-        if suffix not in (['.png','.jpg','.jpeg','.webp','.mp4','.mov','.webm'] if name=='sirio-reference' else ['.png','.jpg','.jpeg','.webp']):raise HTTPException(400,'Use an image or a Sirio reference video.')
+        if suffix not in (['.png','.jpg','.jpeg','.webp','.mp4','.mov','.webm'] if name=='sirio-reference' else ['.png','.jpg','.jpeg','.webp']):raise HTTPException(400,'Use an image or a character reference video.')
         path=folder/(name+suffix)
         with path.open('wb') as f:shutil.copyfileobj(upload.file,f)
         paths.append(path)
@@ -182,7 +183,7 @@ def create_hd(ident:str):
         from seedance_bridge import submit_hd,wait_and_finish
         try:
             request_id=submit_hd(folder)
-            hd_jobs[ident].update(request_id=request_id,status='Generating 1080p through Enhancor');save()
+            hd_jobs[ident].update(request_id=request_id,status='Generating 1080p HD render');save()
             wait_and_finish(hd,request_id,lambda s:hd_jobs[ident].update(status=s))
             hd_jobs[ident].update(state='done',status='1080p ready · original source audio restored')
         except Exception as e:hd_jobs[ident].update(state='error',status=str(e))

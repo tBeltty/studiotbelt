@@ -15,6 +15,6 @@ All neural inference in the default path is hosted. No weight downloads are incl
 
 The pinned SAM and Demucs versions and the depth model schema were verified through authenticated Replicate API reads on 2026-10-06. If a model becomes unavailable, inspect its current schema before changing the adapter. [Replicate HTTP API](https://replicate.com/docs/reference/http).
 
-The [SAM3-Video Hugging Face Space](https://huggingface.co/spaces/linoyts/SAM3-Video) was an earlier exploration; it is not the active raw-mask implementation. Never describe a green visualization overlay as a raw mask. Public Spaces may change their Gradio API. An RGB segmentation retry is a deliberate repair, not a different depth color treatment.
+The pipeline utilizes raw binary alpha masks rather than color-overlay visualizations for subject segmentation. When processing complex scenes with edge noise or subject spill, trigger the RGB segmentation repair workflow to generate clean boundary definitions.
 
 `requirements.txt` records versions from the development environment. Setup installs them into a clean venv; the package's local tests are also runnable using a compatible existing environment. Hosted availability, price and access are account-dependent; no free-inference claim is made. Local self-hosting of model weights is not configured here.

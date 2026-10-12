@@ -1,7 +1,16 @@
-# Third-party notices
+# Third-Party Notices & Acknowledgements
 
-Python dependencies retain their respective licenses. Rubber Band is an external executable with its own licensing; obtain it from its official distribution/package manager. Hosted Demucs, depth, SAM and Seedance models are not redistributed in this package and remain subject to their providers' terms.
+## Upstream & Foundational Research
+- **Workflow Research:** Portions of the foundational video character-replacement pipeline and motion guidance architecture build upon concepts pioneered by Sirio Berati (licensed under the MIT License).
 
-TEIN branding and companion illustrations are included from the existing user-authorized UI. Those assets are excluded from the MIT license covering this project’s code and documentation; this package grants no new rights to them. Google Fonts are requested by CSS, not vendored here. Preview assets under `examples/previews/` illustrate sample workflows. No license to third-party footage, music or likenesses is granted by this package.
+## External Binaries & Tooling
+- **Python Libraries:** Distributed under their respective open-source licenses (see `requirements.txt`).
+- **Rubber Band Library:** External audio processing utility with its own licensing; obtain via your system package manager.
+- **Cloudflare Tunnel:** Optional external binary distributed by Cloudflare (`cloudflared`).
 
-Cloudflared is an optional external executable distributed by Cloudflare. Quick Tunnels are a development service; this package does not redistribute the binary.
+## Hosted Generative Models & APIs
+- Hosted Demucs, Depth Anything, SAM 3, and Seedance / Wan diffusion models run on remote provider infrastructure and remain subject to their respective terms of service.
+
+## Visual & Media Assets
+- Companion illustrations and branding elements are excluded from the project's code MIT license. Preview clips under `examples/previews/` illustrate workflow capabilities. No license to third-party likenesses, footage, or audio beds is granted.
+

@@ -123,7 +123,7 @@ def submit_hd_fal(folder):
         raise ValueError('HD already submitted. Resume its saved request.')
     original = json.loads((folder/'seedance-request.json').read_text())
     if not (folder/'final-preview.mp4').exists():
-        raise ValueError('A completed draft is required before generating 1080p.')
+        raise ValueError('A completed draft is required before generating high resolution.')
 
     hd = folder/'hd'
     hd.mkdir(exist_ok=True)
@@ -134,7 +134,7 @@ def submit_hd_fal(folder):
     import fal_client
     model_id = original.get('model', 'minimax/h3-max/recast')
     args = dict(original.get('arguments', {}))
-    args['resolution'] = '1080P'
+    args['resolution'] = setting('FAL_HD_RESOLUTION', '1080P')
 
     handler = fal_client.submit(model_id, arguments=args)
     ident = handler.request_id
@@ -224,7 +224,8 @@ def submit_enhancor(folder, prompt, sirio, tein=None, status=print):
     status('Uploading video with embedded vocals and character references')
     from media_host import upload
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:urls=list(pool.map(upload,[prepared,sirio]+([tein] if tein else [])))
-    p={'resolution':'1080p','output_format':'mp4','pass_faces':True,'webhook_url':setting('ENHANCOR_WEBHOOK_URL','')}
+    enh_res = setting('ENHANCOR_DRAFT_RESOLUTION', '1080p')
+    p={'resolution':enh_res,'output_format':'mp4','pass_faces':True,'webhook_url':setting('ENHANCOR_WEBHOOK_URL','')}
     p.update(mode='edit',is_draft=True,aspect_ratio='adaptive',videos=[urls[0]],audios=[],images=urls[1:],prompt=prompt.replace('@Audio1', 'the audio embedded in @Video1')+'\n@Video1 contains the colored-depth composite and embedded isolated vocals pitched up three semitones, without the music bed; use its embedded audio for performance and lip synchronization. '+('@Image1 is the primary character reference; @Image2 is the secondary character reference.' if tein else '@Image1 is the only replacement character reference.'));p.pop('duration',None)
     if Path(sirio).suffix.lower() in ['.mp4','.mov','.webm']:
         import av
@@ -254,59 +255,110 @@ def submit_enhancor(folder, prompt, sirio, tein=None, status=print):
     return ident
 
 def submit(folder, prompt, sirio, tein=None, status=print):
-    from providers import get_active_provider
+    from providers import get_active_provider, is_provider_configured
     active = get_active_provider()
     if active == 'replicate':
         return submit_replicate(folder, prompt, sirio, tein, status)
     elif active == 'enhancor':
         return submit_enhancor(folder, prompt, sirio, tein, status)
-    else:
+    elif active in ['fal', 'fal.ai']:
         return submit_fal(folder, prompt, sirio, tein, status)
+    elif active == 'comfy':
+        raise NotImplementedError("ComfyUI local integration is not yet connected to the backend. Please select fal.ai, Enhancor, or Replicate.")
+    else:
+        for p, fn in [('replicate', submit_replicate), ('enhancor', submit_enhancor), ('fal', submit_fal)]:
+            if is_provider_configured(p):
+                return fn(folder, prompt, sirio, tein, status)
+        raise ValueError("No generative AI provider configured. Please configure an API key for Enhancor, Replicate, or fal.ai in Settings or .env.")
+
+def wait_and_finish_enhancor(folder, request_id, status=print):
+    folder = Path(folder)
+    key = credential('ENHANCOR_API_KEY')
+    for _ in range(360):
+        r = requests.post(setting('ENHANCOR_BASE_URL', 'https://apireq.enhancor.ai/api/seedance2.5/v1').rstrip('/') + '/status',
+                          headers={'x-api-key': key}, json={'request_id': request_id}, timeout=30)
+        r.raise_for_status()
+        j = r.json()
+        (folder / 'provider-status.json').write_text(json.dumps(j, indent=2))
+        status(f"Seedance status: {j.get('status')}")
+        if j.get('status') == 'COMPLETED':
+            url = j.get('result')
+            if not isinstance(url, str) or not url.startswith('https://'):
+                raise ValueError('Seedance result URL missing.')
+            r = requests.get(url, timeout=180)
+            r.raise_for_status()
+            (folder / 'seedance-result.mp4').write_bytes(r.content)
+            status('Restoring entire original source audio · discarding generated audio')
+            finish_preview(folder / 'seedance-result.mp4', folder)
+            return
+        if j.get('status') in ['FAILED', 'CANCELED']:
+            raise RuntimeError('Seedance failed: ' + str(j.get('error') or j.get('status')))
+        time.sleep(10)
+    raise TimeoutError('Seedance is still pending. Request ID saved; do not resubmit automatically.')
 
 def wait_and_finish(folder, request_id, status=print):
     folder = Path(folder)
-    provider = 'fal'
-    if (folder/'seedance-response.json').exists():
-        try:
-            resp = json.loads((folder/'seedance-response.json').read_text())
-            provider = resp.get('provider', 'fal')
-        except Exception:
-            pass
+    provider = None
+    for candidate in [folder / 'seedance-response.json', folder / 'generation.json', folder / 'response.json', folder.parent / 'seedance-response.json', folder.parent / 'generation.json']:
+        if candidate.exists():
+            try:
+                resp = json.loads(candidate.read_text())
+                if 'provider' in resp and resp['provider']:
+                    provider = resp['provider']
+                    break
+            except Exception:
+                pass
+    if not provider:
+        from providers import get_active_provider
+        provider = get_active_provider()
 
     if provider == 'replicate':
         return wait_and_finish_replicate(folder, request_id, status)
     elif provider in ['fal.ai', 'fal']:
         return wait_and_finish_fal(folder, request_id, status)
+    elif provider == 'enhancor':
+        return wait_and_finish_enhancor(folder, request_id, status)
+    else:
+        raise ValueError(f"Unknown or unconfigured provider '{provider}' for job completion.")
 
-    folder=Path(folder)
-    key=credential('ENHANCOR_API_KEY')
-    for _ in range(360):
-        r=requests.post(setting('ENHANCOR_BASE_URL','https://apireq.enhancor.ai/api/seedance2.5/v1').rstrip('/')+'/status',headers={'x-api-key':key},json={'request_id':request_id},timeout=30);r.raise_for_status();j=r.json()
-        (folder/'provider-status.json').write_text(json.dumps(j,indent=2))
-        status(f"Seedance status: {j.get('status')}")
-        if j.get('status')=='COMPLETED':
-            url=j.get('result')
-            if not isinstance(url,str) or not url.startswith('https://'):raise ValueError('Seedance result URL missing.')
-            r=requests.get(url,timeout=180);r.raise_for_status();(folder/'seedance-result.mp4').write_bytes(r.content)
-            status('Restoring entire original source audio · discarding generated audio')
-            finish_preview(folder/'seedance-result.mp4',folder)
-            return
-        if j.get('status') in ['FAILED','CANCELED']:raise RuntimeError('Seedance failed: '+str(j.get('error') or j.get('status')))
-        time.sleep(10)
-    raise TimeoutError('Seedance is still pending. Request ID saved; do not resubmit automatically.')
+def submit_hd_enhancor(folder):
+    folder = Path(folder)
+    if (folder / 'hd/response.json').exists():
+        raise ValueError('HD already submitted. Resume its saved request.')
+    generation = json.loads((folder / 'generation.json').read_text())
+    original = json.loads((folder / 'seedance-request.json').read_text())
+    if not original.get('is_draft') or not (folder / 'final-preview.mp4').exists():
+        raise ValueError('A completed draft is required before generating high resolution.')
+    payload = {'draft_id': generation['request_id'], 'webhook_url': original['webhook_url']}
+    key = credential('ENHANCOR_API_KEY')
+    hd = folder / 'hd'
+    hd.mkdir(exist_ok=True)
+    source = hd / 'upload.mp4'
+    if not source.exists():
+        __import__('shutil').copy2(folder / 'upload.mp4', source)
+    (hd / 'request.json').write_text(json.dumps(payload, indent=2))
+    response = requests.post(setting('ENHANCOR_BASE_URL', 'https://apireq.enhancor.ai/api/seedance2.5/v1').rstrip('/') + '/queue',
+                             headers={'x-api-key': key}, json=payload, timeout=90)
+    response.raise_for_status()
+    data = response.json()
+    (hd / 'response.json').write_text(json.dumps(data))
+    ident = data.get('requestId')
+    if not ident:
+        raise ValueError('Enhancor did not return a request ID.')
+    return ident
 
 def submit_hd(folder):
     folder = Path(folder)
     provider = None
-    if (folder/'seedance-response.json').exists():
+    if (folder / 'seedance-response.json').exists():
         try:
-            resp = json.loads((folder/'seedance-response.json').read_text())
+            resp = json.loads((folder / 'seedance-response.json').read_text())
             provider = resp.get('provider')
         except Exception:
             pass
-    if not provider and (folder/'generation.json').exists():
+    if not provider and (folder / 'generation.json').exists():
         try:
-            gen = json.loads((folder/'generation.json').read_text())
+            gen = json.loads((folder / 'generation.json').read_text())
             provider = gen.get('provider')
         except Exception:
             pass
@@ -316,21 +368,9 @@ def submit_hd(folder):
 
     if provider in ['fal', 'fal.ai']:
         return submit_hd_fal(folder)
-
-    if (folder/'hd/response.json').exists():raise ValueError('HD already submitted. Resume its saved request.')
-    generation=json.loads((folder/'generation.json').read_text())
-    original=json.loads((folder/'seedance-request.json').read_text())
-    if not original.get('is_draft') or not (folder/'final-preview.mp4').exists():
-        raise ValueError('A completed draft is required before generating 1080p.')
-    payload={'draft_id':generation['request_id'],'webhook_url':original['webhook_url']}
-    key=credential('ENHANCOR_API_KEY')
-    hd=folder/'hd';hd.mkdir(exist_ok=True)
-    source=hd/'upload.mp4'
-    if not source.exists():__import__('shutil').copy2(folder/'upload.mp4',source)
-    (hd/'request.json').write_text(json.dumps(payload,indent=2))
-    response=requests.post(setting('ENHANCOR_BASE_URL','https://apireq.enhancor.ai/api/seedance2.5/v1').rstrip('/')+'/queue',headers={'x-api-key':key},json=payload,timeout=90)
-    response.raise_for_status();data=response.json()
-    (hd/'response.json').write_text(json.dumps(data))
-    ident=data.get('requestId')
-    if not ident:raise ValueError('Enhancor did not return a request ID.')
-    return ident
+    elif provider == 'enhancor':
+        return submit_hd_enhancor(folder)
+    elif provider == 'replicate':
+        raise NotImplementedError("Replicate renders at native resolution and does not require an HD draft upgrade step.")
+    else:
+        raise ValueError(f"Unknown or unconfigured provider '{provider}' for HD generation.")

@@ -11,19 +11,19 @@ def run(src,folder,status=print):
     if not python.exists():
         python=Path(sys.executable)
     folder.mkdir(parents=True,exist_ok=True)
-    status('1/4 Normalizing video and format (24 fps)...')
+    status('1/4 Normalizing video and format...')
     normalize(src,folder/'original.mp4')
     status('2/4 Facial mesh tracking with MediaPipe...')
     subprocess.run([str(python),str(ROOT/'mesh_worker.py'),str(folder)],check=True)
     (folder/'workflow-mode.json').write_text(json.dumps({'mode':'face_mesh'}))
     status('3/4 Vocal isolation and audio stems...')
     separate(src,folder,status)
-    status('4/4 Pitch shifting vocals (+3 semitones)...')
+    status('4/4 Pitch shifting vocals...')
     prepare_seedance_video(folder)
     status('Video prepared successfully · Ready for review')
 
 
-def run_depth(src,folder,prompt='person',provider='replicate',status=print):
+def run_depth(src,folder,prompt='person',provider='auto',status=print):
     from pipeline import run as run_advanced
     from audio_workflow import prepare_seedance_video
     folder=Path(folder)

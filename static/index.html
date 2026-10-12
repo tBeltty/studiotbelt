@@ -1330,7 +1330,7 @@
       <div class="brand-links">
         <button type="button" id="open-settings-btn" class="btn btn-secondary" style="min-height: 34px; padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          <span id="active-engine-badge" style="color: var(--brand-amber); font-weight: 600;">fal.ai</span>
+          <span id="active-engine-badge" style="color: var(--brand-amber); font-weight: 600;">—</span>
         </button>
         <div class="lang-switcher" role="group" aria-label="Language selection">
           <button type="button" class="lang-btn active" data-lang="en">EN</button>
@@ -1601,12 +1601,12 @@
 
       <div class="meta-row">
         <div class="meta-pill" id="step3-engine-pill">
-          <span data-i18n="settings.active_engine">Active Engine</span>: <b id="step3-engine-name">fal.ai</b>
+          <span data-i18n="settings.active_engine">Active Engine</span>: <b id="step3-engine-name">—</b>
           <button type="button" class="btn btn-ghost" id="step3-change-engine" style="padding: 2px 6px; font-size: 11px; margin-left: 6px; cursor: pointer; display: inline-flex; align-items: center;" aria-label="Change engine">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
         </div>
-        <div class="meta-pill" id="mode-label">H3 Max Recast · 1080p</div>
+        <div class="meta-pill" id="mode-label">Neural Motion Transfer</div>
         <div class="meta-pill" data-i18n="s3.quality_pill">Quality: <b>High Fidelity</b></div>
       </div>
 
@@ -1660,8 +1660,8 @@
             <div class="processing-title-group">
               <div class="processing-pulse" id="gen-pulse-dot"></div>
               <div>
-                <h4 id="gen-headline" class="processing-headline" data-i18n="s3.rendering_title">Generating Character with fal.ai (H3 Max)...</h4>
-                <div id="gen-subtitle" class="field-hint" data-i18n="s3.rendering_sub">Cloud 1080p video diffusion. Cinematic identity replacement (~2-3 min).</div>
+                <h4 id="gen-headline" class="processing-headline" data-i18n="s3.rendering_title">Generating Character with AI...</h4>
+                <div id="gen-subtitle" class="field-hint" data-i18n="s3.rendering_sub">Cloud video diffusion. Cinematic identity replacement (~2-3 min).</div>
               </div>
             </div>
             <div class="timer-pill" id="gen-timer">00:00</div>
@@ -1672,7 +1672,7 @@
           </div>
 
           <div class="progress-metrics">
-            <span id="gen-status-msg" class="progress-status-text">Connecting to fal.ai...</span>
+            <span id="gen-status-msg" class="progress-status-text">Connecting to provider...</span>
             <span id="gen-percentage" class="progress-percent-text">15%</span>
           </div>
 
@@ -1683,7 +1683,7 @@
             </div>
             <div class="milestone-item" id="gen-ms-2">
               <span class="ms-indicator">2</span>
-              <span class="ms-label" data-i18n="s3.ms2">Video Diffusion (fal.ai)</span>
+              <span class="ms-label" data-i18n="s3.ms2">Video Diffusion</span>
             </div>
             <div class="milestone-item" id="gen-ms-3">
               <span class="ms-indicator">3</span>
@@ -1718,7 +1718,7 @@
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         </div>
         <strong data-i18n="s4.empty_title">No draft generated yet</strong>
-        <span data-i18n="s4.empty_sub">Complete Step 03 to render your first draft with fal.ai.</span>
+        <span data-i18n="s4.empty_sub">Complete Step 03 to render your first draft.</span>
       </div>
 
       <div id="final-ready" hidden>
@@ -1748,7 +1748,7 @@
         <p class="field-hint" id="generation-id" style="margin-top: 8px;"></p>
         <pre id="sent-prompt"></pre>
         <div style="margin-top: 10px;">
-          <a id="raw-link" class="field-hint" style="color: var(--accent); text-decoration: none;" data-i18n="s4.raw_download">Download raw output from fal.ai ↓</a>
+          <a id="raw-link" class="field-hint" style="color: var(--accent); text-decoration: none;" data-i18n="s4.raw_download">Download raw output from provider ↓</a>
         </div>
       </details>
 
@@ -1956,7 +1956,8 @@
         }
 
         if (input.name === 'sirio') {
-          $('#mode-label').textContent = f.type.startsWith('video/') ? 'fal.ai · Video-to-Video' : 'fal.ai · Live Portrait';
+          const activeName = (currentSettings && currentSettings.active_provider && currentSettings.providers[currentSettings.active_provider]) ? currentSettings.providers[currentSettings.active_provider].name : 'AI Engine';
+          $('#mode-label').textContent = f.type.startsWith('video/') ? `${activeName} · Video-to-Video` : `${activeName} · Image Reference`;
         }
 
         if (img && !f.type.startsWith('video/')) {
@@ -2246,9 +2247,10 @@
       // Sent generation info
       if (exists('generation.json')) {
         const g = await json(base() + 'generation.json');
-        $('#mode-label').textContent = 'fal.ai · Live Portrait';
+        const provName = g.provider ? (g.provider === 'fal.ai' ? 'fal.ai' : g.provider.charAt(0).toUpperCase() + g.provider.slice(1)) : 'AI';
+        $('#mode-label').textContent = `${provName} · ${g.mode || 'Motion Synthesis'}`;
         $('#sent-details').hidden = false;
-        $('#generation-id').textContent = 'fal.ai Request ID: ' + g.request_id;
+        $('#generation-id').textContent = `${provName} Request ID: ` + g.request_id;
         $('#sent-prompt').textContent = g.prompt;
         if (!$('#seedance textarea').dataset.loaded) {
           $('#seedance textarea').value = g.prompt;
@@ -2311,7 +2313,7 @@
             } else if (s.includes('retrieving') || s.includes('descargando')) {
               gms = 2;
               gp = 85;
-            } else if (s.includes('in_progress') || s.includes('rendering video through fal.ai') || s.includes('generando')) {
+            } else if (s.includes('in_progress') || s.includes('rendering') || s.includes('generando')) {
               gms = 2;
               gp = 60;
             } else if (s.includes('in_queue') || s.includes('queued') || s.includes('seedance rendering')) {
@@ -2484,7 +2486,7 @@
       xhr.send(fd);
     };
 
-    // Step 03 fal.ai Draft Submit
+    // Step 03 Character Recast Draft Submit
     $('#seedance').onsubmit = async e => {
       e.preventDefault();
       if (!jobId) return;
@@ -2495,7 +2497,8 @@
       const button = $('#draft-button');
       const origText = button.textContent;
       button.disabled = true;
-      button.textContent = (currentLang === 'en' ? 'Generating Character (fal.ai H3 Max)...' : 'Generando Personaje (fal.ai H3 Max)...');
+      const activeName = (currentSettings && currentSettings.active_provider && currentSettings.providers[currentSettings.active_provider]) ? currentSettings.providers[currentSettings.active_provider].name : 'AI';
+      button.textContent = (currentLang === 'en' ? `Generating Character (${activeName})...` : `Generando Personaje (${activeName})...`);
       try {
         const data = new FormData(e.target);
         for (const name of ['sirio', 'tein']) {
@@ -2613,17 +2616,23 @@
     // SETTINGS & PROVIDER MANAGEMENT
     // ==========================================
     let currentSettings = null;
-    let selectedProviderId = 'fal';
+    let selectedProviderId = null;
 
     async function loadSettings() {
       try {
         const res = await fetch('/api/settings');
         if (!res.ok) return;
         currentSettings = await res.json();
-        selectedProviderId = currentSettings.active_provider || 'fal';
+        
+        if (currentSettings.active_provider && currentSettings.providers[currentSettings.active_provider]) {
+          selectedProviderId = currentSettings.active_provider;
+        } else {
+          const configured = Object.values(currentSettings.providers).find(p => p.configured);
+          selectedProviderId = configured ? configured.id : Object.keys(currentSettings.providers)[0];
+        }
 
-        const activeSpec = currentSettings.providers[selectedProviderId];
-        const activeName = activeSpec ? activeSpec.name : selectedProviderId;
+        const activeSpec = currentSettings.active_provider ? currentSettings.providers[currentSettings.active_provider] : null;
+        const activeName = activeSpec ? activeSpec.name : (currentSettings.has_any_provider ? (selectedProviderId ? currentSettings.providers[selectedProviderId].name : 'AI Engine') : (currentLang === 'es' ? 'Sin conectar' : 'Not Connected'));
         const navBadge = $('#active-engine-badge');
         if (navBadge) navBadge.textContent = activeName;
         const step3Name = $('#step3-engine-name');

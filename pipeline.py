@@ -5,22 +5,29 @@ import av, numpy as np, requests
 from PIL import Image
 from gradio_client import Client, handle_file
 
-from config import load_env
+from config import load_env, setting, find_binary
 load_env()
 
-DEPTH='depth-anything/Video-Depth-Anything'
-SAM='linoyts/SAM3-Video'
+def get_depth_hf_space():
+    return setting('HF_DEPTH_SPACE', 'depth-anything/Video-Depth-Anything')
+
+def get_sam_hf_space():
+    return setting('HF_SAM_SPACE', 'linoyts/SAM3-Video')
 
 def frames(path):
     with av.open(str(path)) as c:
         for f in c.decode(video=0): yield f.to_ndarray(format='rgb24')
 
-def writer(path,w,h):
-    c=av.open(str(path),'w');s=c.add_stream('libx264',rate=24);s.width=w;s.height=h;s.pix_fmt='yuv420p';s.options={'crf':'18','preset':'fast'}
+def writer(path,w,h,fps=None):
+    target_fps = fps or int(setting('TARGET_FPS', '24'))
+    crf = setting('FFMPEG_CRF', '18')
+    preset = setting('FFMPEG_PRESET', 'fast')
+    c=av.open(str(path),'w');s=c.add_stream('libx264',rate=target_fps);s.width=w;s.height=h;s.pix_fmt='yuv420p';s.options={'crf':crf,'preset':preset}
     return c,s
 
-def put(c,s,a,i):
-    f=av.VideoFrame.from_ndarray(a,format='rgb24');f.pts=i;f.time_base=Fraction(1,24)
+def put(c,s,a,i,fps=None):
+    target_fps = fps or int(setting('TARGET_FPS', '24'))
+    f=av.VideoFrame.from_ndarray(a,format='rgb24');f.pts=i;f.time_base=Fraction(1,target_fps)
     for p in s.encode(f):c.mux(p)
 
 def finish(c,s):
@@ -29,19 +36,23 @@ def finish(c,s):
 
 def normalize(src,dst):
     import subprocess
-    from config import find_binary
+    target_fps = int(setting('TARGET_FPS', '24'))
+    max_width = int(setting('MAX_WIDTH', '960'))
+    crf = setting('FFMPEG_CRF', '18')
+    preset = setting('FFMPEG_PRESET', 'fast')
+    audio_bitrate = setting('AUDIO_BITRATE', '192k')
     cmd = [
         find_binary('ffmpeg'), '-y', '-i', str(src),
-        '-vf', "fps=24,scale='min(960,iw)':-2",
-        '-c:v', 'libx264', '-crf', '18', '-preset', 'fast',
-        '-c:a', 'aac', '-b:a', '192k',
+        '-vf', f"fps={target_fps},scale='min({max_width},iw)':-2",
+        '-c:v', 'libx264', '-crf', crf, '-preset', preset,
+        '-c:a', 'aac', '-b:a', audio_bitrate,
         str(dst)
     ]
     subprocess.run(cmd, check=True, capture_output=True)
     with av.open(str(dst)) as inp:
         vs = inp.streams.video[0]
         dur = float(inp.duration / av.time_base) if inp.duration else 15.0
-        return {'frames': vs.frames or round(dur * 24), 'fps': 24, 'width': vs.width, 'height': vs.height, 'duration': dur}
+        return {'frames': vs.frames or round(dur * target_fps), 'fps': target_fps, 'width': vs.width, 'height': vs.height, 'duration': dur}
 
 def file_path(x):
     if isinstance(x,str):return x
@@ -54,11 +65,13 @@ def depth_fal(src,dst):
         raise ValueError('fal.ai depth requires FAL_KEY configured in settings.')
     import fal_client
     video_url = fal_client.upload_file(str(src))
+    model = setting('FAL_DEPTH_MODEL', "fal-ai/depth-anything-video")
+    model_size = setting('FAL_DEPTH_SIZE', "base")
     result = fal_client.subscribe(
-        "fal-ai/depth-anything-video",
+        model,
         arguments={
             "video_url": video_url,
-            "model_size": "base"
+            "model_size": model_size
         }
     )
     url = result.get('video', {}).get('url') if isinstance(result.get('video'), dict) else result.get('video')
@@ -74,8 +87,9 @@ def segment_fal(src,dst,prompt="person"):
         raise ValueError('fal.ai SAM 3 requires FAL_KEY configured in settings.')
     import fal_client
     video_url = fal_client.upload_file(str(src))
+    model = setting('FAL_SAM_MODEL', "fal-ai/sam-3/video")
     result = fal_client.subscribe(
-        "fal-ai/sam-3/video",
+        model,
         arguments={
             "video_url": video_url,
             "prompt": prompt,
@@ -121,11 +135,14 @@ def composite_fal(original_path, depth_path, sam_path, directory, audio_source=N
     return frame_idx
 
 def depth_hf(src,dst):
-    c=Client(DEPTH,token=os.getenv('HF_TOKEN') or None,verbose=False)
-    result=c.predict({'video':handle_file(str(src))},max_len=-1,target_fps=24,max_res=960,grayscale=False,api_name='/infer_video_depth')
+    target_fps = int(setting('TARGET_FPS', '24'))
+    max_res = int(setting('MAX_WIDTH', '960'))
+    c=Client(get_depth_hf_space(),token=os.getenv('HF_TOKEN') or None,verbose=False)
+    result=c.predict({'video':handle_file(str(src))},max_len=-1,target_fps=target_fps,max_res=max_res,grayscale=False,api_name='/infer_video_depth')
     shutil.copy(file_path(result[1]),dst)
 
-def depth_replicate(src,dst,model_name="lucataco/depth-anything-video"):
+def depth_replicate(src,dst,model_name=None):
+    model_name = model_name or setting('REPLICATE_DEPTH_MODEL', 'lucataco/depth-anything-video')
     token=os.getenv('REPLICATE_API_TOKEN')
     if not token:raise ValueError('Replicate fallback requires REPLICATE_API_TOKEN in the server environment.')
     # Resolve live model schema instead of assuming an input field.
@@ -202,15 +219,27 @@ def run(src,directory,prompt='person',provider=None,status=print):
     directory=Path(directory);directory.mkdir(parents=True,exist_ok=True)
     active_prov = provider
     if not active_prov or active_prov in ['auto', 'local']:
-        if os.getenv('FAL_KEY'):
+        from providers import get_active_provider, is_provider_configured
+        active_gen = get_active_provider()
+        if active_gen == 'replicate' and is_provider_configured('replicate'):
+            active_prov = 'replicate'
+        elif active_gen == 'fal' and is_provider_configured('fal'):
             active_prov = 'fal'
+        elif is_provider_configured('replicate'):
+            active_prov = 'replicate'
+        elif is_provider_configured('fal'):
+            active_prov = 'fal'
+        elif os.getenv('HF_TOKEN'):
+            active_prov = 'huggingface'
         elif os.getenv('REPLICATE_API_TOKEN'):
             active_prov = 'replicate'
-        else:
+        elif os.getenv('FAL_KEY'):
             active_prov = 'fal'
+        else:
+            active_prov = 'huggingface'
 
     if active_prov == 'fal':
-        status('1/4 Normalizando video y formato (24 fps)...')
+        status(f'1/4 Normalizando video y formato ({setting("TARGET_FPS", "24")} fps)...')
         meta = normalize(src, directory / 'original.mp4')
         status('2/4 Video Depth Anything · generando profundidad 3D en la nube...')
         depth_fal(directory / 'original.mp4', directory / 'depth.mp4')
@@ -218,11 +247,11 @@ def run(src,directory,prompt='person',provider=None,status=print):
         segment_fal(directory / 'original.mp4', directory / 'sam.mp4', prompt=prompt)
         status('Compositing · depth subject over original background')
         composite_fal(directory / 'original.mp4', directory / 'depth.mp4', directory / 'sam.mp4', directory, src)
-        status('4/4 Aislamiento vocal y ajuste de tono (+3 semitonos)...')
+        status(f'4/4 Aislamiento vocal y ajuste de tono ({setting("PITCH_SEMITONES", "+3")} semitonos)...')
         from audio_workflow import separate, prepare_seedance_video
         separate(src, directory, status)
         prepare_seedance_video(directory)
-        meta.update(prompt=prompt, depth_provider='fal', sam_space='fal-ai/sam-3/video', mask_method='SAM 3 video mask')
+        meta.update(prompt=prompt, depth_provider='fal', sam_space=setting('FAL_SAM_MODEL', 'fal-ai/sam-3/video'), mask_method='SAM 3 video mask')
         (directory / 'manifest.json').write_text(json.dumps(meta, indent=2))
         status('Complete')
         return meta
@@ -230,13 +259,13 @@ def run(src,directory,prompt='person',provider=None,status=print):
         status('1/4 Aislamiento vocal...')
         from audio_workflow import separate
         separate(src, directory, status)
-        status('2/4 Preparando video (24 fps)...')
+        status(f'2/4 Preparando video ({setting("TARGET_FPS", "24")} fps)...')
         meta = normalize(src, directory / 'original.mp4')
         status('3/4 Video Depth Anything · generando profundidad...')
         if active_prov == 'huggingface':
             depth_hf(directory / 'original.mp4', directory / 'depth-raw.mp4')
         else:
-            depth_replicate(directory / 'original.mp4', directory / 'depth-raw.mp4', 'chenxwh/depth-any-video' if active_prov == 'replicate-chenxwh' else 'lucataco/depth-anything-video')
+            depth_replicate(directory / 'original.mp4', directory / 'depth-raw.mp4', 'chenxwh/depth-any-video' if active_prov == 'replicate-chenxwh' else setting('REPLICATE_DEPTH_MODEL', 'lucataco/depth-anything-video'))
         shutil.copyfile(directory / 'depth-raw.mp4', directory / 'depth.mp4')
         status('4/4 SAM 3 · segmentando sujetos...')
         from raw_masks import segment_raw, clean_border_fragments
@@ -244,9 +273,9 @@ def run(src,directory,prompt='person',provider=None,status=print):
         status('Compositing · depth subject over original background')
         composite(directory / 'original.mp4', directory / 'depth.mp4', raw_dir, directory, src)
         from audio_workflow import prepare_seedance_video
-        status('Ajuste de tono vocal (+3 semitonos)...')
+        status(f'Ajuste de tono vocal ({setting("PITCH_SEMITONES", "+3")} semitonos)...')
         prepare_seedance_video(directory)
-        meta.update(prompt=prompt, depth_provider=active_prov, sam_space=SAM, mask_method='SAM 3 raw PNG masks')
+        meta.update(prompt=prompt, depth_provider=active_prov, sam_space=get_sam_hf_space(), mask_method='SAM 3 raw PNG masks')
         (directory / 'manifest.json').write_text(json.dumps(meta, indent=2))
         status('Complete')
         return meta

@@ -40,11 +40,14 @@ def get_active_provider():
     pref = os.environ.get('ACTIVE_PROVIDER') or setting('ACTIVE_PROVIDER')
     if pref in PROVIDER_SPECS and is_provider_configured(pref):
         return pref
-    # Auto-detection based on configured keys
-    for p in ['fal', 'enhancor', 'replicate', 'comfy']:
+    # Auto-detection based on configured keys across all providers
+    for p in PROVIDER_SPECS:
         if is_provider_configured(p):
             return p
-    return 'fal'
+    # If a preference was set even if not yet configured, return it
+    if pref in PROVIDER_SPECS:
+        return pref
+    return None
 
 def is_provider_configured(provider_id):
     spec = PROVIDER_SPECS.get(provider_id)
@@ -90,11 +93,46 @@ def update_settings(provider_id, key=None, extra=None):
         'ENHANCOR_API_KEY',
         'ENHANCOR_BASE_URL',
         'ENHANCOR_WEBHOOK_URL',
+        'ENHANCOR_DRAFT_RESOLUTION',
+        'ENHANCOR_HD_RESOLUTION',
         'REPLICATE_API_TOKEN',
+        'REPLICATE_MODEL',
+        'REPLICATE_DEPTH_MODEL',
+        'REPLICATE_SAM_VERSION',
+        'REPLICATE_DEMUCS_VERSION',
         'COMFY_URL',
         'MEDIA_HOST',
         'MEDIA_HOST_FALLBACKS',
-        'CATBOX_USERHASH'
+        'CATBOX_USERHASH',
+        'HOST',
+        'PORT',
+        'STUDIO_MAX_WORKERS',
+        'TARGET_FPS',
+        'MAX_WIDTH',
+        'PITCH_SEMITONES',
+        'FFMPEG_CRF',
+        'FFMPEG_PRESET',
+        'AUDIO_BITRATE',
+        'AUDIO_SAMPLE_RATE',
+        'FAL_MODEL',
+        'FAL_DEPTH_MODEL',
+        'FAL_DEPTH_SIZE',
+        'FAL_SAM_MODEL',
+        'FAL_RECAST_RESOLUTION',
+        'FAL_WAN_RESOLUTION',
+        'FAL_HD_RESOLUTION',
+        'HF_DEPTH_SPACE',
+        'HF_SAM_SPACE',
+        'HF_TOKEN',
+        'DEMUCS_MODEL',
+        'FACE_LANDMARKER_URL',
+        'FACE_LANDMARKER_SHA256',
+        'FACE_CONFIDENCE',
+        'FACE_NUM_FACES',
+        'FACE_CROP_X0',
+        'FACE_CROP_Y0',
+        'FACE_CROP_CW',
+        'FACE_CROP_CH'
     }
 
     if extra and isinstance(extra, dict):

@@ -31,3 +31,7 @@ Thumbs.db
 *.swp
 *.bak
 scratch/
+
+# Local Workspace & Tooling
+.agents/
+AGENTS.md
