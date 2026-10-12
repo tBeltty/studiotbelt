@@ -5,9 +5,9 @@
 *.pem
 *.key
 
-# Python Virtual Environments & Caches
+# Python Virtual Environments & Bytecode
 .venv/
-.venv-face/
+.venv*/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -15,9 +15,7 @@ __pycache__/
 # Runtime Artifacts & Logs
 runs/
 *.log
-server.log
-tunnel.log
-.runtime-webhook.json
+.runtime-*.json
 models/
 
 # OS & Editor
@@ -30,23 +28,6 @@ ehthumbs.db
 Thumbs.db
 .idea/
 .vscode/
-
-# Internal Agent, Research Notes & Audit Reports
-HANDOFF.md
-*audit*.md
-*Audit*.md
-*hygiene*.md
-*Hygiene*.md
-*report*.md
-*Report*.md
-docs/*-ANALYSIS.md
-docs/*-AUDIT.md
-docs/*-HYGIENE.md
-docs/HIGGSFIELD-*.md
-plan-of-record.md
-execution-guide.md
-compliance-log.md
-annexes/
-.auditkit/
+*.swp
+*.bak
 scratch/
-.unity/
