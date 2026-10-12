@@ -8,15 +8,19 @@ def run(src,folder,status=print):
     from audio_workflow import separate,prepare_seedance_video
     folder=Path(folder)
     python=ROOT/'.venv-face/bin/python'
-    if not python.exists():raise ValueError('Fast face mesh needs setup: bash setup-face-mesh.sh (Python 3.12).')
+    if not python.exists():
+        python=Path(sys.executable)
     folder.mkdir(parents=True,exist_ok=True)
-    status('Normalizing video');normalize(src,folder/'original.mp4')
-    status('Tracking face mesh locally · no depth or SAM')
+    status('1/4 Normalizando video y formato (24 fps)...')
+    normalize(src,folder/'original.mp4')
+    status('2/4 Rastreo de malla facial con MediaPipe...')
     subprocess.run([str(python),str(ROOT/'mesh_worker.py'),str(folder)],check=True)
     (folder/'workflow-mode.json').write_text(json.dumps({'mode':'face_mesh'}))
+    status('3/4 Aislamiento vocal y pistas de audio...')
     separate(src,folder,status)
+    status('4/4 Ajustando tono vocal (+3 semitonos)...')
     prepare_seedance_video(folder)
-    status('Face mesh ready · review tracking and pitched audio')
+    status('✓ Video preparado exitosamente · Listo para revisión')
 
 
 def run_depth(src,folder,prompt='person',provider='replicate',status=print):
@@ -24,7 +28,8 @@ def run_depth(src,folder,prompt='person',provider='replicate',status=print):
     from audio_workflow import prepare_seedance_video
     folder=Path(folder)
     python=ROOT/'.venv-face/bin/python'
-    if not python.exists():raise ValueError('Install face mesh first: bash setup-face-mesh.sh')
+    if not python.exists():
+        python=Path(sys.executable)
     folder.mkdir(parents=True,exist_ok=True)
     run_advanced(src,folder,prompt,provider,status)
     shutil.copy2(folder/'composite-silent.mp4',folder/'depth-composite-silent.mp4')

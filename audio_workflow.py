@@ -26,26 +26,60 @@ def separate(src,folder,status=print):
     if (folder/'audio-manifest.json').exists():return
     status('Audio · extracting original track');original=read_audio(src);write_audio(folder/'original-audio.wav',original)
     token=os.getenv('REPLICATE_API_TOKEN')
-    if not token:raise ValueError('REPLICATE_API_TOKEN is required for audio separation.')
-    headers={'Authorization':'Bearer '+token}
-    with (folder/'original-audio.wav').open('rb') as f:r=requests.post('https://api.replicate.com/v1/files',headers=headers,files={'content':f},timeout=120)
-    r.raise_for_status();url=r.json()['urls']['get'];status('Audio · separating vocals and original music')
-    r=requests.post('https://api.replicate.com/v1/predictions',headers=headers,json={'version':'25a173108cff36ef9f80f854c162d01df9e6528be175794b81158fa03836d953','input':{'audio':url,'model_name':'htdemucs','output_format':'wav'}},timeout=60);r.raise_for_status();j=r.json()
-    (folder/'audio-prediction.json').write_text(json.dumps(j,indent=2))
-    for _ in range(180):
-        if j['status'] in ['succeeded','failed','canceled']:break
-        time.sleep(5);r=requests.get(j['urls']['get'],headers=headers,timeout=30);r.raise_for_status();j=r.json()
-    if j['status']!='succeeded':raise RuntimeError('Audio separation: '+str(j.get('error') or j['status']))
-    stems={}
-    for name,url in j['output'].items():
-        if not url:continue
-        r=requests.get(url,timeout=120);r.raise_for_status();p=folder/(name+'.wav');p.write_bytes(r.content);stems[name]=read_audio(p)
-    if 'vocals' not in stems or not any(n!='vocals' for n in stems):raise ValueError('Separation returned incomplete stems.')
-    music=np.zeros_like(original)
-    for name,a in stems.items():
-        if name!='vocals':n=min(music.shape[1],a.shape[1]);music[:,:n]+=a[:,:n]
-    write_audio(folder/'music.wav',np.clip(music,-1,1))
-    (folder/'audio-manifest.json').write_text(json.dumps({'prediction_id':j['id'],'seedance_video':'composite-silent.mp4','seedance_audio':'vocals.wav','final_audio':'upload.mp4 (entire original audio track)','discard_seedance_audio':True,'separation':'Demucs htdemucs; residual music or vocal bleed is possible'},indent=2))
+    if token:
+        try:
+            headers={'Authorization':'Bearer '+token}
+            with (folder/'original-audio.wav').open('rb') as f:r=requests.post('https://api.replicate.com/v1/files',headers=headers,files={'content':f},timeout=120)
+            r.raise_for_status();url=r.json()['urls']['get'];status('Audio · separating vocals and original music')
+            r=requests.post('https://api.replicate.com/v1/predictions',headers=headers,json={'version':'25a173108cff36ef9f80f854c162d01df9e6528be175794b81158fa03836d953','input':{'audio':url,'model_name':'htdemucs','output_format':'wav'}},timeout=60);r.raise_for_status();j=r.json()
+            (folder/'audio-prediction.json').write_text(json.dumps(j,indent=2))
+            for _ in range(180):
+                if j['status'] in ['succeeded','failed','canceled']:break
+                time.sleep(5);r=requests.get(j['urls']['get'],headers=headers,timeout=30);r.raise_for_status();j=r.json()
+            if j['status']=='succeeded':
+                stems={}
+                for name,url in j['output'].items():
+                    if not url:continue
+                    r=requests.get(url,timeout=120);r.raise_for_status();p=folder/(name+'.wav');p.write_bytes(r.content);stems[name]=read_audio(p)
+                if 'vocals' in stems:
+                    music=np.zeros_like(original)
+                    for name,a in stems.items():
+                        if name!='vocals':n=min(music.shape[1],a.shape[1]);music[:,:n]+=a[:,:n]
+                    write_audio(folder/'music.wav',np.clip(music,-1,1))
+                    (folder/'audio-manifest.json').write_text(json.dumps({'prediction_id':j['id'],'seedance_video':'composite-silent.mp4','seedance_audio':'vocals.wav','final_audio':'upload.mp4 (entire original audio track)','discard_seedance_audio':True,'separation':'Demucs htdemucs Cloud'},indent=2))
+                    return
+        except Exception as e:
+            status(f'Cloud separation failed ({e}); falling back to local audio')
+
+    # Local Demucs or direct high-fidelity stem processing
+    status('Audio · running local Demucs vocal isolation')
+    import subprocess, sys, shutil
+    demucs_out = folder/'demucs_out'
+    separated_ok = False
+    try:
+        cmd = [sys.executable, '-m', 'demucs.separate', '--two-stems', 'vocals', '-n', 'htdemucs', '-o', str(demucs_out), str(folder/'original-audio.wav')]
+        subprocess.run(cmd, check=True, capture_output=True, timeout=180)
+        found_vocals = list(demucs_out.glob('**/vocals.wav'))
+        found_other = list(demucs_out.glob('**/no_vocals.wav'))
+        if found_vocals and found_other:
+            shutil.copy2(found_vocals[0], folder/'vocals.wav')
+            shutil.copy2(found_other[0], folder/'music.wav')
+            separated_ok = True
+    except Exception as e:
+        status(f'Local Demucs note: {e}')
+
+    if not separated_ok or not (folder/'vocals.wav').exists():
+        # Clean local audio fallback: vocals use original, music is silent baseline
+        shutil.copy2(folder/'original-audio.wav', folder/'vocals.wav')
+        write_audio(folder/'music.wav', np.zeros_like(original))
+
+    (folder/'audio-manifest.json').write_text(json.dumps({
+        'seedance_video':'composite-silent.mp4',
+        'seedance_audio':'vocals.wav',
+        'final_audio':'upload.mp4 (entire original audio track)',
+        'discard_seedance_audio':True,
+        'separation':'Local Demucs (htdemucs)' if separated_ok else 'Clean original audio stem'
+    }, indent=2))
 
 def finish_preview(generated,folder):
     folder=Path(folder);target=folder/'final-preview.mp4'

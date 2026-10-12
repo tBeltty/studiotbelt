@@ -28,19 +28,19 @@ def finish(c,s):
     c.close()
 
 def normalize(src,dst):
-    with av.open(str(src)) as inp:
-        vs=inp.streams.video[0];rate=float(vs.average_rate or 24)
-        dur=float(vs.duration*vs.time_base) if vs.duration else float(inp.duration/av.time_base)
-        if dur>30:raise ValueError('Use a clip of 30 seconds or less for this hosted workflow.')
-        it=iter(inp.decode(video=0));cur=next(it);start=float(cur.time or 0);nxt=next(it,None)
-        scale=min(1,960/max(cur.width,cur.height));w=max(2,int(cur.width*scale)//2*2);h=max(2,int(cur.height*scale)//2*2)
-        out,stream=writer(dst,w,h);count=round(dur*24)
-        for i in range(count):
-            t=i/24+start
-            while nxt is not None and float(nxt.time)<=t:cur=nxt;nxt=next(it,None)
-            a=np.asarray(cur.to_image().resize((w,h),Image.Resampling.LANCZOS));put(out,stream,a,i)
-        finish(out,stream)
-    return {'frames':count,'fps':24,'width':w,'height':h,'duration':count/24}
+    import subprocess
+    cmd = [
+        'ffmpeg', '-y', '-i', str(src),
+        '-vf', "fps=24,scale='min(960,iw)':-2",
+        '-c:v', 'libx264', '-crf', '18', '-preset', 'fast',
+        '-c:a', 'aac', '-b:a', '192k',
+        str(dst)
+    ]
+    subprocess.run(cmd, check=True, capture_output=True)
+    with av.open(str(dst)) as inp:
+        vs = inp.streams.video[0]
+        dur = float(inp.duration / av.time_base) if inp.duration else 15.0
+        return {'frames': vs.frames or round(dur * 24), 'fps': 24, 'width': vs.width, 'height': vs.height, 'duration': dur}
 
 def file_path(x):
     if isinstance(x,str):return x

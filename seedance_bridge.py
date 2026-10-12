@@ -1,11 +1,135 @@
 from pathlib import Path
-import json,requests,re,time,concurrent.futures
+import json, requests, re, time, concurrent.futures
 from config import credential, setting
-from media_host import upload
 from audio_workflow import finish_preview
 
-def submit(folder,prompt,sirio,tein=None,status=print):
-    folder=Path(folder)
+def is_fal_active():
+    key = setting('FAL_KEY')
+    return bool(key) and not any(x in key.lower() for x in ['your_key', 'replace_me', 'placeholder'])
+
+def submit_fal(folder, prompt, sirio, tein=None, status=print):
+    import fal_client
+    folder = Path(folder)
+    from mask_review import require_approved, is_mesh
+    require_approved(folder)
+    if (folder/'seedance-response.json').exists():
+        raise ValueError('This job already has a provider response. Resume it; prepare a new job for a deliberate variation.')
+
+    if not (folder/'audio-manifest.json').exists():
+        raise ValueError('Audio separation must complete before submission.')
+
+    from audio_workflow import prepare_seedance_video
+    status('Pitching isolated vocals +3 semitones and embedding in guided video')
+    prepared = folder/'seedance-input.mp4' if is_mesh(folder) else prepare_seedance_video(folder)
+
+    status('Uploading video and character references to fal.ai high-speed CDN')
+    video_url = fal_client.upload_file(str(prepared))
+    image_url = fal_client.upload_file(str(sirio))
+
+    model_id = setting('FAL_MODEL', 'fal-ai/live-portrait')
+    status(f'Submitting to {model_id} via fal.ai')
+
+    if 'live-portrait' in model_id:
+        args = {
+            'video_url': video_url,
+            'image_url': image_url
+        }
+    else:
+        args = {
+            'video_url': video_url,
+            'prompt': prompt
+        }
+
+    handler = fal_client.submit(model_id, arguments=args)
+    ident = handler.request_id
+
+    req_data = {'provider': 'fal.ai', 'model': model_id, 'arguments': args, 'prompt': prompt, 'is_draft': True}
+    (folder/'seedance-request.json').write_text(json.dumps(req_data, indent=2))
+    res_data = {'requestId': ident, 'provider': 'fal.ai', 'model': model_id}
+    (folder/'seedance-response.json').write_text(json.dumps(res_data, indent=2))
+    (folder/'generation.json').write_text(json.dumps({
+        'request_id': ident,
+        'prompt': prompt,
+        'video': 'seedance-result.mp4',
+        'mode': 'fal_live_portrait' if 'live-portrait' in model_id else 'fal_video',
+        'provider': 'fal.ai'
+    }, indent=2))
+    status(f'fal.ai generation queued: {ident}')
+    return ident
+
+def wait_and_finish_fal(folder, request_id, status=print):
+    import fal_client
+    folder = Path(folder)
+    resp_file = folder/'seedance-response.json'
+    model_id = 'fal-ai/live-portrait'
+    if resp_file.exists():
+        model_id = json.loads(resp_file.read_text()).get('model', model_id)
+
+    status('Rendering video through fal.ai…')
+    for _ in range(180):
+        s = fal_client.status(model_id, request_id, with_logs=True)
+        status_str = getattr(s, 'status', str(s))
+        (folder/'provider-status.json').write_text(json.dumps({'status': status_str, 'request_id': request_id}, indent=2))
+
+        if 'COMPLETED' in status_str or 'OK' in status_str or type(s).__name__ == 'Completed':
+            status('Retrieving result from fal.ai')
+            res = fal_client.result(model_id, request_id)
+            video_url = None
+            if isinstance(res, dict):
+                if 'video' in res and isinstance(res['video'], dict):
+                    video_url = res['video'].get('url')
+                elif 'output' in res and isinstance(res['output'], dict):
+                    video_url = res['output'].get('url')
+                elif 'video_url' in res:
+                    video_url = res['video_url']
+
+            if not video_url:
+                raise ValueError(f'Could not find video URL in fal.ai result: {res}')
+
+            r = requests.get(video_url, timeout=180)
+            r.raise_for_status()
+            (folder/'seedance-result.mp4').write_bytes(r.content)
+            status('Restoring entire untouched original source audio · discarding generated audio')
+            finish_preview(folder/'seedance-result.mp4', folder)
+            return
+
+        if 'FAILED' in status_str or 'CANCELED' in status_str:
+            raise RuntimeError(f'fal.ai task {status_str}')
+
+        time.sleep(5)
+    raise TimeoutError('fal.ai task is still pending. Request ID saved.')
+
+def submit_hd_fal(folder):
+    folder = Path(folder)
+    if (folder/'hd/response.json').exists():
+        raise ValueError('HD already submitted. Resume its saved request.')
+    original = json.loads((folder/'seedance-request.json').read_text())
+    if not (folder/'final-preview.mp4').exists():
+        raise ValueError('A completed draft is required before generating 1080p.')
+
+    hd = folder/'hd'
+    hd.mkdir(exist_ok=True)
+    source = hd/'upload.mp4'
+    if not source.exists():
+        import shutil; shutil.copy2(folder/'upload.mp4', source)
+
+    import fal_client
+    model_id = original.get('model', 'fal-ai/live-portrait')
+    args = dict(original.get('arguments', {}))
+
+    handler = fal_client.submit(model_id, arguments=args)
+    ident = handler.request_id
+    res_data = {'requestId': ident, 'provider': 'fal.ai', 'model': model_id}
+    (hd/'request.json').write_text(json.dumps(args, indent=2))
+    (hd/'response.json').write_text(json.dumps(res_data, indent=2))
+    (hd/'seedance-response.json').write_text(json.dumps(res_data, indent=2))
+    return ident
+
+def submit(folder, prompt, sirio, tein=None, status=print):
+    if is_fal_active():
+        return submit_fal(folder, prompt, sirio, tein, status)
+
+    folder = Path(folder)
     from mask_review import require_approved, is_mesh
     require_approved(folder)
     if (folder/'seedance-response.json').exists():raise ValueError('This job already has a provider response. Resume it; prepare a new job for a deliberate variation.')
@@ -16,6 +140,7 @@ def submit(folder,prompt,sirio,tein=None,status=print):
     status('Pitching isolated vocals +3 semitones and embedding in colored-depth video')
     prepared=folder/'seedance-input.mp4' if is_mesh(folder) else prepare_seedance_video(folder)
     status('Uploading video with embedded vocals and character references')
+    from media_host import upload
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:urls=list(pool.map(upload,[prepared,sirio]+([tein] if tein else [])))
     p={'resolution':'1080p','output_format':'mp4','pass_faces':True,'webhook_url':setting('ENHANCOR_WEBHOOK_URL','')}
     p.update(mode='edit',is_draft=True,aspect_ratio='adaptive',videos=[urls[0]],audios=[],images=urls[1:],prompt=prompt.replace('@Audio1', 'the audio embedded in @Video1')+'\n@Video1 contains the colored-depth composite and embedded isolated vocals pitched up three semitones, without the music bed; use its embedded audio for performance and lip synchronization. '+('@Image1 is the primary character reference; @Image2 is the secondary character reference.' if tein else '@Image1 is the only replacement character reference.'));p.pop('duration',None)
@@ -46,7 +171,10 @@ def submit(folder,prompt,sirio,tein=None,status=print):
     status('Seedance draft submitted: '+ident)
     return ident
 
-def wait_and_finish(folder,request_id,status=print):
+def wait_and_finish(folder, request_id, status=print):
+    if is_fal_active():
+        return wait_and_finish_fal(folder, request_id, status)
+
     folder=Path(folder)
     key=credential('ENHANCOR_API_KEY')
     for _ in range(360):
@@ -63,9 +191,10 @@ def wait_and_finish(folder,request_id,status=print):
         time.sleep(10)
     raise TimeoutError('Seedance is still pending. Request ID saved; do not resubmit automatically.')
 
-
 def submit_hd(folder):
-    """Complete the accepted draft; Enhancor reuses its original parameters."""
+    if is_fal_active():
+        return submit_hd_fal(folder)
+
     folder=Path(folder)
     if (folder/'hd/response.json').exists():raise ValueError('HD already submitted. Resume its saved request.')
     generation=json.loads((folder/'generation.json').read_text())
@@ -75,7 +204,6 @@ def submit_hd(folder):
     payload={'draft_id':generation['request_id'],'webhook_url':original['webhook_url']}
     key=credential('ENHANCOR_API_KEY')
     hd=folder/'hd';hd.mkdir(exist_ok=True)
-    # Keep the draft intact and use the exact source audio for the HD export.
     source=hd/'upload.mp4'
     if not source.exists():__import__('shutil').copy2(folder/'upload.mp4',source)
     (hd/'request.json').write_text(json.dumps(payload,indent=2))

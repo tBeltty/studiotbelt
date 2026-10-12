@@ -1,17 +1,37 @@
+# Environment & Secrets
 .env
-.venv/
-__pycache__/
-*.pyc
-runs/
-*.log
-.DS_Store
-
-.runtime-webhook.json
-
 .env.*
 !.env.example
 *.pem
 *.key
 
+# Python Virtual Environments & Caches
+.venv/
 .venv-face/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Runtime Artifacts & Logs
+runs/
+*.log
+server.log
+tunnel.log
+.runtime-webhook.json
 models/
+
+# OS & Editor
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+.vscode/
+
+# Internal Agent & Research Notes
+HANDOFF.md
+docs/HIGGSFIELD-*.md
+.unity/
