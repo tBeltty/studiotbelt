@@ -48,6 +48,78 @@ def file_path(x):
     if isinstance(x,dict):return file_path(x.get('video') or x.get('path'))
     raise ValueError('Provider did not return a downloadable video.')
 
+def depth_fal(src,dst):
+    token = os.getenv('FAL_KEY')
+    if not token:
+        raise ValueError('fal.ai depth requires FAL_KEY configured in settings.')
+    import fal_client
+    video_url = fal_client.upload_file(str(src))
+    result = fal_client.subscribe(
+        "fal-ai/depth-anything-video",
+        arguments={
+            "video_url": video_url,
+            "model_size": "base"
+        }
+    )
+    url = result.get('video', {}).get('url') if isinstance(result.get('video'), dict) else result.get('video')
+    if not url:
+        raise ValueError(f'fal.ai depth did not return video: {result}')
+    r = requests.get(url, timeout=180)
+    r.raise_for_status()
+    Path(dst).write_bytes(r.content)
+
+def segment_fal(src,dst,prompt="person"):
+    token = os.getenv('FAL_KEY')
+    if not token:
+        raise ValueError('fal.ai SAM 3 requires FAL_KEY configured in settings.')
+    import fal_client
+    video_url = fal_client.upload_file(str(src))
+    result = fal_client.subscribe(
+        "fal-ai/sam-3/video",
+        arguments={
+            "video_url": video_url,
+            "prompt": prompt,
+            "apply_mask": True
+        }
+    )
+    url = result.get('video', {}).get('url') if isinstance(result.get('video'), dict) else result.get('video')
+    if not url:
+        raise ValueError(f'fal.ai SAM 3 did not return video: {result}')
+    r = requests.get(url, timeout=180)
+    r.raise_for_status()
+    Path(dst).write_bytes(r.content)
+
+def composite_fal(original_path, depth_path, sam_path, directory, audio_source=None):
+    directory = Path(directory)
+    with av.open(str(original_path)) as c_orig, av.open(str(depth_path)) as c_dep, av.open(str(sam_path)) as c_sam:
+        orig_stream = c_orig.streams.video[0]
+        w, h = orig_stream.width, orig_stream.height
+        c_mask_out, s_mask_out = writer(str(directory / 'mask.mp4'), w, h)
+        c_comp_out, s_comp_out = writer(str(directory / 'composite-silent.mp4'), w, h)
+        frame_idx = 0
+        for f_orig, f_dep, f_sam in zip(c_orig.decode(video=0), c_dep.decode(video=0), c_sam.decode(video=0)):
+            arr_orig = f_orig.to_ndarray(format='rgb24')
+            arr_dep = f_dep.to_ndarray(format='rgb24')
+            arr_sam = f_sam.to_ndarray(format='rgb24')
+            mask = (arr_sam > 10).any(axis=-1)[:, :, None]
+            mask_rgb = np.repeat(mask.astype(np.uint8) * 255, 3, axis=2)
+            comp = np.where(mask, arr_dep, arr_orig)
+            put(c_mask_out, s_mask_out, mask_rgb, frame_idx)
+            put(c_comp_out, s_comp_out, comp, frame_idx)
+            frame_idx += 1
+        finish(c_mask_out, s_mask_out)
+        finish(c_comp_out, s_comp_out)
+    final = directory / 'composite.mp4'
+    with av.open(str(directory / 'composite-silent.mp4')) as video, av.open(str(audio_source or original_path)) as aud, av.open(str(final), 'w') as output:
+        vs = output.add_stream_from_template(video.streams.video[0])
+        astream = output.add_stream_from_template(aud.streams.audio[0]) if aud.streams.audio else None
+        for packet in video.demux(video=0):
+            if packet.dts is not None: packet.stream = vs; output.mux(packet)
+        if aud.streams.audio:
+            for packet in aud.demux(audio=0):
+                if packet.dts is not None: packet.stream = astream; output.mux(packet)
+    return frame_idx
+
 def depth_hf(src,dst):
     c=Client(DEPTH,token=os.getenv('HF_TOKEN') or None,verbose=False)
     result=c.predict({'video':handle_file(str(src))},max_len=-1,target_fps=24,max_res=960,grayscale=False,api_name='/infer_video_depth')
@@ -126,22 +198,55 @@ def composite(original,depth,seg,directory,audio_source=None):
                 if packet.dts is not None:packet.stream=astream;output.mux(packet)
     return counts[0]
 
-def run(src,directory,prompt='person',provider='replicate',status=print):
+def run(src,directory,prompt='person',provider=None,status=print):
     directory=Path(directory);directory.mkdir(parents=True,exist_ok=True)
-    from audio_workflow import separate
-    separate(src,directory,status)
-    status('Preparing video · 24 fps');meta=normalize(src,directory/'original.mp4')
-    status('Video Depth Anything · generating depth')
-    if provider=='huggingface':depth_hf(directory/'original.mp4',directory/'depth-raw.mp4')
-    else:depth_replicate(directory/'original.mp4',directory/'depth-raw.mp4', 'chenxwh/depth-any-video' if provider=='replicate-chenxwh' else 'lucataco/depth-anything-video')
-    shutil.copyfile(directory/'depth-raw.mp4',directory/'depth.mp4')
-    status('SAM 3 · segmenting the depth subject')
-    from raw_masks import segment_raw,clean_border_fragments
-    raw_dir=clean_border_fragments(segment_raw(directory/'depth.mp4',directory,prompt))
-    status('Compositing · depth subject over original background')
-    composite(directory/'original.mp4',directory/'depth.mp4',raw_dir,directory,src)
-    from audio_workflow import prepare_seedance_video
-    status('Embedding isolated vocals · +3 semitones')
-    prepare_seedance_video(directory)
-    meta.update(prompt=prompt,depth_provider=provider,sam_space=SAM,mask_method='SAM 3 raw PNG masks')
-    (directory/'manifest.json').write_text(json.dumps(meta,indent=2));status('Complete')
+    active_prov = provider
+    if not active_prov or active_prov in ['auto', 'local']:
+        if os.getenv('FAL_KEY'):
+            active_prov = 'fal'
+        elif os.getenv('REPLICATE_API_TOKEN'):
+            active_prov = 'replicate'
+        else:
+            active_prov = 'fal'
+
+    if active_prov == 'fal':
+        status('1/4 Normalizando video y formato (24 fps)...')
+        meta = normalize(src, directory / 'original.mp4')
+        status('2/4 Video Depth Anything · generando profundidad 3D en la nube...')
+        depth_fal(directory / 'original.mp4', directory / 'depth.mp4')
+        status('3/4 SAM 3 · segmentando sujetos y ropa en la nube...')
+        segment_fal(directory / 'original.mp4', directory / 'sam.mp4', prompt=prompt)
+        status('Compositing · depth subject over original background')
+        composite_fal(directory / 'original.mp4', directory / 'depth.mp4', directory / 'sam.mp4', directory, src)
+        status('4/4 Aislamiento vocal y ajuste de tono (+3 semitonos)...')
+        from audio_workflow import separate, prepare_seedance_video
+        separate(src, directory, status)
+        prepare_seedance_video(directory)
+        meta.update(prompt=prompt, depth_provider='fal', sam_space='fal-ai/sam-3/video', mask_method='SAM 3 video mask')
+        (directory / 'manifest.json').write_text(json.dumps(meta, indent=2))
+        status('Complete')
+        return meta
+    else:
+        status('1/4 Aislamiento vocal...')
+        from audio_workflow import separate
+        separate(src, directory, status)
+        status('2/4 Preparando video (24 fps)...')
+        meta = normalize(src, directory / 'original.mp4')
+        status('3/4 Video Depth Anything · generando profundidad...')
+        if active_prov == 'huggingface':
+            depth_hf(directory / 'original.mp4', directory / 'depth-raw.mp4')
+        else:
+            depth_replicate(directory / 'original.mp4', directory / 'depth-raw.mp4', 'chenxwh/depth-any-video' if active_prov == 'replicate-chenxwh' else 'lucataco/depth-anything-video')
+        shutil.copyfile(directory / 'depth-raw.mp4', directory / 'depth.mp4')
+        status('4/4 SAM 3 · segmentando sujetos...')
+        from raw_masks import segment_raw, clean_border_fragments
+        raw_dir = clean_border_fragments(segment_raw(directory / 'depth.mp4', directory, prompt))
+        status('Compositing · depth subject over original background')
+        composite(directory / 'original.mp4', directory / 'depth.mp4', raw_dir, directory, src)
+        from audio_workflow import prepare_seedance_video
+        status('Ajuste de tono vocal (+3 semitonos)...')
+        prepare_seedance_video(directory)
+        meta.update(prompt=prompt, depth_provider=active_prov, sam_space=SAM, mask_method='SAM 3 raw PNG masks')
+        (directory / 'manifest.json').write_text(json.dumps(meta, indent=2))
+        status('Complete')
+        return meta

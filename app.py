@@ -57,9 +57,10 @@ def health_endpoint():
     return {'status': 'ok', 'binaries': bins}
 
 @app.post('/jobs')
-def create(video:UploadFile=File(...),prompt:str=Form('person'),provider:str=Form('local'),mode:str=Form('face_mesh')):
-    if mode not in ['face_mesh','depth','depth_mesh']:raise HTTPException(400,'Unknown workflow mode')
-    if provider not in ['local','fal','huggingface','replicate','replicate-chenxwh']:raise HTTPException(400,'Unknown provider')
+def create(video:UploadFile=File(...),prompt:str=Form('person'),provider:str=Form('auto'),mode:str=Form('depth')):
+    if mode not in ['face_mesh','depth','depth_mesh','cloud_depth']:raise HTTPException(400,'Unknown workflow mode')
+    if mode == 'cloud_depth': mode = 'depth'
+    if provider not in ['auto','local','fal','huggingface','replicate','replicate-chenxwh']:raise HTTPException(400,'Unknown provider')
     ident=uuid.uuid4().hex;folder=RUNS/ident;folder.mkdir();src=folder/'upload.mp4'
     with src.open('wb') as out:shutil.copyfileobj(video.file,out)
     jobs[ident]={'state':'running','status':'Starting','id':ident}
@@ -71,7 +72,9 @@ def create(video:UploadFile=File(...),prompt:str=Form('person'),provider:str=For
             elif mode=='depth_mesh':
                 from face_mesh import run_depth
                 run_depth(src,folder,prompt,provider,lambda s:jobs[ident].update(status=s))
-            else:run(src,folder,prompt,provider,lambda s:jobs[ident].update(status=s))
+            else:
+                from pipeline import run
+                run(src,folder,prompt,provider,lambda s:jobs[ident].update(status=s))
             jobs[ident].update(state='done',status='Preparation complete · input review required')
             (folder/'status.json').write_text(json.dumps(jobs[ident]))
         except Exception as e:

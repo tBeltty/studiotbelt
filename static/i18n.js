@@ -37,20 +37,38 @@ const I18N = {
     's1.companion_alt': 'Gato Director',
     's1.upload_title': 'Elegir video original',
     's1.upload_sub': 'MP4, MOV o WebM · hasta 30 segundos',
-    's1.smart_pill': '⚡ <b>Configuración Óptima</b>: Malla Facial (MediaPipe) + Aislamiento Vocal (Demucs)',
+    's1.mode_cloud_title': 'Profundidad 3D + SAM 3',
+    's1.mode_cloud_badge': 'Recomendado · Cloud',
+    's1.mode_cloud_desc': 'Inferencia cloud ultra-rápida. Segmenta sujetos completos, ropa y cabello (~$0.005/req).',
+    's1.mode_mesh_title': 'Malla Facial Rápida',
+    's1.mode_mesh_badge': 'Experimental · Local',
+    's1.mode_mesh_desc': 'Rastreo facial 2D con MediaPipe. Óptimo para cámara web o un solo sujeto centrado.',
+    's1.smart_pill': '☁️ <b>Configuración Óptima</b>: Profundidad 3D (fal.ai) + SAM 3 + Aislamiento Vocal',
     's1.hint': '<b>Paso 1 de 2</b>: Sube tu clip y prepáralo con un solo clic.',
     's1.button': '⚡ 1 Clic: Preparar Video →',
     's1.btn_preparing': '⚡ Preparando Video...',
     'prog.title': 'Preparando video con IA...',
-    'prog.subtitle': 'Tu Mac está normalizando el video, rastreando la malla facial y aislando el audio.',
+    'prog.subtitle': 'Generando mapas de profundidad 3D, segmentación SAM 3 y aislando pistas vocales.',
     'prog.uploading': 'Subiendo archivo de video...',
     'prog.done_title': '¡Video preparado con éxito!',
-    'prog.done_sub': 'Malla facial y pistas vocales listas. Revisa el resultado abajo.',
+    'prog.done_sub': 'Video preparado con audio original impecable. Revisa el resultado abajo.',
     'prog.error_title': 'Error en la preparación',
-    'prog.ms1': 'Subida y Normalización',
-    'prog.ms2': 'Malla Facial (MediaPipe)',
-    'prog.ms3': 'Aislamiento Vocal (Demucs)',
-    'prog.ms4': 'Listo para Revisión',
+    'prog.ms1': 'Subida y Formato',
+    'prog.ms2': 'Profundidad 3D (Cloud AI)',
+    'prog.ms2_mesh': 'Malla Facial (MediaPipe)',
+    'prog.ms3': 'Segmentación SAM 3 (Cloud AI)',
+    'prog.ms3_audio': 'Aislamiento Vocal (Demucs)',
+    'prog.ms4': 'Audio +3 st y Revisión',
+    'prog.status_ms1': '1/4 Normalizando video y formato (24 fps)...',
+    'prog.status_ms2': '2/4 Video Depth Anything · generando profundidad 3D en la nube...',
+    'prog.status_ms2_mesh': '2/4 Rastreo de malla facial con MediaPipe...',
+    'prog.status_ms3': '3/4 SAM 3 · segmentando sujetos y ropa en la nube...',
+    'prog.status_ms3_audio': '3/4 Aislamiento vocal y pistas de audio...',
+    'prog.status_ms4': '4/4 Aislamiento vocal y ajuste de tono (+3 semitonos)...',
+    'prog.status_ms4_pitch': '4/4 Ajustando tono vocal (+3 semitonos)...',
+    'prog.status_done': '✓ Video preparado exitosamente · Listo para revisión',
+    'status.rendering': 'Generando video con IA…',
+    'status.retrieving': 'Descargando resultado de IA…',
     'prog.retry': 'Reintentar preparación',
     'prog.ready_banner': '✓ ¡Preparación completada! Revisa el resultado abajo.',
     'settings.title': 'Ajustes del Motor Generativo',
@@ -168,20 +186,38 @@ const I18N = {
     's1.companion_alt': 'Cat Director',
     's1.upload_title': 'Choose original video',
     's1.upload_sub': 'MP4, MOV or WebM · up to 30 seconds',
-    's1.smart_pill': '⚡ <b>Optimal Setup</b>: Face Mesh (MediaPipe) + Vocal Isolation (Demucs)',
+    's1.mode_cloud_title': '3D Depth + SAM 3',
+    's1.mode_cloud_badge': 'Recommended · Cloud',
+    's1.mode_cloud_desc': 'Ultra-fast cloud inference. Segments full bodies, clothing and hair (~$0.005/req).',
+    's1.mode_mesh_title': 'Fast Face Mesh',
+    's1.mode_mesh_badge': 'Experimental · Local',
+    's1.mode_mesh_desc': '2D facial tracking with MediaPipe. Best for webcam or single centered speaker.',
+    's1.smart_pill': '☁️ <b>Optimal Setup</b>: 3D Depth (fal.ai) + SAM 3 + Vocal Isolation',
     's1.hint': '<b>Step 1 of 2</b>: Upload your clip and prepare it in 1 click.',
     's1.button': '⚡ 1-Click: Prepare Video →',
     's1.btn_preparing': '⚡ Preparing Video...',
     'prog.title': 'Preparing video with AI...',
-    'prog.subtitle': 'Your Mac is normalizing video, tracking face mesh, and isolating audio tracks.',
+    'prog.subtitle': 'Generating 3D depth maps, SAM 3 segmentation, and isolated vocal stems.',
     'prog.uploading': 'Uploading video file...',
     'prog.done_title': 'Video prepared successfully!',
-    'prog.done_sub': 'Face mesh and vocal stems are ready. Review the result below.',
+    'prog.done_sub': 'Prepared video with pristine original audio. Review the result below.',
     'prog.error_title': 'Preparation error',
-    'prog.ms1': 'Upload & Normalize',
-    'prog.ms2': 'Face Mesh (MediaPipe)',
-    'prog.ms3': 'Vocal Isolation (Demucs)',
-    'prog.ms4': 'Ready for Review',
+    'prog.ms1': 'Upload & Format',
+    'prog.ms2': '3D Depth (Cloud AI)',
+    'prog.ms2_mesh': 'Face Mesh (MediaPipe)',
+    'prog.ms3': 'SAM 3 Segmentation (Cloud AI)',
+    'prog.ms3_audio': 'Vocal Isolation (Demucs)',
+    'prog.ms4': 'Vocals +3 st & Review',
+    'prog.status_ms1': '1/4 Normalizing video and framerate (24 fps)...',
+    'prog.status_ms2': '2/4 Video Depth Anything · generating 3D depth in cloud...',
+    'prog.status_ms2_mesh': '2/4 Facial mesh tracking with MediaPipe...',
+    'prog.status_ms3': '3/4 SAM 3 · segmenting subjects and clothing in cloud...',
+    'prog.status_ms3_audio': '3/4 Vocal isolation and audio stems...',
+    'prog.status_ms4': '4/4 Vocal isolation and pitch shifting (+3 semitones)...',
+    'prog.status_ms4_pitch': '4/4 Pitch shifting vocals (+3 semitones)...',
+    'prog.status_done': '✓ Video prepared successfully · Ready for review',
+    'status.rendering': 'Generating AI video…',
+    'status.retrieving': 'Downloading AI generation…',
     'prog.retry': 'Retry preparation',
     'prog.ready_banner': '✓ Preparation complete! Review your result below.',
     'settings.title': 'Video Generation Engine Settings',
@@ -316,6 +352,46 @@ function setLanguage(lang) {
   // Dispatch custom event for dynamic components
   window.dispatchEvent(new CustomEvent('languagechange', { detail: { lang } }));
 }
+
+function localizeStatus(status) {
+  if (!status) return '';
+  const s = status.toLowerCase();
+  if (s.includes('1/4') || s.includes('normaliz')) {
+    return t('prog.status_ms1');
+  }
+  if (s.includes('2/4') || s.includes('depth') || s.includes('profundidad')) {
+    return t('prog.status_ms2');
+  }
+  if (s.includes('malla') || s.includes('mesh') || s.includes('mediapipe')) {
+    return t('prog.status_ms2_mesh');
+  }
+  if (s.includes('3/4') || s.includes('sam') || s.includes('segment')) {
+    return t('prog.status_ms3');
+  }
+  if (s.includes('vocal') && (s.includes('aislamiento') || s.includes('separating'))) {
+    return t('prog.status_ms3_audio');
+  }
+  if (s.includes('4/4') || s.includes('tono') || s.includes('pitch') || s.includes('semitono')) {
+    return t('prog.status_ms4');
+  }
+  if (s.includes('compositing') || s.includes('composición')) {
+    return currentLang === 'en' ? 'Compositing · depth subject over original background' : 'Composición · sujeto de profundidad sobre fondo original';
+  }
+  if (s.includes('complete') || s.includes('exitosamente') || s.includes('listo para revisión') || s.includes('input review required')) {
+    return t('prog.status_done');
+  }
+  if (s.includes('rendering') || s.includes('generando')) {
+    return t('status.rendering');
+  }
+  if (s.includes('retrieving') || s.includes('descargando')) {
+    return t('status.retrieving');
+  }
+  return status;
+}
+
+window.localizeStatus = localizeStatus;
+window.t = t;
+window.setLanguage = setLanguage;
 
 function initI18n() {
   let savedLang = null;

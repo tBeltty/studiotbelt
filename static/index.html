@@ -553,6 +553,86 @@
       gap: 12px;
     }
 
+    /* Mode Selector Grid */
+    .mode-options-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    @media (max-width: 640px) {
+      .mode-options-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .mode-option-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 14px 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .mode-option-card:hover {
+      border-color: var(--border-medium);
+      background: var(--bg-elevated);
+    }
+
+    .mode-option-card.selected {
+      border-color: var(--accent);
+      background: rgba(242, 177, 52, 0.05);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .mode-option-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .mode-option-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mode-option-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .mode-option-badge.recommended {
+      background: var(--success-bg);
+      color: var(--success-text);
+      border-color: var(--success-border);
+    }
+
+    .mode-option-desc {
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
     /* Settings Modal & Backdrop */
     .modal-backdrop {
       position: fixed;
@@ -1305,16 +1385,27 @@
           <button type="button" id="clear-video-btn" class="btn btn-secondary" style="min-height: 28px; padding: 4px 10px; font-size: 11px;">Cambiar ✕</button>
         </div>
 
-        <!-- Zero broken dependencies: Native Fast Face Mesh + Demucs Vocal Isolation -->
-        <input type="hidden" name="mode" value="face_mesh">
-        <input type="hidden" name="provider" value="local">
+        <!-- Processing Mode Selector -->
+        <div class="mode-options-grid" id="mode-selector-group">
+          <label class="mode-option-card selected" id="card-mode-depth">
+            <input type="radio" name="mode" value="depth" checked style="position: absolute; opacity: 0; pointer-events: none;">
+            <div class="mode-option-header">
+              <span class="mode-option-title">☁️ <span data-i18n="s1.mode_cloud_title">Profundidad 3D + SAM 3</span></span>
+              <span class="mode-option-badge recommended" data-i18n="s1.mode_cloud_badge">Recomendado · Cloud</span>
+            </div>
+            <p class="mode-option-desc" data-i18n="s1.mode_cloud_desc">Inferencia cloud ultra-rápida. Segmenta sujetos completos, ropa y cabello (~$0.005/req).</p>
+          </label>
 
-        <!-- Preset Badge -->
-        <div style="margin: 14px 0;">
-          <div class="meta-pill" style="color: var(--success-text); border-color: var(--success-border); background: var(--success-bg); font-size: 13px; padding: 8px 14px;" data-i18n="s1.smart_pill">
-            ⚡ <b>Configuración Óptima</b>: Malla Facial (MediaPipe) + Aislamiento Vocal (Demucs)
-          </div>
+          <label class="mode-option-card" id="card-mode-mesh">
+            <input type="radio" name="mode" value="face_mesh" style="position: absolute; opacity: 0; pointer-events: none;">
+            <div class="mode-option-header">
+              <span class="mode-option-title">⚡ <span data-i18n="s1.mode_mesh_title">Malla Facial Rápida</span></span>
+              <span class="mode-option-badge" data-i18n="s1.mode_mesh_badge">Experimental · Local</span>
+            </div>
+            <p class="mode-option-desc" data-i18n="s1.mode_mesh_desc">Rastreo facial 2D con MediaPipe. Óptimo para cámara web o un solo sujeto centrado.</p>
+          </label>
         </div>
+        <input type="hidden" name="provider" value="auto">
 
         <div class="actions-bar" id="step1-actions-bar">
           <span class="field-hint" data-i18n="s1.hint"><b>Paso 1 de 2</b>: Sube tu clip y prepáralo con un solo clic.</span>
@@ -1330,7 +1421,7 @@
               <div class="processing-pulse" id="progress-pulse-dot"></div>
               <div>
                 <h4 id="progress-headline" class="processing-headline" data-i18n="prog.title">Preparando video con IA...</h4>
-                <div id="progress-subtitle" class="field-hint" data-i18n="prog.subtitle">Normalizando video, rastreando malla facial y aislando audio.</div>
+                <div id="progress-subtitle" class="field-hint" data-i18n="prog.subtitle">Generando mapas de profundidad 3D, segmentación SAM 3 y aislando pistas vocales.</div>
               </div>
             </div>
             <div class="timer-pill" id="progress-timer">⏱ 00:00</div>
@@ -1348,19 +1439,19 @@
           <div class="pipeline-milestones">
             <div class="milestone-item active" id="ms-1">
               <span class="ms-indicator">1</span>
-              <span class="ms-label" data-i18n="prog.ms1">Subida y Normalización</span>
+              <span class="ms-label" data-i18n="prog.ms1">Subida y Formato</span>
             </div>
             <div class="milestone-item" id="ms-2">
               <span class="ms-indicator">2</span>
-              <span class="ms-label" data-i18n="prog.ms2">Malla Facial (MediaPipe)</span>
+              <span class="ms-label" data-i18n="prog.ms2">Profundidad 3D (Cloud AI)</span>
             </div>
             <div class="milestone-item" id="ms-3">
               <span class="ms-indicator">3</span>
-              <span class="ms-label" data-i18n="prog.ms3">Aislamiento Vocal (Demucs)</span>
+              <span class="ms-label" data-i18n="prog.ms3">Segmentación SAM 3 (Cloud AI)</span>
             </div>
             <div class="milestone-item" id="ms-4">
               <span class="ms-indicator">4</span>
-              <span class="ms-label" data-i18n="prog.ms4">Listo para Revisión</span>
+              <span class="ms-label" data-i18n="prog.ms4">Audio +3 st y Revisión</span>
             </div>
           </div>
         </div>
@@ -1653,7 +1744,8 @@
     }
 
     function status(tText, error = false) {
-      $('#status-text').textContent = t(tText, tText);
+      const localized = window.localizeStatus ? window.localizeStatus(tText) : t(tText, tText);
+      $('#status-text').textContent = localized;
       $('#status').classList.toggle('error', error);
       $('#status').classList.toggle('running', busy);
       const dismissBtn = $('#dismiss-error-btn');
@@ -1665,11 +1757,39 @@
       dismissBtn.onclick = () => resetJob();
     }
 
+    // Mode selector card click logic
+    const modeCards = document.querySelectorAll('.mode-option-card');
+    function selectMode(card) {
+      if (!card) return;
+      modeCards.forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      const radio = card.querySelector('input[type="radio"]');
+      if (radio) radio.checked = true;
+      updateModeMilestones(radio ? radio.value : 'depth');
+    }
+    modeCards.forEach(card => {
+      card.addEventListener('click', () => selectMode(card));
+    });
+
+    function updateModeMilestones(mode) {
+      const ms2 = document.querySelector('#ms-2 .ms-label');
+      const ms3 = document.querySelector('#ms-3 .ms-label');
+      if (mode === 'depth') {
+        if (ms2) ms2.textContent = t('prog.ms2');
+        if (ms3) ms3.textContent = t('prog.ms3');
+      } else {
+        if (ms2) ms2.textContent = t('prog.ms2_mesh');
+        if (ms3) ms3.textContent = t('prog.ms3_audio');
+      }
+    }
+
     // Initialize i18n
     if (typeof initI18n === 'function') {
       initI18n();
     }
     window.addEventListener('languagechange', () => {
+      const activeCard = document.querySelector('.mode-option-card.selected input[type="radio"]');
+      updateModeMilestones(activeCard ? activeCard.value : 'depth');
       if (jobId) refresh();
     });
 
@@ -1812,7 +1932,7 @@
 
       if (fillEl) fillEl.style.width = p + '%';
       if (pctEl) pctEl.textContent = p + '%';
-      if (msg && msgEl) msgEl.textContent = msg;
+      if (msg && msgEl) msgEl.textContent = (window.localizeStatus ? window.localizeStatus(msg) : msg);
 
       if (isError) {
         if (pulseDot) pulseDot.style.background = 'var(--danger-text)';
@@ -1974,18 +2094,18 @@
           let p = 35;
           let ms = 1;
           const s = (j.status || '').toLowerCase();
-          if (s.includes('[1/4]') || s.includes('normaliz')) {
-            ms = 1;
-            p = 40;
-          } else if (s.includes('[2/4]') || s.includes('malla') || s.includes('mesh') || s.includes('mediapipe')) {
-            ms = 2;
-            p = 65;
-          } else if (s.includes('[3/4]') || s.includes('demucs') || s.includes('vocal') || s.includes('audio')) {
-            ms = 3;
-            p = 85;
-          } else if (s.includes('[4/4]') || s.includes('listo') || s.includes('complet')) {
+          if (s.includes('4/4') || s.includes('[4/4]') || s.includes('listo') || s.includes('complet')) {
             ms = 4;
             p = 95;
+          } else if (s.includes('3/4') || s.includes('[3/4]') || s.includes('sam') || s.includes('segment') || s.includes('compositing') || s.includes('composición')) {
+            ms = 3;
+            p = 80;
+          } else if (s.includes('2/4') || s.includes('[2/4]') || s.includes('depth') || s.includes('profundidad') || s.includes('malla') || s.includes('mesh') || s.includes('mediapipe')) {
+            ms = 2;
+            p = 60;
+          } else if (s.includes('1/4') || s.includes('[1/4]') || s.includes('normaliz')) {
+            ms = 1;
+            p = 40;
           }
           updateProgress(p, j.status, ms);
           pollTimer = setTimeout(watch, 1000);
