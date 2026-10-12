@@ -22,10 +22,11 @@ The entire source audio (vocal stems, music, sound design, and ambience) is pres
    - Vocals are frequency-modulated by +3 semitones while retaining sample-accurate duration and syllable timing.
    - Guidance audio is embedded into the synthesis stream, with full original source audio restored on final export.
 
-2. **Native MediaPipe 478-Point Face Mesh**:
-   - Real-time 3D facial landmark calculation using Google's quantized TensorFlow Lite model (`face_landmarker.task`, ~3.6 MB).
-   - Adaptive portrait cropping (`x0=0.20*w, cw=0.60*w, ch=0.75*h`) for facial detection across both close-ups and wide cinematic shots.
-   - Temporal smoothing across rapid head turns to maintain continuous tracking coordinates.
+2. **Flexible Step 01 Preparation: Cloud Depth/SAM vs. Local Face Mesh**:
+   - **Cloud SAM 3 + Depth (fal.ai)**: High-speed serverless segmentation (`fal-ai/sam-3/video` at $0.005 + `fal-ai/depth-anything-video` at $0.012 = **~$0.017 USD** per clip). Fully tracks multiple actors, body contours, and background details across fast camera cuts.
+   - **Free Cloud Hugging Face Spaces**: Official repo default using ZeroGPU (`linoyts/SAM3-Video` + `depth-anything/Video-Depth-Anything`) via a free `HF_TOKEN` (**$0.00 / 100% Free**).
+   - **Local MediaPipe 478-Point Face Mesh (Mac CPU)**: 100% offline execution via Google's quantized TFLite model (`face_landmarker.task`, ~3.6 MB) with temporal landmark smoothing (**$0.00 / Zero API calls**).
+   - ⚠️ **Multi-Person Limitation on Mac**: The local Face Mesh worker is calibrated strictly for a **single centered speaker**. In scenes featuring 2 or more actors (e.g. duo dialogue scenes like Quavo & Takeoff), the local detector flickers, jumps, or locks onto only one face, leaving other subjects unmasked. **Always use Depth + SAM 3 for multi-person footage.**
 
 3. **Provider-Agnostic Video Recasting & In-App Settings**:
    - Connect and switch generative video backends through the in-app Settings modal (⚙️ Settings) or environment variables.

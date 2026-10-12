@@ -71,6 +71,23 @@ $$\text{Crop} = \left[ x_0 = 0.20 \cdot W, \, y_0 = 0, \, w = 0.60 \cdot W, \, h
 ### Temporal Occlusion Smoothing
 During rapid head turns, yaw rotations, or brief downward glances, detection confidence can drop momentarily. Instead of terminating execution with a tracking fault, the landmark processor carries forward the previous valid landmark matrix and linearly interpolates coordinates until re-acquisition, guaranteeing uninterrupted guidance frames.
 
+### Multi-Person Architectural Limitation on Local CPU
+The local MediaPipe FaceLandmarker processor is mathematically constrained to a single bounding crop:
+$$\text{Crop} = \left[ x_0 = 0.20 \cdot W, \, y_0 = 0, \, w = 0.60 \cdot W, \, h = 0.75 \cdot H \right]$$
+
+When two or more subjects share the frame (e.g., dual interviews, rap duos, dialog scenes):
+- The single-crop window cannot encapsulate both faces simultaneously.
+- Landmark tracking frequently oscillates between subjects across cuts, causing severe jitter or completely abandoning the secondary character.
+- **Resolution**: Multi-person footage requires full-frame semantic segmentation (Option 1: `fal-ai/sam-3/video` or Option 2: `linoyts/SAM3-Video` on Hugging Face Spaces), which extracts pixel-level masks for all bodies and faces across the entire 1920×1080 canvas without cropping.
+
+### Step 01 Preparation Mode Comparison
+
+| Mode | Engine | Cost | Multi-Person? | Latency | Infrastructure |
+|---|---|---|---|---|---|
+| **Cloud SAM 3 + Depth** | `fal-ai/sam-3/video` + `fal-ai/depth-anything-video` | **~$0.017 USD** | ✅ Yes (Full frame) | ~15–20s | Serverless GPUs |
+| **Free Cloud Spaces** | `linoyts/SAM3-Video` + `depth-anything/Video-Depth-Anything` | **$0.00 (Free)** | ✅ Yes (Full frame) | Variable (Queue) | HF ZeroGPU |
+| **Local Face Mesh** | MediaPipe TFLite (CPU) via `setup-face-mesh.sh` | **$0.00 (Free)** | ❌ No (Single speaker) | ~6–8s | Local Mac CPU |
+
 ---
 
 ## 3. Audio Engineering: Demucs + Pitch Shift

@@ -42,17 +42,34 @@ The system maintains a provider-agnostic architecture allowing instant switching
 Enhancor Edit accepts exactly one video: the prepared source. If the replacement identity reference is a video, use multi_reference (Omni), with prepared source @Video1 and identity reference @Video2. Use the identity clip for appearance only unless the user explicitly asks to use its voice or performance. Do not convert that reference to pictures without permission. For image references, default to Edit. Show the actual mode in the UI and saved generation metadata. Omni requires duration and aspect ratio; use the source framing and nearest supported duration. Preserve the full source audio in the final export and disclose any necessary short last-frame hold.
 
 
-## Fast alternative: face mesh
+## Step 01 Preparation & Motion Guidance Options
 
-Choose **Fast · Face mesh** in the UI, or use `workflow.py prepare VIDEO --mode face_mesh`. Install the optional worker once with `bash setup-face-mesh.sh` (Python 3.12 required; isolated `.venv-face`). The model downloads from Google's official storage on first use.
+The system supports four distinct motion guidance and segmentation pipelines during Step 01:
 
-This path keeps the original video, tracks and saves facial landmarks, draws the mesh, isolates vocals and embeds the +3 pitched vocals. It makes **no depth or SAM calls**. It is currently designed for a single centered speaker; inspect all frames and stop on tracking gaps or incorrect face alignment. Do not claim mask review in this mode: review facial tracking and audio instead. Saved artifact hashes gate submission.
+### 1. Cloud SAM 3 + Depth Anything (via fal.ai)
+- **Endpoints**: `fal-ai/sam-3/video` (\$0.005) and `fal-ai/depth-anything-video` (\$0.012).
+- **Total Cost**: **~\$0.017 USD** for the entire clip.
+- **Multi-Person Support**: ✅ **Full Multi-Subject Tracking**. Seamlessly tracks multiple people, bodies, clothing, background elements, and rapid camera cuts across the entire frame.
+- **Speed**: Cloud serverless GPUs (~15–20s execution).
 
-Use the same character references, draft-first submission, collection, original-audio restoration and explicitly approved HD upgrade. In the prompt, explain that mesh lines are motion guidance and must disappear, replace the complete original identity including hair, and preserve all dialogue and timing. Image reference uses Edit; video identity uses Omni. Keep advanced depth mode available. Do not submit automatically during setup.
+### 2. Free Cloud Hugging Face Spaces (Original Repo Default)
+- **Endpoints**: `linoyts/SAM3-Video` and `depth-anything/Video-Depth-Anything`.
+- **Requirements**: Free Hugging Face account and `HF_TOKEN`.
+- **Total Cost**: **\$0.00 (100% Free)**.
+- **Multi-Person Support**: ✅ **Full Multi-Subject Tracking**.
+- **Trade-off**: Queue wait times on Hugging Face ZeroGPU during peak global traffic.
 
+### 3. Free Local Face Mesh on Mac (MediaPipe TFLite)
+- **Setup**: Install isolated worker via `bash setup-face-mesh.sh` (Python 3.12 required; `.venv-face`).
+- **Engine**: Google Face Landmarker 478-point 3D landmark model via TensorFlow Lite CPU.
+- **Total Cost**: **\$0.00 (100% Free, Zero API calls, 100% offline)**.
+- ⚠️ **CRITICAL LOCAL / MAC LIMITATION — SINGLE CENTERED SPEAKER ONLY**:
+  - The local pipeline relies on an adaptive portrait crop (`[x0=0.20*w, cw=0.60*w, ch=0.75*h]`) and single-landmark matrix interpolation.
+  - **It CANNOT track multiple faces or bodies simultaneously** (e.g. duo dialogue scenes like Quavo & Takeoff).
+  - In multi-person scenes, the local detector suffers tracking jumps, flickers, or locks onto only one actor, leaving other subjects unmasked.
+  - **Rule**: For scenes containing 2 or more subjects, **always choose Depth + SAM 3** (Option 1 or Option 2). Never use Fast Face Mesh on multi-person footage.
 
-### Combined depth + face mesh
-
-Select **Advanced + Face mesh** in the UI or use `workflow.py prepare VIDEO --mode depth_mesh`. This runs the original depth/SAM pipeline, preserves its depth composite, then tracks the face from the original frames and overlays the mesh onto that composite. Landmarks are saved in `face-landmarks.json`. Review BOTH mask coverage and face tracking before approval. All artifacts, including depth, mask, mesh and embedded audio, are bound to review approval. Follow the same draft → approved HD → original-audio restoration flow.
-
-For setup with all three preparation modes, also install Python 3.12 and run `bash setup-face-mesh.sh`. This creates an isolated mesh environment; the main app can retain its existing Python version. A Google Face Landmarker model is downloaded at first use. No SAM/depth inference is used by fast mode. Mesh modes are experimental and currently optimized for one centered speaker.
+### 4. Combined Depth + Face Mesh
+- Select **Advanced + Face mesh** in UI or `workflow.py prepare VIDEO --mode depth_mesh`.
+- Runs Depth/SAM segmentation first, then overlays the 478-point landmark mesh on the depth composite.
+- Review BOTH mask coverage and facial tracking before signing off. Artifact hashes gate downstream submission.
