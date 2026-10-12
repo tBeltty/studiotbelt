@@ -1157,7 +1157,10 @@
         <div class="status-indicator" id="status-indicator"></div>
         <span id="status-text" class="status-text" data-i18n="status.initial">Selecciona tu video original para iniciar el flujo.</span>
       </div>
-      <div id="job-info-pill" class="job-badge" style="display:none;" title="Click to copy Job ID"></div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" id="dismiss-error-btn" class="btn btn-secondary" style="display:none; padding: 2px 8px; font-size: 11px; min-height: 24px;">✕ Descartar</button>
+        <div id="job-info-pill" class="job-badge" style="display:none;" title="Click to copy Job ID"></div>
+      </div>
     </div>
 
     <!-- ==========================================
@@ -1485,10 +1488,34 @@
 
     const base = () => '/runs/' + jobId + '/';
 
+    function resetJob() {
+      jobId = null;
+      if (window.location.search) {
+        history.replaceState(null, '', window.location.pathname);
+      }
+      const pill = $('#job-info-pill');
+      if (pill) pill.style.display = 'none';
+      const dismissBtn = $('#dismiss-error-btn');
+      if (dismissBtn) dismissBtn.style.display = 'none';
+      $('#status').classList.remove('error', 'running');
+      $('#status-text').textContent = t('status.initial');
+      const dash = $('#processing-dashboard');
+      if (dash) dash.hidden = true;
+      $('#go').disabled = false;
+      stopProcTimer();
+    }
+
     function status(tText, error = false) {
       $('#status-text').textContent = t(tText, tText);
       $('#status').classList.toggle('error', error);
       $('#status').classList.toggle('running', busy);
+      const dismissBtn = $('#dismiss-error-btn');
+      if (dismissBtn) dismissBtn.style.display = error ? 'inline-block' : 'none';
+    }
+
+    const dismissBtn = $('#dismiss-error-btn');
+    if (dismissBtn) {
+      dismissBtn.onclick = () => resetJob();
     }
 
     // Initialize i18n
@@ -1542,6 +1569,9 @@
         const placeholder = uploadZone ? uploadZone.querySelector('.upload-icon') : null;
 
         if (input.id === 'video-file-input') {
+          if ($('#status').classList.contains('error')) {
+            resetJob();
+          }
           const strip = $('#video-preview-strip');
           if (strip) {
             $('#preview-filename').textContent = f.name;
@@ -1569,6 +1599,7 @@
       clearVideoBtn.onclick = e => {
         e.preventDefault();
         e.stopPropagation();
+        resetJob();
         const vidInput = $('#video-file-input');
         if (vidInput) vidInput.value = '';
         const strip = $('#video-preview-strip');
