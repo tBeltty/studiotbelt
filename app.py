@@ -1,5 +1,6 @@
 from pathlib import Path
-import os,sys,threading,uuid,shutil,json
+from contextlib import asynccontextmanager
+import os,sys,threading,uuid,shutil,json,concurrent.futures
 
 import config  # Initializes hardened cross-platform PATH and environment
 
@@ -9,7 +10,16 @@ from fastapi.staticfiles import StaticFiles
 from pipeline import run
 ROOT=Path(__file__).resolve().parent
 RUNS=ROOT/'runs';RUNS.mkdir(exist_ok=True)
-app=FastAPI();jobs={}
+jobs={}
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix='studio_worker')
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    resume_saved_generations()
+    yield
+    executor.shutdown(wait=False)
+
+app=FastAPI(lifespan=lifespan)
 
 @app.middleware("http")
 async def add_no_cache_headers(request, call_next):
@@ -77,7 +87,7 @@ def create(video:UploadFile=File(...),prompt:str=Form('person'),provider:str=For
         except Exception as e:
             jobs[ident].update(state='error',status=str(e))
             (folder/'status.json').write_text(json.dumps(jobs[ident]))
-    threading.Thread(target=work,daemon=True).start();return jobs[ident]
+    executor.submit(work);return jobs[ident]
 @app.get('/jobs/{ident}')
 def get(ident:str):
     if ident not in jobs:
@@ -123,7 +133,7 @@ def seedance(ident:str,prompt:str=Form(...),sirio:UploadFile=File(...),tein:Uplo
             jobs[ident].update(state='done',status='Final preview ready · entire original source audio',final_url='/runs/'+ident+'/final-preview.mp4')
         except Exception as e:jobs[ident].update(state='error',status=str(e))
         (folder/'status.json').write_text(json.dumps(jobs[ident]))
-    threading.Thread(target=collect,daemon=True).start()
+    executor.submit(collect)
     return {'request_id':request_id,'id':ident,'state':'running','status':jobs[ident]['status']}
 
 @app.post('/jobs/{ident}/finish')
@@ -177,7 +187,7 @@ def create_hd(ident:str):
             hd_jobs[ident].update(state='done',status='1080p ready · original source audio restored')
         except Exception as e:hd_jobs[ident].update(state='error',status=str(e))
         save()
-    threading.Thread(target=work_hd,daemon=True).start()
+    executor.submit(work_hd)
     return hd_jobs[ident]
 
 @app.get('/jobs/{ident}/mask-review')
@@ -193,7 +203,6 @@ def save_mask_review(ident:str,approved:bool=Form(...),fingerprint:str=Form(...)
 
 app.mount('/static',StaticFiles(directory=ROOT/'static'),name='static')
 
-@app.on_event('startup')
 def resume_saved_generations():
     """Resume collection only: never requeue a paid prediction on restart."""
     from seedance_bridge import wait_and_finish
@@ -212,8 +221,8 @@ def resume_saved_generations():
                     registry[ident].update(state='done',status='Final preview ready · original source audio')
                 except Exception as e:registry[ident].update(state='error',status=str(e))
                 (folder/'status.json').write_text(json.dumps(registry[ident]))
-            threading.Thread(target=collect_saved,daemon=True).start()
+            executor.submit(collect_saved)
 
 @app.get('/health')
 def health():
-    return {'status':'ok','service':'TEIN Video Workflow'}
+    return {'status':'ok','service':'tBelt Studio'}

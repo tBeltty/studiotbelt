@@ -84,11 +84,25 @@ def update_settings(provider_id, key=None, extra=None):
         os.environ[env_var] = key.strip()
         updates[env_var] = key.strip()
 
+    ALLOWED_ENV_VARS = {
+        'ACTIVE_PROVIDER',
+        'FAL_KEY',
+        'ENHANCOR_API_KEY',
+        'ENHANCOR_BASE_URL',
+        'ENHANCOR_WEBHOOK_URL',
+        'REPLICATE_API_TOKEN',
+        'COMFY_URL',
+        'MEDIA_HOST',
+        'MEDIA_HOST_FALLBACKS',
+        'CATBOX_USERHASH'
+    }
+
     if extra and isinstance(extra, dict):
         for k, v in extra.items():
-            if v:
-                os.environ[k] = str(v).strip()
-                updates[k] = str(v).strip()
+            if k in ALLOWED_ENV_VARS and v is not None:
+                cleaned = str(v).strip()
+                os.environ[k] = cleaned
+                updates[k] = cleaned
 
     # Safely persist to .env
     lines = []

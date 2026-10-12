@@ -6,10 +6,16 @@ from PIL import ImageDraw
 root = Path(sys.argv[1]).resolve()
 source = root / 'original.mp4'
 model = Path(__file__).resolve().parent / 'models/face_landmarker.task'
+MODEL_SHA256 = '64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff'
 if not model.exists():
+    import hashlib
     model.parent.mkdir(exist_ok=True)
     temporary = model.with_suffix('.download')
     urllib.request.urlretrieve('https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task', str(temporary))
+    digest = hashlib.sha256(temporary.read_bytes()).hexdigest()
+    if digest != MODEL_SHA256:
+        temporary.unlink(missing_ok=True)
+        raise ValueError(f"Model integrity verification failed: expected {MODEL_SHA256}, got {digest}")
     temporary.replace(model)
 
 opts = mp.tasks.vision.FaceLandmarkerOptions(
