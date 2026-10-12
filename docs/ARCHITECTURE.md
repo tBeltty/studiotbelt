@@ -81,9 +81,9 @@ Because tracking is constrained to one face per frame, multi-subject scenes requ
 
 | Mode | Engine | Cost | Multi-Person? | Latency | Infrastructure |
 |---|---|---|---|---|---|
-| **Cloud SAM 3 + Depth** | `fal-ai/sam-3/video` + `fal-ai/depth-anything-video` | **~$0.017 USD** | ✅ Yes (Full frame) | ~15–20s | Serverless GPUs |
-| **Free Cloud Spaces** | `linoyts/SAM3-Video` + `depth-anything/Video-Depth-Anything` | **$0.00 (Free)** | ✅ Yes (Full frame) | Variable (Queue) | HF ZeroGPU |
-| **Local Face Mesh** | MediaPipe TFLite (CPU) via `setup-face-mesh.sh` | **$0.00 (Free)** | ❌ No (Single speaker) | ~6–8s | Local Mac CPU |
+| **Cloud SAM 3 + Depth** | `fal-ai/sam-3/video` + `fal-ai/depth-anything-video` | **~$0.017 USD** | Yes (Full frame) | ~15–20s | Serverless GPUs |
+| **Free Cloud Spaces** | `linoyts/SAM3-Video` + `depth-anything/Video-Depth-Anything` | **$0.00 (Free)** | Yes (Full frame) | Variable (Queue) | HF ZeroGPU |
+| **Local Face Mesh** | MediaPipe TFLite (CPU) via `setup-face-mesh.sh` | **$0.00 (Free)** | No (Single speaker) | ~6–8s | Local Mac CPU |
 
 ---
 

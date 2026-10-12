@@ -29,7 +29,7 @@ The entire source audio (vocal stems, music, sound design, and ambience) is pres
    - **Limitation**: The local Face Mesh model tracks a single face per frame. Multi-subject scenes require full-frame segmentation (SAM 3).
 
 3. **Provider-Agnostic Video Recasting & In-App Settings**:
-   - Connect and switch generative video backends through the in-app Settings modal (⚙️ Settings) or environment variables.
+   - Connect and switch generative video backends through the in-app Settings modal or environment variables.
    - Designed for video-to-video subject identity transfer:
      - **fal.ai — Wan 2.2 Animate Replace (`fal-ai/wan/v2.2-14b/animate/replace`)**: Budget pay-as-you-go (\$0.04/s at 480p, \$0.08/s at 720p; ~\$0.60–\$1.20 for 15s).
      - **fal.ai — MiniMax H3 Max Recast (`minimax/h3-max/recast`)**: Cinematic quality (\$0.45/s at 1080p, \$0.30/s at 768p; ~\$6.75 for 15s).
@@ -40,7 +40,7 @@ The entire source audio (vocal stems, music, sound design, and ambience) is pres
 
 4. **Single Page Application with Live Progress**:
    - Asynchronous upload tracking via `XMLHttpRequest` with exact byte counts and percentage indicators (`X.X MB / Y.Y MB`).
-   - Active session timer (`⏱ mm:ss`) and 4-phase milestone tracking (Normalization, Mesh, Audio, Review).
+   - Active session timer (`mm:ss`) and 4-phase milestone tracking (Normalization, Mesh, Audio, Review).
    - In-memory artifact manifest (`Set.has()`) for zero-overhead validation and clean browser console logs.
    - Smooth client-side state transitions with `history.pushState` and quick error dismissal.
 
@@ -126,7 +126,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # 3. Configure credentials
-# Either configure through the in-app Settings modal (⚙️ Ajustes)
+# Either configure through the in-app Settings modal
 # or populate your .env file:
 cp .env.example .env
 # Set FAL_KEY, ENHANCOR_API_KEY, REPLICATE_API_TOKEN, or COMFY_URL
@@ -149,16 +149,16 @@ open http://127.0.0.1:8770
 1. **Step 01 — Upload & Preparation**:
    - Drag and drop your original video clip (up to 30 seconds).
    - Observe instant file verification (size and filename).
-   - Click **⚡ 1-Click: Prepare Video**. Watch the real-time upload bar and milestone indicators progress through normalization, MediaPipe mesh tracking, and Demucs stem isolation.
+   - Click **Prepare Video**. Watch the real-time upload bar and milestone indicators progress through normalization, MediaPipe mesh tracking, and Demucs stem isolation.
 2. **Step 02 — Verification & Review**:
    - Review the prepared motion guide with isolated vocal tracks.
    - Inspect individual audio stems (`vocals.wav`, `vocals-plus3.wav`, `music.wav`).
-   - Click **✓ Approve & Continue to Character**.
+   - Click **Approve & Continue to Character**.
 3. **Step 03 — Character Synthesis**:
    - Upload the reference photo of the new character (face or body).
    - Verify prompt synthesis instructions.
    - Select your active generative engine (fal.ai, Enhancor, Replicate, or ComfyUI).
-   - Click **✨ 2-Click: Generate Character** to dispatch draft generation.
+   - Click **Generate Character** to dispatch draft generation.
 4. **Step 04 — Master Export**:
    - Inspect the draft preview with pristine original source audio restored.
    - Approve 1080p high-definition upgrade when satisfied.

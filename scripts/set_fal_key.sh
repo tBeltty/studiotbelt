@@ -24,5 +24,5 @@ sed -i '' '/^FAL_KEY=/d' .env 2>/dev/null || sed -i '/^FAL_KEY=/d' .env
 echo "FAL_KEY=\"${FAL_INPUT}\"" >> .env
 chmod 600 .env
 
-echo "✓ FAL_KEY saved successfully to .env (permissions 600)"
+echo "FAL_KEY saved successfully to .env (permissions 600)"
 echo ""

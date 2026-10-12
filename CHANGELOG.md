@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automated engine auto-detection with fallback to the user's active configured key.
   - Endpoints `GET /api/settings` and `POST /api/settings` for runtime configuration without manual terminal intervention.
 - **In-App Engine Settings Modal & Onboarding (`static/index.html`, `static/i18n.js`)**:
-  - Interactive settings modal (⚙️ Ajustes) with provider selector cards, connection indicators, and key persistence.
+  - Interactive settings modal (Settings) with provider selector cards, connection indicators, and key persistence.
   - Active engine indicator badge in top navigation and Step 03 character creation panel.
   - Non-intrusive onboarding banner displayed when no generation engine is configured.
 - **Daemon Environment & Binary Resolution Hardening (`config.py`, `pipeline.py`, `audio_workflow.py`)**:
@@ -46,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Async generation workflow with polling, request ID tracking, and two-stage draft validation before 1080p export.
 - **Production SPA Frontend with Real-Time Feedback (`static/index.html`)**:
   - Live upload progress indicator via `XMLHttpRequest` (0% to 30%) with exact uploaded bytes and total size (`X.X MB / Y.Y MB`).
-  - Active session stopwatch (`⏱ mm:ss`) displaying real-time execution duration.
+  - Active session stopwatch (`mm:ss`) displaying real-time execution duration.
   - 4-phase visual pipeline milestone tracker:
     1. Upload & Normalization
     2. Face Mesh (MediaPipe)

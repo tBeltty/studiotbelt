@@ -11,16 +11,16 @@ def run(src,folder,status=print):
     if not python.exists():
         python=Path(sys.executable)
     folder.mkdir(parents=True,exist_ok=True)
-    status('1/4 Normalizando video y formato (24 fps)...')
+    status('1/4 Normalizing video and format (24 fps)...')
     normalize(src,folder/'original.mp4')
-    status('2/4 Rastreo de malla facial con MediaPipe...')
+    status('2/4 Facial mesh tracking with MediaPipe...')
     subprocess.run([str(python),str(ROOT/'mesh_worker.py'),str(folder)],check=True)
     (folder/'workflow-mode.json').write_text(json.dumps({'mode':'face_mesh'}))
-    status('3/4 Aislamiento vocal y pistas de audio...')
+    status('3/4 Vocal isolation and audio stems...')
     separate(src,folder,status)
-    status('4/4 Ajustando tono vocal (+3 semitonos)...')
+    status('4/4 Pitch shifting vocals (+3 semitones)...')
     prepare_seedance_video(folder)
-    status('✓ Video preparado exitosamente · Listo para revisión')
+    status('Video prepared successfully · Ready for review')
 
 
 def run_depth(src,folder,prompt='person',provider='replicate',status=print):
