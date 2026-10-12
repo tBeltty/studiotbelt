@@ -296,10 +296,27 @@ def wait_and_finish(folder, request_id, status=print):
     raise TimeoutError('Seedance is still pending. Request ID saved; do not resubmit automatically.')
 
 def submit_hd(folder):
-    if is_fal_active():
+    folder = Path(folder)
+    provider = None
+    if (folder/'seedance-response.json').exists():
+        try:
+            resp = json.loads((folder/'seedance-response.json').read_text())
+            provider = resp.get('provider')
+        except Exception:
+            pass
+    if not provider and (folder/'generation.json').exists():
+        try:
+            gen = json.loads((folder/'generation.json').read_text())
+            provider = gen.get('provider')
+        except Exception:
+            pass
+    if not provider:
+        from providers import get_active_provider
+        provider = get_active_provider()
+
+    if provider in ['fal', 'fal.ai']:
         return submit_hd_fal(folder)
 
-    folder=Path(folder)
     if (folder/'hd/response.json').exists():raise ValueError('HD already submitted. Resume its saved request.')
     generation=json.loads((folder/'generation.json').read_text())
     original=json.loads((folder/'seedance-request.json').read_text())

@@ -26,6 +26,6 @@ We will acknowledge receipt within 48 hours and work with you on a resolution be
 
 ## Security Guarantees & Posture
 
-- **API Secrets:** Third-party API tokens (`FAL_KEY`) are read strictly from environment variables or a local `.env` file with `chmod 600` permissions. They are never rendered into client HTML, logs, or response payloads.
+- **API Secrets:** Third-party API credentials (`FAL_KEY`, `ENHANCOR_API_KEY`, `REPLICATE_API_TOKEN`) are read strictly from environment variables or a local `.env` file with `chmod 600` permissions. They are never rendered into client HTML, logs, or response payloads.
 - **Path Traversal Protection:** All file endpoints require strict 32-character hexadecimal path parameters (`[0-9a-f]{32}`), preventing arbitrary filesystem traversal.
 - **Media Sanitization:** Client-uploaded video inputs are sanitized and re-encoded using FFmpeg prior to any downstream processing.
