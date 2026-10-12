@@ -15,28 +15,22 @@ Carry authorized jobs through preparation, quality review, generation and delive
 9. On explicit approval, complete the draft at 1080p using draft_id and webhook_url, then restore original audio again.
 10. Show the final preview and download. Keep status persisted and UI preview selection stable. Never expose credentials.
 
-## Exact Model Category Requirement: Video Recasting / Character Replacement
-The character generation stage (Step 03) requires a **Video Recasting / Video Character Replacement with Identity Transfer** model. It MUST NOT be confused with or substituted by:
-- ❌ **Generic Text-to-Video or Image-to-Video models** (e.g. Sora, Runway Gen-2/3, standard Kling/Hailuo): These hallucinate brand new camera paths, change choreographies, and ruin shot-for-shot pacing.
-- ❌ **Talking-Head / Avatar mesh retargeters** (e.g. LivePortrait, SadTalker): These crop down to 512×512 facial bounding boxes, warp faces into uncanny rubber, cut off actor bodies, and distort aspect ratios.
-- ✅ **Video Recasting Models (Subject Identity Transfer)**: Models that accept a driving composite video + character reference images, track subject motion, gestures, camera framing, cuts, and lighting, and transfer the new character's identity across the full body while leaving background and choreography intact.
+## Model Requirements
+Step 03 requires video-to-video character replacement models with full-body identity transfer that accept a driving composite video alongside character reference assets, maintaining original camera framing, cuts, lighting, and motion choreography.
 
 ### Provider & Pricing Matrix for Video Recasting
-The system maintains a provider-agnostic architecture allowing instant switching:
+The system maintains a provider-agnostic architecture:
 
 1. **Enhancor (ByteDance Seedance 2.5 Edit / Omni)**:
-   - **Cost**: ~\$0.15 – \$0.35 USD per generation (via subscription credits).
-   - **Best for**: Routine production and high-volume iterations.
-   - **Routing**: Image reference uses Seedance Edit; video reference uses Omni multi-reference.
+   - Cost: ~\$0.15 – \$0.35 USD per generation (subscription credits, \$45/mo plan required for API).
+   - Routing: Image reference uses Seedance Edit; video reference uses Omni multi-reference.
 2. **fal.ai — Wan 2.2 Animate Replace (`fal-ai/wan/v2.2-14b/animate/replace`)**:
-   - **Cost**: **\$0.08 / second** at 720p (~\$0.90 – \$1.20 for 15s) | **\$0.04 / second** at 480p (~\$0.60 for 15s).
-   - **Best for**: Ultra-budget cloud testing without a fixed subscription. Open-weights video character swap preserving motion and scene lighting.
+   - Cost: \$0.08/s at 720p (~\$1.20 for 15s) | \$0.04/s at 480p (~\$0.60 for 15s). Pay-as-you-go.
 3. **fal.ai — MiniMax H3 Max Recast (`minimax/h3-max/recast`)**:
-   - **Cost**: **\$0.45 / second** at 1080p (~\$6.75 for 15s) | **\$0.30 / second** at 768p (~\$4.50 for 15s).
-   - **Best for**: Premium, high-end cinematic delivery where multi-person tracking, camera cuts, and maximum photorealism are strictly required.
+   - Cost: \$0.45/s at 1080p (~\$6.75 for 15s) | \$0.30/s at 768p (~\$4.50 for 15s). Pay-as-you-go.
 4. **Replicate / ComfyUI Local**:
-   - Replicate: Wan 2.2 Animate Replace on serverless GPUs.
-   - ComfyUI Local: Free (\$0.00) using local AnimateDiff / IP-Adapter Video / Wan workflows on capable local GPUs.
+   - Replicate: Wan 2.2 on serverless GPUs.
+   - ComfyUI Local: Free (\$0.00) with local GPU.
 
 ## Reference-mode routing (required)
 Enhancor Edit accepts exactly one video: the prepared source. If the replacement identity reference is a video, use multi_reference (Omni), with prepared source @Video1 and identity reference @Video2. Use the identity clip for appearance only unless the user explicitly asks to use its voice or performance. Do not convert that reference to pictures without permission. For image references, default to Edit. Show the actual mode in the UI and saved generation metadata. Omni requires duration and aspect ratio; use the source framing and nearest supported duration. Preserve the full source audio in the final export and disclose any necessary short last-frame hold.
@@ -44,32 +38,17 @@ Enhancor Edit accepts exactly one video: the prepared source. If the replacement
 
 ## Step 01 Preparation & Motion Guidance Options
 
-The system supports four distinct motion guidance and segmentation pipelines during Step 01:
+The system supports three motion guidance pipelines:
 
-### 1. Cloud SAM 3 + Depth Anything (via fal.ai)
-- **Endpoints**: `fal-ai/sam-3/video` (\$0.005) and `fal-ai/depth-anything-video` (\$0.012).
-- **Total Cost**: **~\$0.017 USD** for the entire clip.
-- **Multi-Person Support**: ✅ **Full Multi-Subject Tracking**. Seamlessly tracks multiple people, bodies, clothing, background elements, and rapid camera cuts across the entire frame.
-- **Speed**: Cloud serverless GPUs (~15–20s execution).
-
-### 2. Free Cloud Hugging Face Spaces (Original Repo Default)
-- **Endpoints**: `linoyts/SAM3-Video` and `depth-anything/Video-Depth-Anything`.
-- **Requirements**: Free Hugging Face account and `HF_TOKEN`.
-- **Total Cost**: **\$0.00 (100% Free)**.
-- **Multi-Person Support**: ✅ **Full Multi-Subject Tracking**.
-- **Trade-off**: Queue wait times on Hugging Face ZeroGPU during peak global traffic.
-
-### 3. Free Local Face Mesh on Mac (MediaPipe TFLite)
-- **Setup**: Install isolated worker via `bash setup-face-mesh.sh` (Python 3.12 required; `.venv-face`).
-- **Engine**: Google Face Landmarker 478-point 3D landmark model via TensorFlow Lite CPU.
-- **Total Cost**: **\$0.00 (100% Free, Zero API calls, 100% offline)**.
-- ⚠️ **CRITICAL LOCAL / MAC LIMITATION — SINGLE CENTERED SPEAKER ONLY**:
-  - The local pipeline relies on an adaptive portrait crop (`[x0=0.20*w, cw=0.60*w, ch=0.75*h]`) and single-landmark matrix interpolation.
-  - **It CANNOT track multiple faces or bodies simultaneously** (e.g. duo dialogue scenes like Quavo & Takeoff).
-  - In multi-person scenes, the local detector suffers tracking jumps, flickers, or locks onto only one actor, leaving other subjects unmasked.
-  - **Rule**: For scenes containing 2 or more subjects, **always choose Depth + SAM 3** (Option 1 or Option 2). Never use Fast Face Mesh on multi-person footage.
-
-### 4. Combined Depth + Face Mesh
-- Select **Advanced + Face mesh** in UI or `workflow.py prepare VIDEO --mode depth_mesh`.
-- Runs Depth/SAM segmentation first, then overlays the 478-point landmark mesh on the depth composite.
-- Review BOTH mask coverage and facial tracking before signing off. Artifact hashes gate downstream submission.
+1. **Cloud SAM 3 + Depth Anything (fal.ai)**:
+   - Endpoints: `fal-ai/sam-3/video` (\$0.005) + `fal-ai/depth-anything-video` (\$0.012).
+   - Cost: ~\$0.017 USD per clip. Full multi-subject tracking across the entire frame.
+2. **Free Cloud Hugging Face Spaces**:
+   - Endpoints: `linoyts/SAM3-Video` + `depth-anything/Video-Depth-Anything` via free `HF_TOKEN`.
+   - Cost: \$0.00 (Free). Full multi-subject tracking. Subject to ZeroGPU queue times.
+3. **Free Local Face Mesh on Mac (MediaPipe TFLite)**:
+   - Setup: `bash setup-face-mesh.sh` (Python 3.12, `.venv-face`).
+   - Cost: \$0.00 (Free, offline).
+   - Limitation: Single-subject only. The local TFLite crop window (`[x0=0.20*w, cw=0.60*w, ch=0.75*h]`) tracks one face per frame. Multi-subject scenes require Depth + SAM 3.
+4. **Combined Depth + Face Mesh**:
+   - Select `depth_mesh` mode. Runs Depth/SAM first, then overlays the 478-point landmark mesh on the depth composite.

@@ -22,21 +22,20 @@ The entire source audio (vocal stems, music, sound design, and ambience) is pres
    - Vocals are frequency-modulated by +3 semitones while retaining sample-accurate duration and syllable timing.
    - Guidance audio is embedded into the synthesis stream, with full original source audio restored on final export.
 
-2. **Flexible Step 01 Preparation: Cloud Depth/SAM vs. Local Face Mesh**:
-   - **Cloud SAM 3 + Depth (fal.ai)**: High-speed serverless segmentation (`fal-ai/sam-3/video` at $0.005 + `fal-ai/depth-anything-video` at $0.012 = **~$0.017 USD** per clip). Fully tracks multiple actors, body contours, and background details across fast camera cuts.
-   - **Free Cloud Hugging Face Spaces**: Official repo default using ZeroGPU (`linoyts/SAM3-Video` + `depth-anything/Video-Depth-Anything`) via a free `HF_TOKEN` (**$0.00 / 100% Free**).
-   - **Local MediaPipe 478-Point Face Mesh (Mac CPU)**: 100% offline execution via Google's quantized TFLite model (`face_landmarker.task`, ~3.6 MB) with temporal landmark smoothing (**$0.00 / Zero API calls**).
-   - ⚠️ **Multi-Person Limitation on Mac**: The local Face Mesh worker is calibrated strictly for a **single centered speaker**. In scenes featuring 2 or more actors (e.g. duo dialogue scenes like Quavo & Takeoff), the local detector flickers, jumps, or locks onto only one face, leaving other subjects unmasked. **Always use Depth + SAM 3 for multi-person footage.**
+2. **Flexible Step 01 Preparation (Depth/SAM vs. Local Face Mesh)**:
+   - **Cloud SAM 3 + Depth (fal.ai)**: High-speed serverless segmentation (`fal-ai/sam-3/video` + `fal-ai/depth-anything-video` at ~\$0.017 USD per clip) with multi-subject coverage.
+   - **Free Cloud Hugging Face Spaces**: ZeroGPU inference (`linoyts/SAM3-Video` + `depth-anything/Video-Depth-Anything`) via a free `HF_TOKEN`.
+   - **Local MediaPipe 478-Point Face Mesh (Mac CPU)**: 100% offline execution via Google's quantized TFLite model (`face_landmarker.task`) with temporal landmark smoothing.
+   - **Limitation**: The local Face Mesh model tracks a single face per frame. Multi-subject scenes require full-frame segmentation (SAM 3).
 
 3. **Provider-Agnostic Video Recasting & In-App Settings**:
    - Connect and switch generative video backends through the in-app Settings modal (⚙️ Settings) or environment variables.
-   - Strictly engineered for **Video Recasting / Character Replacement with Identity Transfer** (not potato talking-head avatars, not camera-hallucinating text-to-video).
-   - Supported engines & transparent pricing:
-     - **fal.ai — Wan 2.2 Animate Replace (`fal-ai/wan/v2.2-14b/animate/replace`)**: Budget pay-as-you-go ($0.04/s at 480p, $0.08/s at 720p; ~$0.60–$1.20 for 15s). No monthly subscription required.
-     - **fal.ai — MiniMax H3 Max Recast (`minimax/h3-max/recast`)**: Premium cinematic quality ($0.45/s at 1080p, $0.30/s at 768p; ~$6.75 for 15s). Multi-subject tracking and cinematic lighting.
-     - **Enhancor (Seedance 2.5 Edit / Omni)**: Subscription-gated ($45/month plan required to unlock API; ~$0.15–$0.35/draft in subscription credits).
-     - **Replicate**: Wan 2.2 Animate Replace & video-to-video on serverless GPUs (billed per GPU-second).
-     - **ComfyUI Local**: Self-hosted local AnimateDiff / Wan workflows for offline generation (100% free with local GPU).
+   - Designed for video-to-video subject identity transfer:
+     - **fal.ai — Wan 2.2 Animate Replace (`fal-ai/wan/v2.2-14b/animate/replace`)**: Budget pay-as-you-go (\$0.04/s at 480p, \$0.08/s at 720p; ~\$0.60–\$1.20 for 15s).
+     - **fal.ai — MiniMax H3 Max Recast (`minimax/h3-max/recast`)**: Cinematic quality (\$0.45/s at 1080p, \$0.30/s at 768p; ~\$6.75 for 15s).
+     - **Enhancor (Seedance 2.5 Edit / Omni)**: Subscription-gated (\$45/mo plan required for API; ~\$0.15–\$0.35/draft in credits).
+     - **Replicate**: Wan 2.2 on serverless GPUs billed by GPU-seconds.
+     - **ComfyUI Local**: Self-hosted local workflows (100% free with local GPU).
    - Two-stage workflow: draft preview validation before committing to full 1080p high-definition generation.
 
 4. **Single Page Application with Live Progress**:
@@ -53,15 +52,11 @@ The entire source audio (vocal stems, music, sound design, and ambience) is pres
 
 ---
 
-## Exact Model Category: Video Recasting vs. Talking Heads & Text-to-Video
+## Model Requirements
 
-To achieve cinematic, shot-for-shot character replacement with full body motion, lighting, and dialogue retention, **tBelt Studio** enforces a strict model taxonomy:
+Step 03 requires video-to-video character replacement models with full-body identity transfer that accept a driving composite video alongside character reference assets, maintaining original camera framing, cuts, lighting, and motion choreography.
 
-- ❌ **Generic Text-to-Video / Image-to-Video** (e.g. Sora, Runway Gen-2/3, standard Kling/Hailuo): These hallucinate brand new camera angles, alter pacing, and fail to preserve existing multi-shot choreography.
-- ❌ **Talking-Head / Avatar mesh retargeters** (e.g. LivePortrait, SadTalker): These crop down to 512×512 facial bounding boxes, warp faces like rubber, cut off actor bodies, and distort aspect ratios.
-- ✅ **Video Recasting (Subject Identity Transfer)**: Models that accept a driving composite video + character reference images, track subject motion, gestures, camera framing, cuts, and lighting, and transfer the new identity across the full body while leaving the background and choreography intact.
-
-### Provider & Pricing Trade-Off Matrix
+### Provider & Pricing Matrix
 
 | Provider & Model | Pricing Structure | Estimated Cost (15s Clip) | Best For | Subscription Required? |
 |---|---|---|---|---|
@@ -205,6 +200,4 @@ This project builds upon foundational workflow concepts pioneered by **[Sirio Be
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).  
-Copyright (c) 2026 Sirio Berati  
-Copyright (c) 2026 tBelt Online (https://tbelt.online)
+This project is licensed under the [MIT License](LICENSE).

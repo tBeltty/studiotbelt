@@ -9,43 +9,48 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700;800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     /* ==========================================================================
-       TBELT STUDIO · AUTHENTIC TBELT.ONLINE DESIGN SYSTEM
-       Guidelines: No Glassmorphism · Solid Matte Surfaces · Vercel CLS Immunity · WCAG 2.1 AA
-       Primitives inspired by tbelt.online: Graphite, Bone, Signal Amber, Hyper Teal & Clay
+       TBELT STUDIO · ATMOS DESIGN SYSTEM (ATMOSPHERIC & SLEEK DARK MODE)
+       Standards: Atmos UI · Glassmorphism & Matte Surfaces · WCAG 2.1 AA
+       Palette: Rich Graphite, Bone, Signal Amber, Hyper Teal & Clay
        ========================================================================== */
     :root {
       color-scheme: dark;
       
-      /* Primitives & Surfaces (Solid Matte) */
-      --bg-base: hsl(220 8% 6%);       /* Rich Graphite #0e1014 */
-      --bg-surface: hsl(220 8% 9%);    /* Graphite 2 #15171b */
+      /* Primitives & Surfaces */
+      --bg-base: hsl(220 8% 6%);              /* Rich Graphite #0e1014 */
+      --bg-surface: hsl(220 8% 9%);           /* Graphite 2 #15171b */
+      --bg-surface-glass: hsla(220, 8%, 9%, 0.82); /* Glass surface */
       --bg-elevated: #1a1e26;
       --bg-sunken: #0a0b0e;
       
       /* Borders & Lines */
-      --border-subtle: hsl(40 25% 91% / 0.10);  /* Soft Bone line */
+      --border-subtle: hsl(40 25% 91% / 0.10); /* Soft Bone line */
+      --border-base: hsl(40 25% 91% / 0.14);   /* Standard structural border */
       --border-medium: hsl(40 25% 91% / 0.18);
-      --border-strong: hsl(40 88% 58% / 0.35);  /* Signal tint */
+      --border-strong: hsl(40 88% 58% / 0.35); /* Signal tint */
       
       /* Typography Colors */
-      --text-main: hsl(40 25% 91%);     /* Bone #edeae4 */
-      --text-muted: hsl(40 10% 66%);    /* Bone-dim #aba59c */
-      --text-faint: #68645e;
+      --text-high: #ffffff;                    /* Pure white for maximum contrast */
+      --text-main: hsl(40 25% 91%);            /* Bone #edeae4 */
+      --text-muted: hsl(40 10% 66%);           /* Bone-dim #aba59c */
+      --text-faint: #8a857e;                   /* Calibrated to 4.6:1 WCAG AA contrast on dark background */
       
       /* Signal Accent (Belt Brass / Gold) */
-      --accent: hsl(40 88% 58%);        /* Signal Amber #f5a833 */
+      --accent: hsl(40 88% 58%);               /* Signal Amber #f5a833 */
+      --brand-amber: var(--accent);            /* Unified brand token alias */
       --accent-hover: hsl(40 88% 52%);
       --accent-active: hsl(40 88% 46%);
       --accent-subtle: hsl(40 88% 58% / 0.14);
-      --accent-text: #0e1014;           /* Solid Graphite on Amber for AAA contrast */
+      --accent-glow: 0 0 20px hsl(40 88% 58% / 0.35);
+      --accent-text: #0e1014;                  /* Solid Graphite on Amber for AAA contrast (9.5:1) */
       
       /* Functional Secondary Accents */
-      --success: hsl(168 62% 52%);      /* Hyper Teal #38d9b2 */
+      --success: hsl(168 62% 52%);             /* Hyper Teal #38d9b2 */
       --success-bg: #07251e;
       --success-border: #125644;
       --success-text: #4eeac3;
       
-      --warning: hsl(24 82% 62%);       /* Clay #f08554 */
+      --warning: hsl(24 82% 62%);              /* Clay #f08554 */
       --warning-bg: #2d160c;
       --warning-border: #632a15;
       --warning-text: #f59c73;
@@ -55,22 +60,27 @@
       --danger-border: #5c181f;
       --danger-text: #fca5a5;
 
+      /* Radii */
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 14px;
       --radius-full: 999px;
       
-      /* Fonts from tbelt.online */
+      /* Atmospheric Glassmorphism */
+      --glass-blur: blur(12px);
+      --glass-border: 1px solid rgba(255, 255, 255, 0.10);
+      --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      
+      /* Typography */
       --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       --font-display: 'Bricolage Grotesque', ui-rounded, 'Avenir Next', system-ui, sans-serif;
       --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
     }
 
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      min-width: 0;
     }
 
     body {
@@ -439,7 +449,8 @@
       position: relative;
     }
 
-    .progress-fill {
+    .progress-fill,
+    #gen-progress-fill {
       height: 100%;
       background: linear-gradient(90deg, #d99926, #f2b134, #ffd480);
       background-size: 200% 100%;
@@ -592,6 +603,11 @@
       box-shadow: 0 0 0 1px var(--accent);
     }
 
+    .mode-option-card:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent);
+    }
+
     .mode-option-header {
       display: flex;
       align-items: center;
@@ -720,9 +736,11 @@
       line-height: 1.3;
     }
 
-    /* Panels & Sections with subtle tBelt stitch outline */
+    /* Panels & Sections with Atmos subtle glassmorphism & tBelt stitch outline */
     .panel {
-      background: var(--bg-surface);
+      background: var(--bg-surface-glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-lg);
       outline: 1px dashed hsl(40 88% 58% / 0.18);
@@ -730,6 +748,7 @@
       padding: 24px;
       margin-bottom: 24px;
       scroll-margin-top: 24px;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
     }
 
     .panel-header {
@@ -855,9 +874,12 @@
       transition: border-color 0.15s, background-color 0.15s;
     }
 
-    .upload-zone:hover {
+    .upload-zone:hover,
+    .upload-zone:focus-within,
+    .upload-zone.is-dragover {
       border-color: var(--accent);
       background: var(--bg-elevated);
+      box-shadow: 0 0 0 2px var(--accent-subtle);
     }
 
     .upload-zone input[type=file] {
@@ -977,6 +999,18 @@
       border-color: var(--danger);
     }
 
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+    }
+
+    .btn-ghost:hover:not(:disabled) {
+      background: var(--border-subtle);
+      color: var(--text-high);
+      border-color: var(--border-subtle);
+    }
+
     .btn:disabled {
       opacity: 0.45;
       cursor: not-allowed;
@@ -1047,7 +1081,8 @@
 
     .tab-btn.active {
       background: var(--accent);
-      color: #fff;
+      color: var(--accent-text);
+      font-weight: 700;
       border-color: var(--accent);
     }
 
@@ -1247,13 +1282,32 @@
         gap: 10px;
       }
     }
+
+    /* Accessibility: Reduced motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      .status-bar.running .status-indicator,
+      .processing-pulse,
+      .progress-fill,
+      #gen-progress-fill {
+        animation: none !important;
+      }
+      .progress-fill,
+      #gen-progress-fill,
+      .modal-backdrop,
+      .modal-dialog,
+      .btn,
+      .mode-option-card,
+      .step-item {
+        transition: none !important;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="app-container">
     <!-- Navbar -->
     <header class="navbar">
-      <div class="brand-group" style="cursor: pointer;" onclick="resetJob()" title="Reiniciar sesión">
+      <div class="brand-group" style="cursor: pointer;" onclick="resetJob()" title="Reset session">
         <div class="brand-logo" aria-label="tBelt Logo">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="tBelt">
             <defs>
@@ -1270,21 +1324,18 @@
         </div>
         <div class="brand-title">
           tBelt Studio
-          <span class="badge-tag" data-i18n="brand.badge">Video IA</span>
+          <span class="badge-tag" data-i18n="brand.badge">AI Video</span>
         </div>
       </div>
       <div class="brand-links">
         <button type="button" id="open-settings-btn" class="btn btn-secondary" style="min-height: 34px; padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
-          <span>⚙️</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span id="active-engine-badge" style="color: var(--brand-amber); font-weight: 600;">fal.ai</span>
         </button>
         <div class="lang-switcher" role="group" aria-label="Language selection">
-          <button type="button" class="lang-btn active" data-lang="es">ES</button>
-          <button type="button" class="lang-btn" data-lang="en">EN</button>
+          <button type="button" class="lang-btn active" data-lang="en">EN</button>
+          <button type="button" class="lang-btn" data-lang="es">ES</button>
         </div>
-        <a class="btn btn-secondary" style="min-height: 34px; padding: 6px 14px; font-size: 12px;" href="https://tbelt.online" target="_blank" rel="noopener">
-          tbelt.online ↗
-        </a>
       </div>
     </header>
 
@@ -1296,29 +1347,29 @@
     <!-- Hero Header -->
     <section class="hero">
       <div class="hero-eyebrow" data-i18n="hero.eyebrow">
-        <span>●</span> Flujo de Generación de Video en la Nube
+        <span>●</span> Cloud Video Generation Workflow
       </div>
-      <h1 data-i18n="hero.title">Tu escena. Nuevos personajes.</h1>
-      <p data-i18n="hero.desc">Prepara el video original, aísla voces con pitch +3 semitonos, revisa las máscaras de profundidad y sintetiza reemplazos hiperrealistas.</p>
+      <h1 data-i18n="hero.title">Your scene. New characters.</h1>
+      <p data-i18n="hero.desc">Prepare the original video, isolate vocals with +3 semitones pitch, review depth masks, and synthesize photorealistic character replacements.</p>
     </section>
 
     <!-- Workflow Progress Navigation -->
     <nav class="stepper" aria-label="Workflow progress">
       <a href="#source" class="step-item active" id="step-nav-1">
-        <span class="step-num" data-i18n="step.01.num">PASO 01</span>
-        <span class="step-name" data-i18n="step.01.name">Subir Video</span>
+        <span class="step-num" data-i18n="step.01.num">STEP 01</span>
+        <span class="step-name" data-i18n="step.01.name">Upload Video</span>
       </a>
       <a href="#review" class="step-item" id="step-nav-2">
-        <span class="step-num" data-i18n="step.02.num">PASO 02</span>
-        <span class="step-name" data-i18n="step.02.name">Revisar Silueta</span>
+        <span class="step-num" data-i18n="step.02.num">STEP 02</span>
+        <span class="step-name" data-i18n="step.02.name">Review Silhouette</span>
       </a>
       <a href="#draft" class="step-item" id="step-nav-3">
-        <span class="step-num" data-i18n="step.03.num">PASO 03</span>
-        <span class="step-name" data-i18n="step.03.name">Crear Personaje</span>
+        <span class="step-num" data-i18n="step.03.num">STEP 03</span>
+        <span class="step-name" data-i18n="step.03.name">Create Character</span>
       </a>
       <a href="#final" class="step-item" id="step-nav-4">
-        <span class="step-num" data-i18n="step.04.num">PASO 04</span>
-        <span class="step-name" data-i18n="step.04.name">Exportar 1080p</span>
+        <span class="step-num" data-i18n="step.04.num">STEP 04</span>
+        <span class="step-name" data-i18n="step.04.name">Export 1080p</span>
       </a>
     </nav>
 
@@ -1326,10 +1377,10 @@
     <div id="status" class="status-bar" role="status" aria-live="polite">
       <div class="status-content">
         <div class="status-indicator" id="status-indicator"></div>
-        <span id="status-text" class="status-text" data-i18n="status.initial">Selecciona tu video original para iniciar el flujo.</span>
+        <span id="status-text" class="status-text" data-i18n="status.initial">Select your original video to start the workflow.</span>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
-        <button type="button" id="dismiss-error-btn" class="btn btn-secondary" style="display:none; padding: 2px 8px; font-size: 11px; min-height: 24px;">✕ Descartar</button>
+        <button type="button" id="dismiss-error-btn" class="btn btn-secondary" style="display:none; padding: 2px 8px; font-size: 11px; min-height: 24px;">✕ Dismiss</button>
         <div id="job-info-pill" class="job-badge" style="display:none;" title="Click to copy Job ID"></div>
       </div>
     </div>
@@ -1338,13 +1389,15 @@
     <div id="onboarding-banner" class="panel" style="margin-bottom: 24px; border-left: 3px solid var(--brand-amber); padding: 18px 24px;" hidden>
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         <div style="display: flex; align-items: center; gap: 14px;">
-          <span style="font-size: 26px;">⚙️</span>
+          <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--surface-raised); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
           <div>
-            <strong style="font-size: 15px; display: block; margin-bottom: 2px;" data-i18n="settings.onboarding_title">Configura tu motor generativo</strong>
-            <span class="field-hint" data-i18n="settings.onboarding_banner">Conecta tu proveedor preferido (fal.ai, Enhancor, Replicate o ComfyUI) para habilitar la generación.</span>
+            <strong style="font-size: 15px; display: block; margin-bottom: 2px;" data-i18n="settings.onboarding_title">Configure your generation engine</strong>
+            <span class="field-hint" data-i18n="settings.onboarding_banner">Connect your preferred provider (fal.ai, Enhancor, Replicate, or ComfyUI) to enable generation.</span>
           </div>
         </div>
-        <button type="button" id="onboarding-open-btn" class="btn btn-primary" style="font-size: 13px; padding: 10px 20px;" data-i18n="settings.onboarding_btn">Configurar Motor ⚙️</button>
+        <button type="button" id="onboarding-open-btn" class="btn btn-primary" style="font-size: 13px; padding: 10px 20px;" data-i18n="settings.onboarding_btn">Configure Engine</button>
       </div>
     </div>
 
@@ -1355,9 +1408,9 @@
       <div class="panel-header">
         <div class="panel-title-wrap">
           <span class="panel-badge" data-i18n="s1.badge">01</span>
-          <h2 class="panel-title" data-i18n="s1.title">Video Original y Preparación</h2>
+          <h2 class="panel-title" data-i18n="s1.title">Original Video & Preparation</h2>
         </div>
-        <img class="panel-companion" src="/static/companions/cat-video.webp?v=20261011_3" alt="Gato Director" data-i18n-attr="alt:s1.companion_alt" width="44" height="44">
+        <img class="panel-companion" src="/static/companions/cat-video.webp?v=20261011_3" alt="Cat Director" data-i18n-attr="alt:s1.companion_alt" width="44" height="44">
       </div>
 
       <form id="form">
@@ -1366,8 +1419,8 @@
           <label class="upload-zone" id="video-upload-zone">
             <div class="upload-icon" id="video-upload-icon">↑</div>
             <div class="upload-info">
-              <span class="upload-title" data-i18n="s1.upload_title">Elegir video original</span>
-              <span class="upload-sub" data-filename data-i18n="s1.upload_sub">MP4, MOV o WebM · hasta 30 segundos</span>
+              <span class="upload-title" data-i18n="s1.upload_title">Choose original video</span>
+              <span class="upload-sub" data-filename data-i18n="s1.upload_sub">MP4, MOV or WebM · up to 30 seconds</span>
             </div>
             <input aria-label="Original video file" required type="file" name="video" id="video-file-input" accept="video/*">
           </label>
@@ -1376,41 +1429,43 @@
         <!-- Selected Video Instant Feedback Strip -->
         <div id="video-preview-strip" class="file-preview-strip" hidden>
           <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
-            <span style="font-size: 18px;">🎬</span>
+            <div style="width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--surface-raised); border: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+            </div>
             <div style="overflow: hidden;">
               <strong id="preview-filename" style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></strong>
               <span id="preview-filesize" class="field-hint"></span>
             </div>
           </div>
-          <button type="button" id="clear-video-btn" class="btn btn-secondary" style="min-height: 28px; padding: 4px 10px; font-size: 11px;">Cambiar ✕</button>
+          <button type="button" id="clear-video-btn" class="btn btn-secondary" style="min-height: 28px; padding: 4px 10px; font-size: 11px;">Change</button>
         </div>
 
         <!-- Processing Mode Selector -->
         <div class="mode-options-grid" id="mode-selector-group">
           <label class="mode-option-card selected" id="card-mode-depth">
-            <input type="radio" name="mode" value="depth" checked style="position: absolute; opacity: 0; pointer-events: none;">
+            <input type="radio" name="mode" value="depth" checked style="position: absolute; opacity: 0;">
             <div class="mode-option-header">
-              <span class="mode-option-title">☁️ <span data-i18n="s1.mode_cloud_title">Profundidad 3D + SAM 3</span></span>
-              <span class="mode-option-badge recommended" data-i18n="s1.mode_cloud_badge">Recomendado · Cloud</span>
+              <span class="mode-option-title"><span data-i18n="s1.mode_cloud_title">3D Depth + SAM 3</span></span>
+              <span class="mode-option-badge recommended" data-i18n="s1.mode_cloud_badge">Recommended · Cloud</span>
             </div>
-            <p class="mode-option-desc" data-i18n="s1.mode_cloud_desc">Inferencia cloud ultra-rápida. Segmenta sujetos completos, ropa y cabello (~$0.005/req).</p>
+            <p class="mode-option-desc" data-i18n="s1.mode_cloud_desc">Ultra-fast cloud inference. Segments full bodies, clothing and hair (~$0.005/req).</p>
           </label>
 
           <label class="mode-option-card" id="card-mode-mesh">
-            <input type="radio" name="mode" value="face_mesh" style="position: absolute; opacity: 0; pointer-events: none;">
+            <input type="radio" name="mode" value="face_mesh" style="position: absolute; opacity: 0;">
             <div class="mode-option-header">
-              <span class="mode-option-title">⚡ <span data-i18n="s1.mode_mesh_title">Malla Facial Rápida</span></span>
+              <span class="mode-option-title"><span data-i18n="s1.mode_mesh_title">Fast Face Mesh</span></span>
               <span class="mode-option-badge" data-i18n="s1.mode_mesh_badge">Experimental · Local</span>
             </div>
-            <p class="mode-option-desc" data-i18n="s1.mode_mesh_desc">Rastreo facial 2D con MediaPipe. Óptimo para cámara web o un solo sujeto centrado.</p>
+            <p class="mode-option-desc" data-i18n="s1.mode_mesh_desc">2D facial tracking with MediaPipe. Best for webcam or single centered speaker.</p>
           </label>
         </div>
         <input type="hidden" name="provider" value="auto">
 
         <div class="actions-bar" id="step1-actions-bar">
-          <span class="field-hint" data-i18n="s1.hint"><b>Paso 1 de 2</b>: Sube tu clip y prepáralo con un solo clic.</span>
+          <span class="field-hint" data-i18n="s1.hint"><b>Step 1 of 2</b>: Upload your clip and prepare it in 1 click.</span>
           <button type="submit" id="go" class="btn btn-primary" style="font-size: 15px; padding: 12px 28px;" data-i18n="s1.button">
-            ⚡ 1 Clic: Preparar Video →
+            Prepare Video →
           </button>
         </div>
 
@@ -1420,38 +1475,38 @@
             <div class="processing-title-group">
               <div class="processing-pulse" id="progress-pulse-dot"></div>
               <div>
-                <h4 id="progress-headline" class="processing-headline" data-i18n="prog.title">Preparando video con IA...</h4>
-                <div id="progress-subtitle" class="field-hint" data-i18n="prog.subtitle">Generando mapas de profundidad 3D, segmentación SAM 3 y aislando pistas vocales.</div>
+                <h4 id="progress-headline" class="processing-headline" data-i18n="prog.title">Preparing video with AI...</h4>
+                <div id="progress-subtitle" class="field-hint" data-i18n="prog.subtitle">Generating 3D depth maps, SAM 3 segmentation, and isolated vocal stems.</div>
               </div>
             </div>
-            <div class="timer-pill" id="progress-timer">⏱ 00:00</div>
+            <div class="timer-pill" id="progress-timer">00:00</div>
           </div>
 
-          <div class="progress-track">
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="5" aria-label="Preparation Progress">
             <div class="progress-fill" id="progress-fill" style="width: 5%;"></div>
           </div>
 
           <div class="progress-metrics">
-            <span id="progress-status-msg" class="progress-status-text">Iniciando preparación...</span>
+            <span id="progress-status-msg" class="progress-status-text">Starting preparation...</span>
             <span id="progress-percentage" class="progress-percent-text">5%</span>
           </div>
 
           <div class="pipeline-milestones">
             <div class="milestone-item active" id="ms-1">
               <span class="ms-indicator">1</span>
-              <span class="ms-label" data-i18n="prog.ms1">Subida y Formato</span>
+              <span class="ms-label" data-i18n="prog.ms1">Upload & Format</span>
             </div>
             <div class="milestone-item" id="ms-2">
               <span class="ms-indicator">2</span>
-              <span class="ms-label" data-i18n="prog.ms2">Profundidad 3D (Cloud AI)</span>
+              <span class="ms-label" data-i18n="prog.ms2">3D Depth (Cloud AI)</span>
             </div>
             <div class="milestone-item" id="ms-3">
               <span class="ms-indicator">3</span>
-              <span class="ms-label" data-i18n="prog.ms3">Segmentación SAM 3 (Cloud AI)</span>
+              <span class="ms-label" data-i18n="prog.ms3">SAM 3 Segmentation (Cloud AI)</span>
             </div>
             <div class="milestone-item" id="ms-4">
               <span class="ms-indicator">4</span>
-              <span class="ms-label" data-i18n="prog.ms4">Audio +3 st y Revisión</span>
+              <span class="ms-label" data-i18n="prog.ms4">Vocals +3 st & Review</span>
             </div>
           </div>
         </div>
@@ -1465,19 +1520,21 @@
       <div class="panel-header">
         <div class="panel-title-wrap">
           <span class="panel-badge" data-i18n="s2.badge">02</span>
-          <h2 class="panel-title" data-i18n="s2.title">Revisión del Video Preparado</h2>
+          <h2 class="panel-title" data-i18n="s2.title">Review Prepared Input</h2>
         </div>
-        <img class="panel-companion" src="/static/companions/cat-language.webp?v=20261011_3" alt="Gato Detective" data-i18n-attr="alt:s2.companion_alt" width="44" height="44">
+        <img class="panel-companion" src="/static/companions/cat-language.webp?v=20261011_3" alt="Cat Detective" data-i18n-attr="alt:s2.companion_alt" width="44" height="44">
       </div>
 
       <p class="field-hint" style="margin-bottom: 16px;" data-i18n="s2.desc">
-        Examina la silueta de segmentación y escucha las pistas vocales aisladas antes de generar el nuevo personaje.
+        Examine the segmentation silhouette and listen to isolated vocal stems before generating the new character.
       </p>
 
       <div id="input-empty" class="empty-state">
-        <div class="empty-icon">🎬</div>
-        <strong data-i18n="s2.empty_title">Ningún video procesado aún</strong>
-        <span data-i18n="s2.empty_sub">Sube tu clip original en el Paso 01 para ver las capas de vista previa aquí.</span>
+        <div class="empty-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+        </div>
+        <strong data-i18n="s2.empty_title">No video processed yet</strong>
+        <span data-i18n="s2.empty_sub">Upload your original clip in Step 01 to preview layers here.</span>
       </div>
 
       <div id="input-ready" hidden>
@@ -1488,43 +1545,43 @@
           <video id="input-video" controls playsinline preload="metadata"></video>
         </div>
         <div class="video-meta">
-          <span id="input-caption" class="field-hint" data-i18n="s2.cap_prepared">Video preparado + voz aislada pitch +3</span>
-          <a id="input-download" download data-i18n="s2.download_layer">Descargar capa ↓</a>
+          <span id="input-caption" class="field-hint" data-i18n="s2.cap_prepared">Prepared video + isolated vocals pitch +3</span>
+          <a id="input-download" download data-i18n="s2.download_layer">Download layer ↓</a>
         </div>
 
-        <!-- Verification Gate simplificado -->
+        <!-- Verification Gate -->
         <div class="review-gate">
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <div>
-              <h4 style="font-size: 15px; margin-bottom: 2px;" data-i18n="s2.gate_title">Vista Previa de Preparación</h4>
-              <span class="field-hint" data-i18n="s2.gate_sub">Revisa que la silueta y el audio procesado correspondan a tu escena.</span>
+              <h4 style="font-size: 15px; margin-bottom: 2px;" data-i18n="s2.gate_title">Preparation Preview</h4>
+              <span class="field-hint" data-i18n="s2.gate_sub">Verify that silhouette and processed audio match your scene.</span>
             </div>
             <div id="mask-review-status" class="meta-pill" style="align-self: flex-start;" data-i18n="s2.pending_review">
-              Pendiente de revisión
+              Pending review
             </div>
           </div>
 
           <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 6px;">
             <button type="button" id="approve-mask" class="btn btn-primary" style="font-size: 14px; padding: 12px 24px;" data-i18n="s2.btn_approve">
-              ✓ Aprobar y Continuar al Personaje →
+              Approve & Continue to Character →
             </button>
             <button type="button" id="reject-mask" class="btn btn-danger" style="font-size: 13px;" data-i18n="s2.btn_reject">
-              Reportar anomalía
+              Report anomaly
             </button>
           </div>
 
           <details style="margin-top: 6px; border: none; padding: 0;">
-            <summary style="font-size: 12px; opacity: 0.8;" data-i18n="s2.tech_summary">Detalles técnicos de validación</summary>
+            <summary style="font-size: 12px; opacity: 0.8;" data-i18n="s2.tech_summary">Technical validation details</summary>
             <label class="checkbox-label" style="margin-top: 8px;">
               <input type="checkbox" id="review-check" checked>
-              <span data-i18n="s2.checkbox_label">Máscara y separación vocal verificadas conforme a las directrices de calidad.</span>
+              <span data-i18n="s2.checkbox_label">Mask and vocal separation verified in compliance with quality directives.</span>
             </label>
           </details>
         </div>
 
         <!-- Audio Stems Section -->
         <details>
-          <summary data-i18n="s2.stems_summary">🎵 Descargar pistas de audio aisladas (Opcional)</summary>
+          <summary data-i18n="s2.stems_summary">Download isolated audio stems (Optional)</summary>
           <div class="stem-list" id="audio-links"></div>
         </details>
       </div>
@@ -1537,18 +1594,20 @@
       <div class="panel-header">
         <div class="panel-title-wrap">
           <span class="panel-badge" data-i18n="s3.badge">03</span>
-          <h2 class="panel-title" data-i18n="s3.title">Nuevo Personaje y Generación</h2>
+          <h2 class="panel-title" data-i18n="s3.title">New Character & Generation</h2>
         </div>
-        <img class="panel-companion" src="/static/companions/cat-seedance.webp?v=20261011_3" alt="Gato Artista" data-i18n-attr="alt:s3.companion_alt" width="44" height="44">
+        <img class="panel-companion" src="/static/companions/cat-seedance.webp?v=20261011_3" alt="Cat Artist" data-i18n-attr="alt:s3.companion_alt" width="44" height="44">
       </div>
 
       <div class="meta-row">
         <div class="meta-pill" id="step3-engine-pill">
-          <span data-i18n="settings.active_engine">Motor Activo</span>: <b id="step3-engine-name">fal.ai</b>
-          <button type="button" class="btn btn-ghost" id="step3-change-engine" style="padding: 2px 8px; font-size: 11px; margin-left: 6px; cursor: pointer;">⚙️</button>
+          <span data-i18n="settings.active_engine">Active Engine</span>: <b id="step3-engine-name">fal.ai</b>
+          <button type="button" class="btn btn-ghost" id="step3-change-engine" style="padding: 2px 6px; font-size: 11px; margin-left: 6px; cursor: pointer; display: inline-flex; align-items: center;" aria-label="Change engine">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
         </div>
         <div class="meta-pill" id="mode-label">H3 Max Recast · 1080p</div>
-        <div class="meta-pill" data-i18n="s3.quality_pill">Calidad: <b>Alta Fidelidad</b></div>
+        <div class="meta-pill" data-i18n="s3.quality_pill">Quality: <b>High Fidelity</b></div>
       </div>
 
       <form id="seedance">
@@ -1556,38 +1615,42 @@
           <!-- Character 1 Reference -->
           <label class="upload-zone">
             <img id="sirio-img" class="upload-preview" alt="Character 1" hidden>
-            <div class="upload-icon" id="sirio-placeholder">👤</div>
+            <div class="upload-icon" id="sirio-placeholder" style="display: flex; align-items: center; justify-content: center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
             <div class="upload-info">
-              <span class="upload-title" data-i18n="s3.char1_title">Foto del Nuevo Personaje · Requerido</span>
-              <span class="upload-sub" data-filename data-i18n="s3.char1_sub">Sube imagen del rostro o cuerpo nuevo (PNG, JPG, WebP)</span>
+              <span class="upload-title" data-i18n="s3.char1_title">New Character Reference · Required</span>
+              <span class="upload-sub" data-filename data-i18n="s3.char1_sub">Upload face or body reference (PNG, JPG, WebP)</span>
             </div>
             <input type="file" name="sirio" aria-label="Character 1 reference" accept="image/png,image/jpeg,image/webp,video/mp4,video/quicktime,video/webm">
           </label>
 
-          <!-- Character 2 Reference (Opcional) -->
+          <!-- Character 2 Reference (Optional) -->
           <label class="upload-zone">
             <img id="tein-img" class="upload-preview" alt="Character 2" hidden>
-            <div class="upload-icon" id="tein-placeholder">👥</div>
+            <div class="upload-icon" id="tein-placeholder" style="display: flex; align-items: center; justify-content: center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
             <div class="upload-info">
-              <span class="upload-title" data-i18n="s3.char2_title">Segundo Personaje · Opcional</span>
-              <span class="upload-sub" data-filename data-i18n="s3.char2_sub">Solo si hay 2 personas en escena</span>
+              <span class="upload-title" data-i18n="s3.char2_title">Second Character · Optional</span>
+              <span class="upload-sub" data-filename data-i18n="s3.char2_sub">Only if there are 2 subjects in frame</span>
             </div>
             <input type="file" name="tein" aria-label="Character 2 reference" accept="image/png,image/jpeg,image/webp">
           </label>
         </div>
 
         <details style="margin-top: 18px;">
-          <summary data-i18n="s3.prompt_summary">✏️ Personalizar Prompt de IA (Opcional · Recomendado ya incluido)</summary>
+          <summary data-i18n="s3.prompt_summary">Custom AI Prompt (Optional · Recommended defaults included)</summary>
           <div class="field-group" style="margin-top: 12px;">
-            <label class="field-label" for="prompt-area" data-i18n="s3.prompt_label">Instrucciones de síntesis</label>
+            <label class="field-label" for="prompt-area" data-i18n="s3.prompt_label">Synthesis Instructions</label>
             <textarea id="prompt-area" name="prompt" required rows="4">Replace the complete selected subject with the supplied character reference in every frame, including hair, hands, clothing and footwear. Preserve the original background, camera framing, lighting, motion and timing. Match the embedded speech exactly without extra dialogue.</textarea>
           </div>
         </details>
 
         <div class="actions-bar">
-          <span class="field-hint" data-i18n="s3.hint"><b>Paso 2 de 2</b>: Transfiere la identidad de tu personaje con la física y voz del video.</span>
+          <span class="field-hint" data-i18n="s3.hint"><b>Step 2 of 2</b>: Transfer identity using physical choreography and original speech.</span>
           <button type="submit" id="draft-button" class="btn btn-primary" style="font-size: 15px; padding: 12px 28px;" disabled data-i18n="s3.button">
-            ✨ 2 Clic: Generar Personaje →
+            Generate Character →
           </button>
         </div>
 
@@ -1597,38 +1660,38 @@
             <div class="processing-title-group">
               <div class="processing-pulse" id="gen-pulse-dot"></div>
               <div>
-                <h4 id="gen-headline" class="processing-headline" data-i18n="s3.rendering_title">Generando Personaje con fal.ai (H3 Max)...</h4>
-                <div id="gen-subtitle" class="field-hint" data-i18n="s3.rendering_sub">Difusión de video 1080p en la nube. Reemplazo de identidad cinematográfico (~2-3 min).</div>
+                <h4 id="gen-headline" class="processing-headline" data-i18n="s3.rendering_title">Generating Character with fal.ai (H3 Max)...</h4>
+                <div id="gen-subtitle" class="field-hint" data-i18n="s3.rendering_sub">Cloud 1080p video diffusion. Cinematic identity replacement (~2-3 min).</div>
               </div>
             </div>
-            <div class="timer-pill" id="gen-timer">⏱ 00:00</div>
+            <div class="timer-pill" id="gen-timer">00:00</div>
           </div>
 
-          <div class="progress-track">
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="15" aria-label="Generation Progress">
             <div class="progress-fill" id="gen-progress-fill" style="width: 15%;"></div>
           </div>
 
           <div class="progress-metrics">
-            <span id="gen-status-msg" class="progress-status-text">Conectando con fal.ai...</span>
+            <span id="gen-status-msg" class="progress-status-text">Connecting to fal.ai...</span>
             <span id="gen-percentage" class="progress-percent-text">15%</span>
           </div>
 
           <div class="pipeline-milestones">
             <div class="milestone-item active" id="gen-ms-1">
               <span class="ms-indicator">1</span>
-              <span class="ms-label" data-i18n="s3.ms1">Envío y Referencias</span>
+              <span class="ms-label" data-i18n="s3.ms1">Dispatch & References</span>
             </div>
             <div class="milestone-item" id="gen-ms-2">
               <span class="ms-indicator">2</span>
-              <span class="ms-label" data-i18n="s3.ms2">Difusión Video (fal.ai)</span>
+              <span class="ms-label" data-i18n="s3.ms2">Video Diffusion (fal.ai)</span>
             </div>
             <div class="milestone-item" id="gen-ms-3">
               <span class="ms-indicator">3</span>
-              <span class="ms-label" data-i18n="s3.ms3">Restauración de Audio</span>
+              <span class="ms-label" data-i18n="s3.ms3">Audio Restoration</span>
             </div>
             <div class="milestone-item" id="gen-ms-4">
               <span class="ms-indicator">4</span>
-              <span class="ms-label" data-i18n="s3.ms4">Borrador Final Listo</span>
+              <span class="ms-label" data-i18n="s3.ms4">Final Draft Ready</span>
             </div>
           </div>
         </div>
@@ -1642,18 +1705,20 @@
       <div class="panel-header">
         <div class="panel-title-wrap">
           <span class="panel-badge" data-i18n="s4.badge">04</span>
-          <h2 class="panel-title" data-i18n="s4.title">Borrador Final y Exportación 1080p</h2>
+          <h2 class="panel-title" data-i18n="s4.title">Final Draft & 1080p Export</h2>
         </div>
       </div>
 
       <p class="field-hint" style="margin-bottom: 16px;" data-i18n="s4.desc">
-        Los borradores generados reincorporan automáticamente el audio original impecable de la toma fuente (voces, música y ambiente).
+        Generated drafts automatically restore pristine original source audio (vocals, score and atmosphere).
       </p>
 
       <div id="final-empty" class="empty-state">
-        <div class="empty-icon">✨</div>
-        <strong data-i18n="s4.empty_title">Ningún borrador generado aún</strong>
-        <span data-i18n="s4.empty_sub">Completa el Paso 03 para renderizar tu primer borrador con fal.ai.</span>
+        <div class="empty-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <strong data-i18n="s4.empty_title">No draft generated yet</strong>
+        <span data-i18n="s4.empty_sub">Complete Step 03 to render your first draft with fal.ai.</span>
       </div>
 
       <div id="final-ready" hidden>
@@ -1661,17 +1726,17 @@
           <video id="final-video" controls playsinline preload="metadata"></video>
         </div>
         <div class="video-meta">
-          <span class="badge-tag" id="quality-label" data-i18n="s4.badge_draft">BORRADOR · AUDIO ORIGINAL</span>
-          <a id="final-download" download data-i18n="s4.download_draft">Descargar borrador ↓</a>
+          <span class="badge-tag" id="quality-label" data-i18n="s4.badge_draft">DRAFT · ORIGINAL AUDIO</span>
+          <a id="final-download" download data-i18n="s4.download_draft">Download draft ↓</a>
         </div>
 
         <div class="actions-bar">
           <div>
-            <strong style="display:block; margin-bottom: 2px;" data-i18n="s4.satisfied_title">¿Satisfecho con el borrador de movimiento?</strong>
-            <span class="field-hint" data-i18n="s4.satisfied_hint">Escala a alta definición 1080p completa con restauración de audio.</span>
+            <strong style="display:block; margin-bottom: 2px;" data-i18n="s4.satisfied_title">Satisfied with the motion draft?</strong>
+            <span class="field-hint" data-i18n="s4.satisfied_hint">Upscale to full high definition 1080p with complete audio restoration.</span>
           </div>
           <button type="button" id="upgrade" class="btn btn-primary" disabled data-i18n="s4.upgrade_btn">
-            Aprobar y Generar 1080p →
+            Approve & Render 1080p →
           </button>
         </div>
         <div id="upgrade-status" style="margin-top: 12px; font-size: 13px; color: var(--accent);" role="status"></div>
@@ -1679,28 +1744,28 @@
 
       <!-- Raw details -->
       <details id="sent-details" hidden>
-        <summary data-i18n="s4.metadata_summary">Prompt enviado y metadatos de la API</summary>
+        <summary data-i18n="s4.metadata_summary">Dispatched prompt and API metadata</summary>
         <p class="field-hint" id="generation-id" style="margin-top: 8px;"></p>
         <pre id="sent-prompt"></pre>
         <div style="margin-top: 10px;">
-          <a id="raw-link" class="field-hint" style="color: var(--accent); text-decoration: none;" data-i18n="s4.raw_download">Descargar resultado crudo de fal.ai ↓</a>
+          <a id="raw-link" class="field-hint" style="color: var(--accent); text-decoration: none;" data-i18n="s4.raw_download">Download raw output from fal.ai ↓</a>
         </div>
       </details>
 
       <!-- Manual fallback restore -->
       <details>
-        <summary data-i18n="s4.manual_summary">Restauración manual de audio (Importar video crudo)</summary>
+        <summary data-i18n="s4.manual_summary">Manual audio restoration (Import raw video)</summary>
         <form id="finish" style="margin-top: 14px;">
           <label class="upload-zone">
             <div class="upload-icon">↑</div>
             <div class="upload-info">
-              <span class="upload-title" data-i18n="s4.manual_title">Elegir archivo de video generado</span>
-              <span class="upload-sub" data-filename data-i18n="s4.manual_sub">Restaura el audio original de la fuente en el video</span>
+              <span class="upload-title" data-i18n="s4.manual_title">Choose generated video file</span>
+              <span class="upload-sub" data-filename data-i18n="s4.manual_sub">Restores pristine original source audio into video</span>
             </div>
             <input name="video" aria-label="Generated result" type="file" accept="video/*" required>
           </label>
           <div class="actions-bar">
-            <button type="submit" class="btn btn-secondary" data-i18n="s4.manual_btn">Restaurar Audio Original</button>
+            <button type="submit" class="btn btn-secondary" data-i18n="s4.manual_btn">Restore Original Audio</button>
           </div>
         </form>
       </details>
@@ -1708,8 +1773,8 @@
 
     <!-- Footer -->
     <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; color: var(--text-faint); font-size: 12px; flex-wrap: wrap; gap: 12px;">
-      <div data-i18n="footer.audio">tBelt Studio · Restauración de Audio Impecable</div>
-      <div style="font-family: var(--font-mono);" data-i18n="footer.host">Servidor macOS Local · Inferencia en la Nube</div>
+      <div data-i18n="footer.audio">tBelt Studio · Pristine Audio Restoration</div>
+      <div style="font-family: var(--font-mono);" data-i18n="footer.host">Local macOS Server · Cloud AI Inference</div>
     </footer>
   </div>
 
@@ -1720,8 +1785,8 @@
     <div class="modal-dialog">
       <div class="modal-header">
         <div>
-          <h3 class="panel-title" id="modal-settings-title" style="font-size: 16px; margin: 0;" data-i18n="settings.title">Ajustes del Motor Generativo</h3>
-          <p class="field-hint" style="margin-top: 4px; margin-bottom: 0;" data-i18n="settings.subtitle">Elige el servicio de IA para la síntesis de personajes. La preparación siempre se ejecuta localmente en tu Mac.</p>
+          <h3 class="panel-title" id="modal-settings-title" style="font-size: 16px; margin: 0;" data-i18n="settings.title">Video Generation Engine Settings</h3>
+          <p class="field-hint" style="margin-top: 4px; margin-bottom: 0;" data-i18n="settings.subtitle">Choose the AI provider for character synthesis. Video preparation runs locally on your Mac.</p>
         </div>
         <button type="button" class="btn btn-ghost" id="close-settings-btn" aria-label="Close" style="font-size: 18px; padding: 4px 8px; cursor: pointer;">✕</button>
       </div>
@@ -1731,12 +1796,12 @@
       <div id="provider-config-box" style="margin-top: 16px; background: var(--bg-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 14px;">
         <label class="field-label" id="provider-key-label" for="provider-key-input" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 6px;">API Key</label>
         <div style="display: flex; gap: 8px;">
-          <input type="password" id="provider-key-input" style="flex: 1; font-family: var(--font-mono); font-size: 13px;" placeholder="Pega tu clave o token de API" autocomplete="off">
-          <button type="button" class="btn btn-primary" id="save-settings-btn" style="min-height: auto; padding: 0 16px; font-size: 13px;" data-i18n="settings.save_btn">Guardar y Conectar</button>
+          <input type="password" id="provider-key-input" style="flex: 1; font-family: var(--font-mono); font-size: 13px;" placeholder="Paste your API key or token" autocomplete="off">
+          <button type="button" class="btn btn-primary" id="save-settings-btn" style="min-height: auto; padding: 0 16px; font-size: 13px;" data-i18n="settings.save_btn">Save & Connect</button>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
           <span id="settings-feedback" style="font-size: 12px; color: var(--brand-amber); font-weight: 500;"></span>
-          <a id="provider-docs-link" href="#" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: var(--brand-amber); text-decoration: underline;" data-i18n="settings.get_key">Obtener clave →</a>
+          <a id="provider-docs-link" href="#" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: var(--brand-amber); text-decoration: underline;" data-i18n="settings.get_key">Get key →</a>
         </div>
       </div>
     </div>
@@ -1887,7 +1952,7 @@
             $('#preview-filesize').textContent = formatBytes(f.size);
             strip.hidden = false;
           }
-          $('#go').textContent = `⚡ 1 Clic: Preparar Video (${formatBytes(f.size)}) →`;
+          $('#go').textContent = `Prepare Video (${formatBytes(f.size)}) →`;
         }
 
         if (input.name === 'sirio') {
@@ -1901,6 +1966,36 @@
         }
       };
     }
+
+    // Drag & drop support with visual feedback for upload zones
+    document.querySelectorAll('.upload-zone').forEach(zone => {
+      const input = zone.querySelector('input[type=file]');
+      if (!input) return;
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        zone.addEventListener(eventName, e => {
+          e.preventDefault();
+          e.stopPropagation();
+          zone.classList.add('is-dragover');
+        });
+      });
+
+      ['dragleave', 'dragend', 'drop'].forEach(eventName => {
+        zone.addEventListener(eventName, e => {
+          e.preventDefault();
+          e.stopPropagation();
+          zone.classList.remove('is-dragover');
+        });
+      });
+
+      zone.addEventListener('drop', e => {
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length) {
+          input.files = dt.files;
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+    });
 
     // Clear selected video button
     const clearVideoBtn = $('#clear-video-btn');
@@ -1930,12 +2025,12 @@
       stopProcTimer();
       procStartTime = Date.now();
       const timerEl = $('#progress-timer');
-      if (timerEl) timerEl.textContent = '⏱ 00:00';
+      if (timerEl) timerEl.textContent = '00:00';
       procTimerInterval = setInterval(() => {
         const diffSec = Math.floor((Date.now() - procStartTime) / 1000);
         const m = String(Math.floor(diffSec / 60)).padStart(2, '0');
         const s = String(diffSec % 60).padStart(2, '0');
-        if (timerEl) timerEl.textContent = `⏱ ${m}:${s}`;
+        if (timerEl) timerEl.textContent = `${m}:${s}`;
       }, 1000);
     }
 
@@ -1974,12 +2069,14 @@
 
       if (fillEl) fillEl.style.width = p + '%';
       if (pctEl) pctEl.textContent = p + '%';
+      const track1 = fillEl ? fillEl.closest('.progress-track') : null;
+      if (track1) track1.setAttribute('aria-valuenow', p);
       if (msg && msgEl) msgEl.textContent = (window.localizeStatus ? window.localizeStatus(msg) : msg);
 
       if (isError) {
         if (pulseDot) pulseDot.style.background = 'var(--danger-text)';
         if (fillEl) fillEl.style.background = 'var(--danger-text)';
-        if (headline) headline.textContent = t('prog.error_title');
+        if (headline) headline.textContent = t('prog.error_title') || 'Preparation error';
         return;
       }
 
@@ -1994,12 +2091,12 @@
       stopGenTimer();
       genStartTime = Date.now();
       const timerEl = $('#gen-timer');
-      if (timerEl) timerEl.textContent = '⏱ 00:00';
+      if (timerEl) timerEl.textContent = '00:00';
       genTimerInterval = setInterval(() => {
         const diffSec = Math.floor((Date.now() - genStartTime) / 1000);
         const m = String(Math.floor(diffSec / 60)).padStart(2, '0');
         const s = String(diffSec % 60).padStart(2, '0');
-        if (timerEl) timerEl.textContent = `⏱ ${m}:${s}`;
+        if (timerEl) timerEl.textContent = `${m}:${s}`;
       }, 1000);
     }
 
@@ -2038,12 +2135,14 @@
 
       if (fillEl) fillEl.style.width = p + '%';
       if (pctEl) pctEl.textContent = p + '%';
+      const track2 = fillEl ? fillEl.closest('.progress-track') : null;
+      if (track2) track2.setAttribute('aria-valuenow', p);
       if (msg && msgEl) msgEl.textContent = (window.localizeStatus ? window.localizeStatus(msg) : msg);
 
       if (isError) {
         if (pulseDot) pulseDot.style.background = 'var(--danger-text)';
         if (fillEl) fillEl.style.background = 'var(--danger-text)';
-        if (headline) headline.textContent = t('s3.error_title') || 'Error en la generación';
+        if (headline) headline.textContent = t('s3.error_title') || 'Generation error';
         return;
       }
 
@@ -2279,7 +2378,7 @@
             }
           } else if (j.state === 'error') {
             if (isStep3 && genDash && !genDash.hidden) {
-              updateGenProgress(100, j.status || 'Error en la generación', 2, true);
+              updateGenProgress(100, j.status || 'Generation error', 2, true);
               const dBtn = $('#draft-button');
               if (dBtn) {
                 dBtn.disabled = false;
@@ -2288,7 +2387,7 @@
               isSeedanceActive = false;
             } else if (dash) {
               dash.hidden = false;
-              updateProgress(100, j.status || 'Error en la preparación', 1, true);
+              updateProgress(100, j.status || 'Preparation error', 1, true);
             }
           } else {
             await refresh(j);
@@ -2366,7 +2465,7 @@
           }
         } else {
           stopProcTimer();
-          let errText = 'Error en el servidor (' + xhr.status + ')';
+          let errText = 'Server error (' + xhr.status + ')';
           try {
             const errJson = JSON.parse(xhr.responseText);
             if (errJson.detail) errText = errJson.detail;
@@ -2378,7 +2477,7 @@
 
       xhr.onerror = () => {
         stopProcTimer();
-        updateProgress(100, 'Error de red al conectar con el servidor.', 1, true);
+        updateProgress(100, 'Network error connecting to server.', 1, true);
         goBtn.disabled = false;
       };
 
@@ -2396,7 +2495,7 @@
       const button = $('#draft-button');
       const origText = button.textContent;
       button.disabled = true;
-      button.textContent = '✨ ' + (currentLang === 'en' ? 'Generating Character (fal.ai H3 Max)...' : 'Generando Personaje (fal.ai H3 Max)...');
+      button.textContent = (currentLang === 'en' ? 'Generating Character (fal.ai H3 Max)...' : 'Generando Personaje (fal.ai H3 Max)...');
       try {
         const data = new FormData(e.target);
         for (const name of ['sirio', 'tein']) {
