@@ -13,35 +13,35 @@ The entire source audio (vocal stems, music, sound design, and ambience) is pres
 
 ---
 
-## What Makes This Architecture Distinct
+## Key Features & Architecture
 
-Unlike conventional video synthesis pipelines that either demand heavy local GPU workstations (16+ GB VRAM) or rely on expensive, fragmented third-party APIs for basic audio tasks, **tBelt Studio** is architected around strict separation of computational concerns:
+**tBelt Studio** combines local CPU signal processing with cloud neural synthesis:
 
-1. **Zero External Audio API Costs (100% Local CPU Demucs)**:
-   - Vocal isolation runs locally via Demucs (`htdemucs` architecture) directly on CPU.
-   - Isolated vocals are frequency-modulated by +3 semitones while retaining sample-accurate duration and syllable timing.
-   - No paid cloud APIs are used for stem separation.
+1. **Local Audio Stem Isolation & Pitch Modulation**:
+   - Vocal isolation runs locally via Demucs (`htdemucs`) on CPU, separating speech and music tracks.
+   - Vocals are frequency-modulated by +3 semitones while retaining sample-accurate duration and syllable timing.
+   - Guidance audio is embedded into the synthesis stream, with full original source audio restored on final export.
 
 2. **Native MediaPipe 478-Point Face Mesh**:
    - Real-time 3D facial landmark calculation using Google's quantized TensorFlow Lite model (`face_landmarker.task`, ~3.6 MB).
-   - Adaptive portrait cropping (`x0=0.20*w, cw=0.60*w, ch=0.75*h`) ensures robust facial detection on both portrait and wide cinematic frames.
-   - Temporal smoothing across rapid head turns prevents tracking gaps and pipeline crashes.
+   - Adaptive portrait cropping (`x0=0.20*w, cw=0.60*w, ch=0.75*h`) for facial detection across both close-ups and wide cinematic shots.
+   - Temporal smoothing across rapid head turns to maintain continuous tracking coordinates.
 
-3. **Unified Cloud Synthesis via fal.ai**:
-   - Character diffusion and neural motion transfer are handled through **fal.ai** (`FAL_KEY`).
-   - Clean draft-first workflow: validate motion and silhouette on a fast preview before committing to a full 1080p high-definition export.
+3. **Cloud Synthesis via fal.ai**:
+   - Character diffusion and neural motion transfer handled through **fal.ai** (`FAL_KEY`).
+   - Two-stage workflow: draft preview validation before committing to full 1080p high-definition generation.
 
-4. **Production SPA with Real-Time Feedback**:
-   - Zero full-page reloads: state changes happen smoothly via client-side routing (`history.pushState`).
-   - Live upload tracking via `XMLHttpRequest` with exact byte counts and percentage indicators (`X.X MB / Y.Y MB`).
-   - Active session stopwatch (`⏱ mm:ss`) and 4-phase visual milestone indicators.
-   - In-memory manifest Set lookup eliminates blind HTTP `HEAD` probing and resolves console 404 errors.
+4. **Single Page Application with Live Progress**:
+   - Asynchronous upload tracking via `XMLHttpRequest` with exact byte counts and percentage indicators (`X.X MB / Y.Y MB`).
+   - Active session timer (`⏱ mm:ss`) and 4-phase milestone tracking (Normalization, Mesh, Audio, Review).
+   - In-memory artifact manifest (`Set.has()`) for zero-overhead validation and clean browser console logs.
+   - Smooth client-side state transitions with `history.pushState` and quick error dismissal.
 
-5. **Built-in Bilingual i18n Architecture**:
-   - Instant runtime language toggling between Spanish (`es`) and English (`en`) with persisted preferences in `localStorage`.
+5. **Bilingual Interface (i18n)**:
+   - Client-side language toggling between Spanish (`es`) and English (`en`) with persisted preferences.
 
-6. **Decoupled macOS System Daemons**:
-   - The application server and Cloudflare Named Tunnel run as managed `LaunchAgents`, requiring zero active terminal windows or background agent tasks.
+6. **macOS System Daemons & Public Tunneling**:
+   - Managed background execution via macOS `LaunchAgents` and Cloudflare Named Tunnels for SSL remote access without terminal dependencies.
 
 ---
 
@@ -165,8 +165,14 @@ studiotbelt/
 
 ---
 
+## Acknowledgements & Attribution
+
+This project builds upon foundational workflow concepts pioneered by **[Sirio Berati](https://github.com/sirioberati)** in the open-source video AI community. We express our respect and gratitude to Sirio for sharing his subject replacement research under the MIT license, establishing the basis for motion-guided character transfer.
+
+---
+
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).  
 Copyright (c) 2026 Sirio Berati  
 Copyright (c) 2026 tBelt Online (https://tbelt.online)

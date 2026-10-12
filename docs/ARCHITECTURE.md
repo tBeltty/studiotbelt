@@ -6,9 +6,7 @@
 
 ## 1. Architectural Philosophy: Division of Labor
 
-Traditional video character synthesis pipelines either require expensive local GPU hardware (16+ GB VRAM) or offload all stages to costly, fragmented third-party APIs. 
-
-**tBelt Studio** decouples the workflow based on computational efficiency:
+The system decouples processing stages based on computational efficiency between consumer CPU hardware and cloud GPU clusters:
 
 ```mermaid
 flowchart TD
