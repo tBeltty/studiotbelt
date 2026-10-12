@@ -2,13 +2,13 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 import os,sys,threading,uuid,shutil,json,concurrent.futures
 
-import config  # Initializes hardened cross-platform PATH and environment
+from studiotbelt import config  # Initializes hardened cross-platform PATH and environment
+from studiotbelt.config import ROOT
 
 from fastapi import FastAPI,UploadFile,File,Form,HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pipeline import run
-ROOT=Path(__file__).resolve().parent
+from studiotbelt.core.pipeline import run
 RUNS=ROOT/'runs';RUNS.mkdir(exist_ok=True)
 jobs={}
 max_workers = int(config.setting('STUDIO_MAX_WORKERS', '2'))
@@ -42,19 +42,19 @@ def favicon():
 
 @app.get('/api/settings')
 def get_settings_endpoint():
-    from providers import get_settings
+    from studiotbelt.services.providers import get_settings
     return get_settings()
 
 @app.post('/api/settings')
 def update_settings_endpoint(payload: dict):
-    from providers import update_settings
+    from studiotbelt.services.providers import update_settings
     provider = payload.get('provider')
     key = payload.get('key')
     extra = payload.get('extra')
     return update_settings(provider, key, extra)
 @app.get('/api/health')
 def health_endpoint():
-    from config import find_binary
+    from studiotbelt.config import find_binary
     bins = {}
     for b in ['ffmpeg', 'rubberband']:
         try:
@@ -75,13 +75,13 @@ def create(video:UploadFile=File(...),prompt:str=Form('person'),provider:str=For
     def work():
         try:
             if mode=='face_mesh':
-                from face_mesh import run as run_mesh
+                from studiotbelt.vision.face_mesh import run as run_mesh
                 run_mesh(src,folder,lambda s:jobs[ident].update(status=s))
             elif mode=='depth_mesh':
-                from face_mesh import run_depth
+                from studiotbelt.vision.face_mesh import run_depth
                 run_depth(src,folder,prompt,provider,lambda s:jobs[ident].update(status=s))
             else:
-                from pipeline import run
+                from studiotbelt.core.pipeline import run
                 run(src,folder,prompt,provider,lambda s:jobs[ident].update(status=s))
             jobs[ident].update(state='done',status='Preparation complete · input review required')
             (folder/'status.json').write_text(json.dumps(jobs[ident]))
@@ -110,7 +110,7 @@ def seedance(ident:str,prompt:str=Form(...),sirio:UploadFile=File(...),tein:Uplo
     if len(ident)!=32 or not all(c in '0123456789abcdef' for c in ident):raise HTTPException(404)
     folder=RUNS/ident
     if not (folder/'audio-manifest.json').exists():raise HTTPException(400,'Audio separation must complete first.')
-    from mask_review import require_approved
+    from studiotbelt.vision.mask_review import require_approved
     try:require_approved(folder)
     except ValueError as e:raise HTTPException(409,str(e))
     paths=[]
@@ -123,12 +123,12 @@ def seedance(ident:str,prompt:str=Form(...),sirio:UploadFile=File(...),tein:Uplo
         path=folder/(name+suffix)
         with path.open('wb') as f:shutil.copyfileobj(upload.file,f)
         paths.append(path)
-    from seedance_bridge import submit
+    from studiotbelt.services.seedance_bridge import submit
     try:request_id=submit(folder,prompt,*paths)
     except Exception as e:raise HTTPException(502,str(e))
     jobs[ident]={'id':ident,'state':'running','status':'Seedance rendering: '+request_id}
     def collect():
-        from seedance_bridge import wait_and_finish
+        from studiotbelt.services.seedance_bridge import wait_and_finish
         try:
             wait_and_finish(folder,request_id,lambda s:jobs[ident].update(status=s))
             jobs[ident].update(state='done',status='Final preview ready · entire original source audio',final_url='/runs/'+ident+'/final-preview.mp4')
@@ -144,7 +144,7 @@ def finish(ident:str,video:UploadFile=File(...)):
     if not (folder/'upload.mp4').exists():raise HTTPException(400,'Original source is required.')
     target=folder/'seedance-result.mp4'
     with target.open('wb') as f:shutil.copyfileobj(video.file,f)
-    from audio_workflow import finish_preview
+    from studiotbelt.core.audio_workflow import finish_preview
     try:finish_preview(target,folder)
     except Exception as e:raise HTTPException(400,str(e))
     return {'url':'/runs/'+ident+'/final-preview.mp4'}
@@ -180,7 +180,7 @@ def create_hd(ident:str):
         def save(): (hd/'status.json').write_text(json.dumps(hd_jobs[ident]))
         save()
     def work_hd():
-        from seedance_bridge import submit_hd,wait_and_finish
+        from studiotbelt.services.seedance_bridge import submit_hd,wait_and_finish
         try:
             request_id=submit_hd(folder)
             hd_jobs[ident].update(request_id=request_id,status='Generating 1080p HD render');save()
@@ -193,12 +193,12 @@ def create_hd(ident:str):
 
 @app.get('/jobs/{ident}/mask-review')
 def get_mask_review(ident:str):
-    from mask_review import state
+    from studiotbelt.vision.mask_review import state
     return state(hd_folder(ident))
 
 @app.post('/jobs/{ident}/mask-review')
 def save_mask_review(ident:str,approved:bool=Form(...),fingerprint:str=Form(...),note:str=Form('')):
-    from mask_review import review
+    from studiotbelt.vision.mask_review import review
     try:return review(hd_folder(ident),approved,note,fingerprint)
     except ValueError as e:raise HTTPException(409,str(e))
 
@@ -206,7 +206,7 @@ app.mount('/static',StaticFiles(directory=ROOT/'static'),name='static')
 
 def resume_saved_generations():
     """Resume collection only: never requeue a paid prediction on restart."""
-    from seedance_bridge import wait_and_finish
+    from studiotbelt.services.seedance_bridge import wait_and_finish
     for root in RUNS.iterdir():
         if not root.is_dir() or len(root.name)!=32:continue
         for folder,response_file,registry in [(root,'seedance-response.json',jobs),(root/'hd','response.json',hd_jobs)]:

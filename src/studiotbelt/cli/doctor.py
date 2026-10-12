@@ -1,6 +1,6 @@
 """Offline checks; never prints credential values or starts paid calls."""
 import argparse,importlib,shutil,sys
-from config import setting
+from studiotbelt.config import setting, ROOT
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--require-keys',action='store_true');parser.add_argument('--mesh',action='store_true');args=parser.parse_args()
@@ -12,13 +12,12 @@ def main():
     binary_ffmpeg=shutil.which('ffmpeg');print('ffmpeg:', 'OK' if binary_ffmpeg else 'MISSING — install via brew or apt');failed=failed or not binary_ffmpeg
     binary_rubber=shutil.which('rubberband');print('rubberband:', 'OK' if binary_rubber else 'OPTIONAL (FFmpeg pitch filter active)')
     if args.mesh:
-        from pathlib import Path
         import subprocess
-        worker=Path(__file__).resolve().parent/'.venv-face/bin/python'
+        worker=ROOT/'.venv-face/bin/python'
         ready=worker.exists() and subprocess.run([str(worker),'-c','import mediapipe,av,PIL,numpy'],capture_output=True).returncode==0
         print('Face mesh worker: '+('OK' if ready else 'MISSING — run bash setup-face-mesh.sh'))
         failed=failed or not ready
-    from providers import PROVIDER_SPECS, is_provider_configured, get_active_provider
+    from studiotbelt.services.providers import PROVIDER_SPECS, is_provider_configured, get_active_provider
     active = get_active_provider()
     configured_providers = [p for p in PROVIDER_SPECS if is_provider_configured(p)]
 

@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
-from media_host import upload
+from studiotbelt.services.media_host import upload
 
 
 class HostingTests(unittest.TestCase):
@@ -20,9 +20,9 @@ class HostingTests(unittest.TestCase):
             context = Mock()
             context.__enter__ = Mock(return_value=media)
             context.__exit__ = Mock(return_value=False)
-            with patch('media_host.setting', return_value='tmpfiles'), \
-                 patch('media_host.requests.post', return_value=posted), \
-                 patch('media_host.requests.get', side_effect=[page, context]) as get:
+            with patch('studiotbelt.services.media_host.setting', return_value='tmpfiles'), \
+                 patch('studiotbelt.services.media_host.requests.post', return_value=posted), \
+                 patch('studiotbelt.services.media_host.requests.get', side_effect=[page, context]) as get:
                 url = upload(path)
                 self.assertEqual(url, 'https://tmpfiles.org/dl/123/extra-token/input.mp4')
                 self.assertEqual(get.call_args.args[0], url)
@@ -33,9 +33,9 @@ class FallbackTests(unittest.TestCase):
         def settings(k, d=''):
             return {'MEDIA_HOST': 'tmpfiles', 'MEDIA_HOST_FALLBACKS': 'catbox'}.get(k, d)
 
-        with patch('media_host.setting', side_effect=settings), \
-             patch('media_host.time.sleep'), \
-             patch('media_host._upload_once', side_effect=[ValueError('bad'), ValueError('bad'), 'https://files.catbox.moe/test.mp4']) as send:
+        with patch('studiotbelt.services.media_host.setting', side_effect=settings), \
+             patch('studiotbelt.services.media_host.time.sleep'), \
+             patch('studiotbelt.services.media_host._upload_once', side_effect=[ValueError('bad'), ValueError('bad'), 'https://files.catbox.moe/test.mp4']) as send:
             self.assertEqual(upload('test.mp4'), 'https://files.catbox.moe/test.mp4')
             self.assertEqual([c.args[1] for c in send.call_args_list], ['tmpfiles', 'tmpfiles', 'catbox'])
 
@@ -43,16 +43,16 @@ class FallbackTests(unittest.TestCase):
         def settings(k, d=''):
             return {'MEDIA_HOST': 'tmpfiles', 'MEDIA_HOST_FALLBACKS': ''}.get(k, d)
 
-        with patch('media_host.setting', side_effect=settings), \
-             patch('media_host.time.sleep'), \
-             patch('media_host._upload_once', side_effect=ValueError('bad')) as send:
+        with patch('studiotbelt.services.media_host.setting', side_effect=settings), \
+             patch('studiotbelt.services.media_host.time.sleep'), \
+             patch('studiotbelt.services.media_host._upload_once', side_effect=ValueError('bad')) as send:
             with self.assertRaises(RuntimeError):
                 upload('test.mp4')
             self.assertEqual(send.call_count, 2)
 
     def test_success_never_calls_fallback(self):
-        with patch('media_host.setting', side_effect=lambda k, d='': d), \
-             patch('media_host._upload_once', return_value='https://tmpfiles.org/dl/test.mp4') as send:
+        with patch('studiotbelt.services.media_host.setting', side_effect=lambda k, d='': d), \
+             patch('studiotbelt.services.media_host._upload_once', return_value='https://tmpfiles.org/dl/test.mp4') as send:
             upload('test.mp4')
             self.assertEqual(send.call_count, 1)
 

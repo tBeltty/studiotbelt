@@ -6,6 +6,10 @@ from PIL import ImageDraw
 root = Path(sys.argv[1]).resolve()
 source = root / 'original.mp4'
 model = Path(__file__).resolve().parent / 'models/face_landmarker.task'
+if not model.exists():
+    repo_model = Path(__file__).resolve().parents[3] / 'models/face_landmarker.task'
+    if repo_model.exists():
+        model = repo_model
 MODEL_SHA256 = os.getenv('FACE_LANDMARKER_SHA256', '64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff')
 MODEL_URL = os.getenv('FACE_LANDMARKER_URL', 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task')
 if not model.exists():

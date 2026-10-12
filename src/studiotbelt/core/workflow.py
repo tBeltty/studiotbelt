@@ -1,7 +1,7 @@
 """Agent CLI. Run from the project directory; all job IDs are local IDs."""
 import argparse,json
 from pathlib import Path
-from config import ROOT,load_env
+from studiotbelt.config import ROOT,load_env
 load_env()
 p=argparse.ArgumentParser();sub=p.add_subparsers(dest='command',required=True)
 c=sub.add_parser('prepare');c.add_argument('video');c.add_argument('--subject',default='person');c.add_argument('--provider',default='auto',choices=['auto','local','fal','replicate','replicate-chenxwh','huggingface'])
@@ -15,16 +15,16 @@ def main(argv=None):
     a = p.parse_args(argv)
     if a.command == 'prepare':
         import uuid, shutil
-        from pipeline import run
+        from studiotbelt.core.pipeline import run
         folder = ROOT / 'runs' / uuid.uuid4().hex
         folder.mkdir(parents=True)
         shutil.copy2(a.video, folder / 'upload.mp4')
         print('JOB:', folder.name, flush=True)
         if a.mode == 'face_mesh':
-            from face_mesh import run as run_mesh
+            from studiotbelt.vision.face_mesh import run as run_mesh
             run_mesh(folder / 'upload.mp4', folder)
         elif a.mode == 'depth_mesh':
-            from face_mesh import run_depth
+            from studiotbelt.vision.face_mesh import run_depth
             run_depth(folder / 'upload.mp4', folder, a.subject, a.provider)
         else:
             run(folder / 'upload.mp4', folder, a.subject, a.provider)
@@ -38,19 +38,19 @@ def main(argv=None):
         p.error('Job does not exist')
 
     if a.command == 'status':
-        from mask_review import state
+        from studiotbelt.vision.mask_review import state
         print(json.dumps({'mask_review': state(folder), 'generation': json.loads((folder / 'generation.json').read_text()) if (folder / 'generation.json').exists() else None}, indent=2))
     elif a.command == 'review':
-        from mask_review import review
+        from studiotbelt.vision.mask_review import review
         print(review(folder, a.approve, a.note, a.fingerprint))
     elif a.command == 'repair-rgb':
-        from mask_review import is_mesh
+        from studiotbelt.vision.mask_review import is_mesh
         mode = json.loads((folder / 'workflow-mode.json').read_text()).get('mode') if (folder / 'workflow-mode.json').exists() else 'depth'
         if mode == 'face_mesh':
             p.error('Fast face mesh has no SAM mask. Reprepare facial tracking instead.')
-        from raw_masks import segment_raw, clean_border_fragments
-        from pipeline import composite
-        from audio_workflow import prepare_seedance_video
+        from studiotbelt.vision.raw_masks import segment_raw, clean_border_fragments
+        from studiotbelt.core.pipeline import composite
+        from studiotbelt.core.audio_workflow import prepare_seedance_video
         meta = json.loads((folder / 'manifest.json').read_text())
         repair = folder / 'rgb-repair'
         repair.mkdir(exist_ok=True)
@@ -59,14 +59,16 @@ def main(argv=None):
         if mode == 'depth_mesh':
             import shutil, subprocess
             shutil.copy2(folder / 'composite-silent.mp4', folder / 'depth-composite-silent.mp4')
-            subprocess.run([str(ROOT / '.venv-face/bin/python'), str(ROOT / 'mesh_worker.py'), str(folder), '--depth'], check=True)
+            worker_script = ROOT / 'src/studiotbelt/vision/mesh_worker.py'
+            if not worker_script.exists(): worker_script = ROOT / 'mesh_worker.py'
+            subprocess.run([str(ROOT / '.venv-face/bin/python'), str(worker_script), str(folder), '--depth'], check=True)
         prepare_seedance_video(folder)
         (folder / 'mask-review.json').unlink(missing_ok=True)
         meta['mask_method'] = 'SAM 3 on original RGB, preserving depth colors'
         (folder / 'manifest.json').write_text(json.dumps(meta, indent=2))
         print('Repaired. Review the entire clip again; approval cleared.')
     else:
-        from seedance_bridge import submit, submit_hd, wait_and_finish
+        from studiotbelt.services.seedance_bridge import submit, submit_hd, wait_and_finish
         if a.command == 'submit':
             prompt = a.prompt if a.prompt else (Path(a.prompt_file).read_text() if a.prompt_file else None)
             if not prompt:

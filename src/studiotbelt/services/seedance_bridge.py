@@ -1,7 +1,7 @@
 from pathlib import Path
 import os, json, requests, re, time, concurrent.futures
-from config import credential, setting
-from audio_workflow import finish_preview
+from studiotbelt.config import credential, setting
+from studiotbelt.core.audio_workflow import finish_preview
 
 def is_fal_active():
     key = setting('FAL_KEY')
@@ -10,7 +10,7 @@ def is_fal_active():
 def submit_fal(folder, prompt, sirio, tein=None, status=print):
     import fal_client
     folder = Path(folder)
-    from mask_review import require_approved, is_mesh
+    from studiotbelt.vision.mask_review import require_approved, is_mesh
     require_approved(folder)
     if (folder/'seedance-response.json').exists():
         raise ValueError('This job already has a provider response. Resume it; prepare a new job for a deliberate variation.')
@@ -18,7 +18,7 @@ def submit_fal(folder, prompt, sirio, tein=None, status=print):
     if not (folder/'audio-manifest.json').exists():
         raise ValueError('Audio separation must complete before submission.')
 
-    from audio_workflow import prepare_seedance_video
+    from studiotbelt.core.audio_workflow import prepare_seedance_video
     status('Pitching isolated vocals +3 semitones and embedding in guided video')
     prepared = folder/'seedance-input.mp4' if (folder/'seedance-input.mp4').exists() else prepare_seedance_video(folder)
 
@@ -147,7 +147,7 @@ def submit_hd_fal(folder):
 def submit_replicate(folder, prompt, sirio, tein=None, status=print):
     import replicate
     folder = Path(folder)
-    from mask_review import require_approved, is_mesh
+    from studiotbelt.vision.mask_review import require_approved, is_mesh
     require_approved(folder)
     if (folder/'seedance-response.json').exists():
         raise ValueError('Este trabajo ya tiene una respuesta de proveedor registrada.')
@@ -155,7 +155,7 @@ def submit_replicate(folder, prompt, sirio, tein=None, status=print):
     if not (folder/'audio-manifest.json').exists():
         raise ValueError('El aislamiento de audio debe completarse antes de enviar.')
 
-    from audio_workflow import prepare_seedance_video
+    from studiotbelt.core.audio_workflow import prepare_seedance_video
     status('Preparando video guía con audio aislado embedido...')
     prepared = folder/'seedance-input.mp4' if is_mesh(folder) else prepare_seedance_video(folder)
 
@@ -212,17 +212,17 @@ def wait_and_finish_replicate(folder, request_id, status=print):
 
 def submit_enhancor(folder, prompt, sirio, tein=None, status=print):
     folder = Path(folder)
-    from mask_review import require_approved, is_mesh
+    from studiotbelt.vision.mask_review import require_approved, is_mesh
     require_approved(folder)
     if (folder/'seedance-response.json').exists():raise ValueError('This job already has a provider response. Resume it; prepare a new job for a deliberate variation.')
     key=credential('ENHANCOR_API_KEY')
     if not setting('ENHANCOR_WEBHOOK_URL'):raise ValueError('Webhook URL required. Install cloudflared and restart the app, or set ENHANCOR_WEBHOOK_URL.')
     if not (folder/'audio-manifest.json').exists():raise ValueError('Audio separation must complete before submission.')
-    from audio_workflow import prepare_seedance_video
+    from studiotbelt.core.audio_workflow import prepare_seedance_video
     status('Pitching isolated vocals +3 semitones and embedding in colored-depth video')
     prepared=folder/'seedance-input.mp4' if is_mesh(folder) else prepare_seedance_video(folder)
     status('Uploading video with embedded vocals and character references')
-    from media_host import upload
+    from studiotbelt.services.media_host import upload
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:urls=list(pool.map(upload,[prepared,sirio]+([tein] if tein else [])))
     enh_res = setting('ENHANCOR_DRAFT_RESOLUTION', '1080p')
     p={'resolution':enh_res,'output_format':'mp4','pass_faces':True,'webhook_url':setting('ENHANCOR_WEBHOOK_URL','')}
@@ -255,7 +255,7 @@ def submit_enhancor(folder, prompt, sirio, tein=None, status=print):
     return ident
 
 def submit(folder, prompt, sirio, tein=None, status=print):
-    from providers import get_active_provider, is_provider_configured
+    from studiotbelt.services.providers import get_active_provider, is_provider_configured
     active = get_active_provider()
     if active == 'replicate':
         return submit_replicate(folder, prompt, sirio, tein, status)
@@ -309,7 +309,7 @@ def wait_and_finish(folder, request_id, status=print):
             except Exception:
                 pass
     if not provider:
-        from providers import get_active_provider
+        from studiotbelt.services.providers import get_active_provider
         provider = get_active_provider()
 
     if provider == 'replicate':
@@ -363,7 +363,7 @@ def submit_hd(folder):
         except Exception:
             pass
     if not provider:
-        from providers import get_active_provider
+        from studiotbelt.services.providers import get_active_provider
         provider = get_active_provider()
 
     if provider in ['fal', 'fal.ai']:

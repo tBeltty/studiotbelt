@@ -5,15 +5,20 @@
 *.pem
 *.key
 
-# Python Virtual Environments & Bytecode
+# Python Virtual Environments, Bytecode & Build Artifacts
 .venv/
 .venv*/
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
+*.egg
+build/
+dist/
 
 # Runtime Artifacts & Logs
 runs/
+logs/
 *.log
 .runtime-*.json
 models/
@@ -35,3 +40,5 @@ scratch/
 # Local Workspace & Tooling
 .agents/
 AGENTS.md
+audit/
+

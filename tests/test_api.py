@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 from fastapi.testclient import TestClient
 
-from app import app
+from studiotbelt.api.app import app
 
 
 class ApiEndpointTests(unittest.TestCase):
@@ -37,8 +37,8 @@ class ApiEndpointTests(unittest.TestCase):
         self.assertIn('enhancor', data['providers'])
 
     def test_update_settings_whitelisting(self):
-        with patch('providers.ENV_PATH') as mock_env_path, \
-             patch('providers.os.chmod'):
+        with patch('studiotbelt.services.providers.ENV_PATH') as mock_env_path, \
+             patch('studiotbelt.services.providers.os.chmod'):
             mock_env_path.exists.return_value = False
             mock_env_path.read_text.return_value = ''
             payload = {

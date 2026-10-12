@@ -5,8 +5,8 @@ from pathlib import Path
 import av
 import numpy as np
 
-from audio_workflow import finish_preview
-from pipeline import composite, finish, put, writer
+from studiotbelt.core.audio_workflow import finish_preview
+from studiotbelt.core.pipeline import composite, finish, put, writer
 
 
 class MediaTests(unittest.TestCase):

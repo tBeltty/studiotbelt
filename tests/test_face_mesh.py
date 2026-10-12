@@ -1,7 +1,8 @@
 import unittest, tempfile, json
 from pathlib import Path
 from unittest.mock import patch, Mock
-import mask_review, seedance_bridge
+from studiotbelt.vision import mask_review
+from studiotbelt.services import seedance_bridge
 
 class FaceMeshTests(unittest.TestCase):
     def test_mesh_approval_tracks_overlay_and_audio_without_masks(self):
@@ -23,13 +24,13 @@ class FaceMeshTests(unittest.TestCase):
             (p / 'audio-manifest.json').write_text('{}')
             response = Mock()
             response.json.return_value = {'requestId': 'mesh-test'}
-            with patch('providers.get_active_provider', return_value='enhancor'), \
-                 patch('mask_review.require_approved'), \
-                 patch('seedance_bridge.credential', return_value='test'), \
-                 patch('seedance_bridge.setting', return_value='https://example.org'), \
-                 patch('media_host.upload', return_value='https://example.org/video'), \
-                 patch('audio_workflow.prepare_seedance_video') as prepare, \
-                 patch('seedance_bridge.requests.post', return_value=response) as post:
+            with patch('studiotbelt.services.providers.get_active_provider', return_value='enhancor'), \
+                 patch('studiotbelt.vision.mask_review.require_approved'), \
+                 patch('studiotbelt.services.seedance_bridge.credential', return_value='test'), \
+                 patch('studiotbelt.services.seedance_bridge.setting', return_value='https://example.org'), \
+                 patch('studiotbelt.services.media_host.upload', return_value='https://example.org/video'), \
+                 patch('studiotbelt.core.audio_workflow.prepare_seedance_video') as prepare, \
+                 patch('studiotbelt.services.seedance_bridge.requests.post', return_value=response) as post:
                 seedance_bridge.submit(p, 'Replace subject', 'reference.png')
                 prepare.assert_not_called()
                 payload = post.call_args.kwargs['json']

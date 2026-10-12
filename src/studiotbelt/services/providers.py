@@ -1,8 +1,7 @@
 from pathlib import Path
 import os, json, time, requests, concurrent.futures
-from config import setting, credential
+from studiotbelt.config import setting, credential, ROOT
 
-ROOT = Path(__file__).resolve().parent
 ENV_PATH = ROOT / '.env'
 
 PROVIDER_SPECS = {

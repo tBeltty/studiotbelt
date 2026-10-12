@@ -2,7 +2,7 @@ from pathlib import Path
 import os,json,time,zipfile,io
 import requests
 
-from config import credential, setting
+from studiotbelt.config import credential, setting
 
 def segment_raw(video,folder,prompt='person'):
     folder=Path(folder);token=credential('REPLICATE_API_TOKEN');h={'Authorization':'Bearer '+token}

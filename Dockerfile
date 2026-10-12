@@ -20,8 +20,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
+# Copy source code and install package
 COPY . .
+RUN pip install --no-cache-dir -e .
 
 # Create workspace directory for runs
 RUN mkdir -p /app/runs
@@ -30,4 +31,4 @@ RUN mkdir -p /app/runs
 EXPOSE 8770
 
 # Start server
-CMD ["python", "launch.py"]
+CMD ["python", "-m", "studiotbelt.cli.launch"]

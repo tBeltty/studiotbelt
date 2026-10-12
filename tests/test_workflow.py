@@ -1,7 +1,9 @@
 import unittest, tempfile, json
 from pathlib import Path
 from unittest.mock import patch, Mock
-import mask_review, seedance_bridge
+from studiotbelt.vision import mask_review
+from studiotbelt.services import seedance_bridge, providers
+from studiotbelt.core import workflow
 
 class WorkflowTests(unittest.TestCase):
     def test_mask_changed_invalidates_approval(self):
@@ -22,7 +24,7 @@ class WorkflowTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d)
             (p / 'seedance-response.json').write_text('{}')
-            with patch('mask_review.require_approved'), patch('seedance_bridge.requests.post') as post:
+            with patch('studiotbelt.vision.mask_review.require_approved'), patch('studiotbelt.services.seedance_bridge.requests.post') as post:
                 with self.assertRaises(ValueError):
                     seedance_bridge.submit(p, 'prompt', 'reference.png')
                 post.assert_not_called()
@@ -33,13 +35,13 @@ class WorkflowTests(unittest.TestCase):
             (p / 'audio-manifest.json').write_text('{}')
             response = Mock()
             response.json.return_value = {'requestId': 'fake-id'}
-            with patch('providers.get_active_provider', return_value='enhancor'), \
-                 patch('mask_review.require_approved'), \
-                 patch('seedance_bridge.credential', return_value='test'), \
-                 patch('seedance_bridge.setting', return_value='https://example.org/callback'), \
-                 patch('media_host.upload', return_value='https://example.org/media'), \
-                 patch('audio_workflow.prepare_seedance_video', return_value=p / 'seedance-input.mp4'), \
-                 patch('seedance_bridge.requests.post', return_value=response) as post:
+            with patch('studiotbelt.services.providers.get_active_provider', return_value='enhancor'), \
+                 patch('studiotbelt.vision.mask_review.require_approved'), \
+                 patch('studiotbelt.services.seedance_bridge.credential', return_value='test'), \
+                 patch('studiotbelt.services.seedance_bridge.setting', return_value='https://example.org/callback'), \
+                 patch('studiotbelt.services.media_host.upload', return_value='https://example.org/media'), \
+                 patch('studiotbelt.core.audio_workflow.prepare_seedance_video', return_value=p / 'seedance-input.mp4'), \
+                 patch('studiotbelt.services.seedance_bridge.requests.post', return_value=response) as post:
                 seedance_bridge.submit(p, 'Replace one subject', 'reference.png')
                 payload = post.call_args.kwargs['json']
                 self.assertTrue(payload['is_draft'])
@@ -56,10 +58,10 @@ class WorkflowTests(unittest.TestCase):
             response.json.return_value = {'status': 'COMPLETED', 'result': 'https://example.org/result.mp4'}
             media = Mock()
             media.content = b'video'
-            with patch('seedance_bridge.credential', return_value='test'), \
-                 patch('seedance_bridge.requests.post', return_value=response), \
-                 patch('seedance_bridge.requests.get', return_value=media), \
-                 patch('seedance_bridge.finish_preview') as restore:
+            with patch('studiotbelt.services.seedance_bridge.credential', return_value='test'), \
+                 patch('studiotbelt.services.seedance_bridge.requests.post', return_value=response), \
+                 patch('studiotbelt.services.seedance_bridge.requests.get', return_value=media), \
+                 patch('studiotbelt.services.seedance_bridge.finish_preview') as restore:
                 seedance_bridge.wait_and_finish(d, 'fake-id')
                 self.assertEqual((p / 'seedance-result.mp4').read_bytes(), b'video')
                 restore.assert_called_once()
@@ -73,9 +75,9 @@ class WorkflowTests(unittest.TestCase):
             (p / 'seedance-request.json').write_text(json.dumps({'is_draft': True, 'webhook_url': ''}))
             response = Mock()
             response.json.return_value = {'requestId': 'hd-id'}
-            with patch('providers.get_active_provider', return_value='enhancor'), \
-                 patch('seedance_bridge.credential', return_value='test'), \
-                 patch('seedance_bridge.requests.post', return_value=response) as post:
+            with patch('studiotbelt.services.providers.get_active_provider', return_value='enhancor'), \
+                 patch('studiotbelt.services.seedance_bridge.credential', return_value='test'), \
+                 patch('studiotbelt.services.seedance_bridge.requests.post', return_value=response) as post:
                 self.assertEqual(seedance_bridge.submit_hd(p), 'hd-id')
                 self.assertEqual(post.call_args.kwargs['json'], {'draft_id': 'draft', 'webhook_url': ''})
                 with self.assertRaises(ValueError):
@@ -85,32 +87,30 @@ class WorkflowTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d)
             (p / 'audio-manifest.json').write_text('{}')
-            with patch('mask_review.require_approved'), \
-                 patch('providers.get_active_provider', return_value=None), \
-                 patch('providers.is_provider_configured', return_value=False):
+            with patch('studiotbelt.vision.mask_review.require_approved'), \
+                 patch('studiotbelt.services.providers.get_active_provider', return_value=None), \
+                 patch('studiotbelt.services.providers.is_provider_configured', return_value=False):
                 with self.assertRaises(ValueError) as ctx:
                     seedance_bridge.submit(p, 'prompt', 'reference.png')
                 self.assertIn('No generative AI provider configured', str(ctx.exception))
 
     def test_get_active_provider_agnostic(self):
-        import providers
         with patch.dict('os.environ', {}, clear=True), \
-             patch('providers.setting', return_value=''), \
-             patch('providers.is_provider_configured', return_value=False):
+             patch('studiotbelt.services.providers.setting', return_value=''), \
+             patch('studiotbelt.services.providers.is_provider_configured', return_value=False):
             self.assertIsNone(providers.get_active_provider())
 
         with patch.dict('os.environ', {'ACTIVE_PROVIDER': 'enhancor'}), \
-             patch('providers.setting', return_value=''), \
-             patch('providers.is_provider_configured', return_value=True):
+             patch('studiotbelt.services.providers.setting', return_value=''), \
+             patch('studiotbelt.services.providers.is_provider_configured', return_value=True):
             self.assertEqual(providers.get_active_provider(), 'enhancor')
 
         with patch.dict('os.environ', {'ACTIVE_PROVIDER': 'replicate'}), \
-             patch('providers.setting', return_value=''), \
-             patch('providers.is_provider_configured', return_value=True):
+             patch('studiotbelt.services.providers.setting', return_value=''), \
+             patch('studiotbelt.services.providers.is_provider_configured', return_value=True):
             self.assertEqual(providers.get_active_provider(), 'replicate')
 
     def test_cli_prepare_and_submit_args(self):
-        import workflow
         parser = workflow.p
         args = parser.parse_args(['prepare', 'input.mp4', '--provider', 'local', '--mode', 'face_mesh'])
         self.assertEqual(args.command, 'prepare')

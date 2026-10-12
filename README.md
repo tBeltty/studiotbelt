@@ -68,16 +68,17 @@ Step 03 requires video-to-video character replacement models with full-body iden
 
 ```mermaid
 flowchart LR
-    A[Input Video\nMP4 / MOV] --> B[FFmpeg Fast Normalization\n24 fps, Scaled]
-    B --> C[MediaPipe Face Mesh\nLocal CPU]
-    B --> D[Depth & SAM 3\nCloud: fal · HF ZeroGPU · Replicate]
-    B --> E[Demucs Vocal Separation\nLocal CPU or Cloud Replicate]
-    E --> F[Pitch Shift +3 st\nLocked Duration]
-    C & F --> G[Guidance Composite\nseedance-input.mp4]
-    D & F --> G
-    G --> H[Visual Review Gate\nInteractive SPA]
-    H --> I[Agnostic Generative Engine\nReplicate · Enhancor · ComfyUI · fal.ai]
-    I --> J[Original Audio Restoration\nMaster Export 1080p]
+    A["Input Video<br/>(MP4 / MOV)"] --> B["FFmpeg Fast Normalization<br/>(24 fps · C-Filters)"]
+    B --> C["MediaPipe Face Mesh<br/>(Local CPU)"]
+    B --> D["Depth & SAM 3<br/>(Cloud: fal · HF · Replicate)"]
+    B --> E["Demucs Vocal Separation<br/>(Local CPU or Cloud)"]
+    E --> F["Pitch Shift (+3 st)<br/>(Locked Duration)"]
+    C --> G["Guidance Composite<br/>(seedance-input.mp4)"]
+    D --> G
+    F --> G
+    G --> H["Visual Review Gate<br/>(Interactive SPA)"]
+    H --> I["Generative Engine<br/>(fal · Enhancor · Replicate · Comfy)"]
+    I --> J["Master Export 1080p<br/>(Original Audio Restored)"]
 ```
 
 ---
@@ -126,8 +127,9 @@ bash setup.sh
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install -e .
 cp .env.example .env
-python doctor.py
+python -m studiotbelt.cli.doctor
 ```
 
 ### Running the Application
@@ -135,8 +137,11 @@ python doctor.py
 ```bash
 # Start studio launcher
 bash start.sh
-# Or directly via Python:
-python launch.py
+# Or directly via Python module:
+python -m studiotbelt.cli.launch
+
+# Or via installed console script:
+studiotbelt
 
 # Open in browser
 open http://127.0.0.1:8770
@@ -147,7 +152,7 @@ open http://127.0.0.1:8770
 To configure the environment using an agentic coding tool with terminal and filesystem access (Codex, Claude Code, Cursor, Antigravity), provide the following prompt:
 
 ```text
-Set up this tBelt Studio project. Read docs/SETUP.md and follow it end to end. Detect my OS, install missing prerequisites (Python 3.12+, FFmpeg, Rubber Band, cloudflared) using the supported package manager, create the main virtual environment (.venv), install dependencies, run bash setup-face-mesh.sh for local face mesh tracking if supported, and create .env from .env.example without overwriting existing keys. Run the local tests (python -m unittest discover tests) and environment diagnostics (python doctor.py). Launch the app and its callback-only tunnel via python launch.py on a free localhost port, verify that the UI responds, and report the working URL. Work independently through setup, respecting system permission prompts. Do not submit paid generations. If API keys are missing, launch the UI and indicate which provider keys are pending.
+Set up this tBelt Studio project. Read docs/SETUP.md and follow it end to end. Detect my OS, install missing prerequisites (Python 3.12+, FFmpeg, Rubber Band, cloudflared) using the supported package manager, create the main virtual environment (.venv), install dependencies (pip install -r requirements.txt && pip install -e .), run bash setup-face-mesh.sh for local face mesh tracking if supported, and create .env from .env.example without overwriting existing keys. Run the local tests (python -m unittest discover tests) and environment diagnostics (python -m studiotbelt.cli.doctor). Launch the app and its callback-only tunnel via bash start.sh on a free localhost port, verify that the UI responds, and report the working URL. Work independently through setup, respecting system permission prompts. Do not submit paid generations. If API keys are missing, launch the UI and indicate which provider keys are pending.
 ```
 
 The launcher initializes a callback-only Cloudflare Quick Tunnel when no custom webhook is configured. Keep it running alongside the application. The agent references the included [setup guide](docs/SETUP.md). Supply your own provider keys in `.env` and approve required system package installations. Windows users must run inside WSL2 (Ubuntu); launch scripts are included for macOS and Linux.
@@ -180,30 +185,30 @@ Refer to the complete technical guide in [docs/DEPLOY-WEB.md](docs/DEPLOY-WEB.md
 
 ## Command Line Interface (CLI)
 
-The repository provides `workflow.py` for headless terminal execution and autonomous agent pipelines:
+The package provides CLI entry points (`studiotbelt-workflow` or `python -m studiotbelt.core.workflow`) for headless execution and autonomous pipelines:
 
 ```bash
 # 1. Prepare video (depth, face mesh, or depth+mesh)
-python workflow.py prepare path/to/source.mp4 --mode depth --provider auto
+python -m studiotbelt.core.workflow prepare path/to/source.mp4 --mode depth --provider auto
 # Output: JOB: 8e5f2a1b4c3d... (32-character local job ID)
 
 # 2. Check job status and obtain quality fingerprint
-python workflow.py status <JOB_ID>
+python -m studiotbelt.core.workflow status <JOB_ID>
 
 # 3. Quality review gate (approve current motion/mask artifacts)
-python workflow.py review <JOB_ID> --approve --fingerprint <HASH> --note "Visual QA verified"
+python -m studiotbelt.core.workflow review <JOB_ID> --approve --fingerprint <HASH> --note "Visual QA verified"
 
 # 4. Submit character recast draft (supports --prompt string or --prompt-file)
-python workflow.py submit <JOB_ID> --prompt "A cinematic portrait of the character" --reference path/to/character.png
+python -m studiotbelt.core.workflow submit <JOB_ID> --prompt "A cinematic portrait of the character" --reference path/to/character.png
 # Or with multiple character references:
-python workflow.py submit <JOB_ID> --prompt-file prompt.txt --reference char1.png --second-reference char2.png
+python -m studiotbelt.core.workflow submit <JOB_ID> --prompt-file prompt.txt --reference char1.png --second-reference char2.png
 
 # 5. Upgrade draft to high-definition 1080p
-python workflow.py hd <JOB_ID>
+python -m studiotbelt.core.workflow hd <JOB_ID>
 
 # 6. Resume pending or saved requests without re-paying
-python workflow.py resume <JOB_ID>
-python workflow.py resume <JOB_ID> --hd
+python -m studiotbelt.core.workflow resume <JOB_ID>
+python -m studiotbelt.core.workflow resume <JOB_ID> --hd
 ```
 
 ---
@@ -233,30 +238,30 @@ python workflow.py resume <JOB_ID> --hd
 
 ```
 studiotbelt/
-├── app.py                  # FastAPI application server and REST endpoints
-├── launch.py               # Application launcher with automatic port & tunnel handling
-├── doctor.py               # Environment and dependency diagnostic utility
-├── workflow.py             # Headless CLI workflow manager
-├── audio_workflow.py       # Demucs vocal separation & pitch shift engine
-├── face_mesh.py            # MediaPipe Face Mesh tracking controller
-├── mesh_worker.py          # 478 3D landmark extractor with temporal smoothing
-├── pipeline.py             # FFmpeg-accelerated video normalization & vision pipeline
-├── providers.py            # Multi-provider dispatch & settings configuration
-├── seedance_bridge.py      # Agnostic cloud synthesis adapter (Replicate, Enhancor, fal.ai)
-├── mask_review.py          # Quality gate review state manager
-├── static/
-│   ├── index.html          # SPA interface with real-time progress dashboard
-│   ├── i18n.js             # Bilingual Spanish/English translation engine
-│   └── favicon.svg         # Studio vector brand mark
-├── docs/
-│   ├── ARCHITECTURE.md     # In-depth technical architecture specification
-│   ├── DEPLOY-WEB.md       # Docker and cloud deployment guide (ZeroGPU, Hugging Face, VPS)
-│   └── SETUP.md            # Local environment installation walkthrough
-├── CHANGELOG.md            # Release history following Keep a Changelog
-├── CONTRIBUTING.md         # Contribution guidelines and standards
-├── SECURITY.md             # Vulnerability reporting and security posture
-├── LICENSE                 # MIT License
-└── requirements.txt        # Python dependency manifest
+├── pyproject.toml              # Build system, CLI entrypoints, metadata (PEP 517/621)
+├── requirements.txt            # Dependency manifest
+├── start.sh                    # Host launcher script
+├── setup.sh                    # Automated setup & diagnostic bootstrapper
+│
+├── src/studiotbelt/            # Modular application package
+│   ├── api/                    # FastAPI application, routes, and webhooks
+│   ├── core/                   # Pipeline processing, workflow engine, audio separation
+│   ├── services/               # Multi-provider routing, media hosting, synthesis bridges
+│   ├── vision/                 # MediaPipe Face Mesh, SAM 3 masks, quality review
+│   └── cli/                    # Diagnostic doctor and studio launcher implementations
+│
+├── static/                     # Modular client assets
+│   ├── index.html              # Lean semantic SPA markup
+│   ├── css/styles.css          # Studio dark design system tokens & surface styles
+│   ├── js/app.js               # Frontend application runtime & state machine
+│   ├── i18n.js                 # Bilingual Spanish/English translation engine
+│   └── favicon.svg             # Studio vector brand mark
+│
+├── logs/                       # Isolated runtime log directory (server.log, tunnel.log)
+├── tests/                      # Comprehensive test suite (all green)
+├── docs/                       # Architectural specifications & deployment guides
+├── pyproject.toml              # Build backend and editable package definition
+└── requirements.txt            # Python dependency manifest
 ```
 
 ---

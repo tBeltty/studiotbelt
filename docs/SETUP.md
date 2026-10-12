@@ -73,14 +73,14 @@ Verify that all dependencies and binaries are correctly detected:
 python -m unittest discover tests
 
 # Run environment diagnostics
-python doctor.py
+python -m studiotbelt.cli.doctor
 ```
 
 If everything is ready, launch the studio:
 ```bash
 bash start.sh
-# Or directly via Python:
-python launch.py
+# Or directly via Python module:
+python -m studiotbelt.cli.launch
 ```
 Then open your browser at **http://127.0.0.1:8770**.
 
@@ -93,10 +93,10 @@ If you are using an agentic coding assistant with shell and filesystem access (s
 ```text
 Set up this tBelt Studio project. Read docs/SETUP.md and follow it end to end:
 1. Detect my OS and install missing system prerequisites (Python 3.12+, FFmpeg, Rubber Band, cloudflared) using the platform package manager.
-2. Create the main virtual environment (.venv) and install dependencies from requirements.txt.
+2. Create the main virtual environment (.venv) and install dependencies (pip install -r requirements.txt && pip install -e .).
 3. If local face mesh tracking is supported, configure the face mesh environment via bash setup-face-mesh.sh.
 4. Create .env from .env.example without overwriting existing files or keys.
-5. Run the test suite (python -m unittest discover tests) and environment diagnostics (python doctor.py).
-6. Launch the application via python launch.py (which manages the app and callback tunnel on a free port), verify that the UI responds, and output the local URL.
+5. Run the test suite (python -m unittest discover tests) and environment diagnostics (python -m studiotbelt.cli.doctor).
+6. Launch the application via bash start.sh (which manages the app and callback tunnel on a free port), verify that the UI responds, and output the local URL.
 Work autonomously, respecting system permission prompts. Do not submit paid generations. If provider API keys are missing, launch the UI and state which keys are unconfigured.
 ```

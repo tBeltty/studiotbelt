@@ -2,7 +2,7 @@
 from pathlib import Path
 import os,json,time
 import av,numpy as np,requests
-from config import setting
+from studiotbelt.config import setting
 RATE=int(setting('AUDIO_SAMPLE_RATE', '44100'))
 
 def read_audio(path):
@@ -118,7 +118,7 @@ def finish_preview(generated,folder):
 def prepare_seedance_video(folder, semitones=None):
     """Embed pitch-shifted isolated vocals into the guidance composite."""
     import subprocess
-    from config import find_binary
+    from studiotbelt.config import find_binary
     folder=Path(folder)
     if semitones is None:
         semitones = int(setting('PITCH_SEMITONES', '3'))

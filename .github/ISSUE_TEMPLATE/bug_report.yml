@@ -21,7 +21,8 @@ body:
       label: Steps to Reproduce
       description: Steps or commands to reproduce the observed behavior.
       placeholder: |
-        1. Run `python launch.py`
+      placeholder: |
+        1. Run `bash start.sh` (or `python -m studiotbelt.cli.launch`)
         2. Upload a 15-second video...
     validations:
       required: true
@@ -36,5 +37,5 @@ body:
     id: logs
     attributes:
       label: Doctor Output / Terminal Logs
-      description: Run `python doctor.py` and paste the output below.
+      description: Run `python -m studiotbelt.cli.doctor` and paste the output below.
       render: shell

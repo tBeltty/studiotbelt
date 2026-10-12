@@ -56,6 +56,11 @@ mesh = [
     "mediapipe>=0.10.0"
 ]
 
+[project.scripts]
+studiotbelt = "studiotbelt.cli.launch:main"
+studiotbelt-doctor = "studiotbelt.cli.doctor:main"
+studiotbelt-workflow = "studiotbelt.core.workflow:main"
+
 [project.urls]
 Homepage = "https://github.com/tBeltty/studiotbelt"
 Repository = "https://github.com/tBeltty/studiotbelt"
@@ -65,6 +70,10 @@ Issues = "https://github.com/tBeltty/studiotbelt/issues"
 line-length = 120
 target-version = "py312"
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+

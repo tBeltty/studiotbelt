@@ -1,7 +1,7 @@
 import unittest, tempfile
 from pathlib import Path
 import numpy as np
-from pipeline import writer, put, finish, composite, frames
+from studiotbelt.core.pipeline import writer, put, finish, composite, frames
 
 class CompositeTests(unittest.TestCase):
     def test_composite_alignment_and_subject_selection(self):

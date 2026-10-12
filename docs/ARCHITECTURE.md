@@ -10,49 +10,59 @@ The system decouples processing stages based on computational efficiency between
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Client Browser (SPA)"]
-        UI["Modern Web Interface\n(Bilingual ES/EN, Zero Reloads)"]
-        Upload["XHR Upload\n(Live Bytes & Percentage)"]
-        Tracker["Real-time Progress Tracker\n(4 Milestones + Timer)"]
+    subgraph Client ["1. Client Interface (Modular SPA)"]
+        UI["tBelt Studio Web UI<br/>(static/index.html & styles.css)"]
+        Upload["XHR Telemetry & State<br/>(static/js/app.js)"]
     end
 
-    subgraph Local ["Local Server (Apple Silicon / CPU)"]
-        Norm["FFmpeg Acceleration\n(24 fps, Scaled, ~2.8s)"]
-        Mesh["MediaPipe Face Mesh\n(478 3D Landmarks, TFLite CPU)"]
-        Audio["Demucs Vocal Isolation\n(CPU htdemucs) + Pitch Shift (+3 st)"]
-        Mux["Audio Multiplexer\n(Embedded Guidance Stream)"]
+    subgraph API ["2. API & Orchestration (src/studiotbelt/api)"]
+        FastAPI["FastAPI Web Server<br/>(REST Endpoints & Static Mounts)"]
+        Workers["Thread Pool Executor<br/>(Background Job Queue)"]
+        Tunnel["Cloudflare Quick Tunnel<br/>(webhook.py Receiver)"]
     end
 
-    subgraph Cloud ["Generative Infrastructure (Agnostic Layer)"]
-        Router["Provider Router\n(providers.py)"]
-        Fal["fal.ai\nWan 2.2 Animate Replace / MiniMax H3 Max"]
-        Enhancor["Enhancor\nSeedance 2.5 Edit & Omni"]
-        Replicate["Replicate\nWan 2.2 Serverless Video-to-Video"]
-        Comfy["ComfyUI Local\nAnimateDiff / IP-Adapter Video"]
-        Draft["Draft Synthesis Validation"]
-        HD["Approved 1080p Render"]
+    subgraph LocalEngine ["3. Local Processing & CV (src/studiotbelt/core & vision)"]
+        Normalize["FFmpeg Normalization<br/>(24 fps · C-Filters · Downscaling)"]
+        Mesh["MediaPipe Face Mesh<br/>(478 3D Landmarks · CPU TFLite)"]
+        Audio["Demucs Vocal Isolation<br/>(htdemucs + Pitch Shift +3 st)"]
+        Mux["Guidance Multiplexer<br/>(seedance-input.mp4)"]
     end
 
-    UI --> Upload --> Norm
-    Norm --> Mesh
-    Norm --> Audio
-    Mesh & Audio --> Mux
-    Mux --> Tracker
-    Tracker --> Draft --> Router
-    Router --> Fal & Enhancor & Replicate & Comfy
-    Fal & Enhancor & Replicate & Comfy --> HD
-    HD --> UI
+    subgraph Gate ["4. Quality Review Gate (src/studiotbelt/vision)"]
+        ReviewGate["Visual Review Gate (mask_review.py)<br/>Human / Agent Quality Verification"]
+    end
+
+    subgraph CloudLayer ["5. Generative Synthesis (src/studiotbelt/services)"]
+        Router["Provider Router (providers.py)<br/>fal.ai · Enhancor · Replicate · ComfyUI"]
+        Restoration["Master Audio Restoration<br/>(Original Source PCM Audio Restored)"]
+        Output["Master 1080p Video<br/>(final-preview.mp4)"]
+    end
+
+    UI --> Upload
+    Upload -->|POST /jobs| FastAPI
+    FastAPI --> Workers
+    Tunnel -.->|Async Callback| Workers
+    Workers --> Normalize
+    Normalize --> Mesh
+    Normalize --> Audio
+    Mesh --> Mux
+    Audio --> Mux
+    Mux --> ReviewGate
+    ReviewGate -->|Approved Submission| Router
+    Router --> Restoration
+    Restoration --> Output
+    Output -->|Stream / Download| UI
 ```
 
 1. **Local CPU (Preparation & Signal Isolation):**
    - **Video Normalization:** Frame rate adjustment to 24 fps and downscaling via FFmpeg native C-filters.
-   - **Facial Landmark Mesh:** 478 3D points calculated in real time using Google MediaPipe FaceLandmarker via TensorFlow Lite CPU inference.
-   - **Audio Separation & Modulation:** Local Demucs (`htdemucs`) isolates vocals and instrumental tracks. Vocals are pitch-shifted +3 semitones while retaining identical temporal alignment.
+   - **Facial Landmark Mesh:** 478 3D points calculated in real time using Google MediaPipe FaceLandmarker via TensorFlow Lite CPU inference (`src/studiotbelt/vision/face_mesh.py`).
+   - **Audio Separation & Modulation:** Local Demucs (`htdemucs`) isolates vocals and instrumental tracks. Vocals are pitch-shifted +3 semitones while retaining identical temporal alignment (`src/studiotbelt/core/audio_workflow.py`).
    - **Resource Footprint:** Maximum RAM peak of ~1.1 GB, allowing execution on low-memory hardware (benchmark tests on Apple Silicon M1 with 8 GB RAM).
 
 2. **Generative Synthesis (Provider-Agnostic Abstraction Layer):**
    - The preparation stage yields a normalized guidance video `seedance-input.mp4` with pitched audio.
-   - The character generation layer is decoupled into `providers.py`, allowing dynamic routing to:
+   - The character generation layer is decoupled into `src/studiotbelt/services/providers.py`, allowing dynamic routing to:
      - **Replicate**: Serverless Wan 2.2 video-to-video execution and LivePortrait billed by GPU-seconds.
      - **Enhancor**: ByteDance Seedance 2.5 Edit & Omni motion transfer and facial identity preservation.
      - **ComfyUI**: Self-hosted local instances for fully offline workflows.

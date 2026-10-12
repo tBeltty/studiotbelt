@@ -1,11 +1,17 @@
 """Optional local face-mesh preparation; no depth or segmentation calls."""
 from pathlib import Path
 import json,subprocess,sys,shutil
-ROOT=Path(__file__).resolve().parent
+from studiotbelt.config import ROOT
+
+def _get_worker_script():
+    cand = Path(__file__).resolve().parent / 'mesh_worker.py'
+    if cand.exists():
+        return cand
+    return ROOT / 'mesh_worker.py'
 
 def run(src,folder,status=print):
-    from pipeline import normalize
-    from audio_workflow import separate,prepare_seedance_video
+    from studiotbelt.core.pipeline import normalize
+    from studiotbelt.core.audio_workflow import separate, prepare_seedance_video
     folder=Path(folder)
     python=ROOT/'.venv-face/bin/python'
     if not python.exists():
@@ -14,7 +20,7 @@ def run(src,folder,status=print):
     status('1/4 Normalizing video and format...')
     normalize(src,folder/'original.mp4')
     status('2/4 Facial mesh tracking with MediaPipe...')
-    subprocess.run([str(python),str(ROOT/'mesh_worker.py'),str(folder)],check=True)
+    subprocess.run([str(python),str(_get_worker_script()),str(folder)],check=True)
     (folder/'workflow-mode.json').write_text(json.dumps({'mode':'face_mesh'}))
     status('3/4 Vocal isolation and audio stems...')
     separate(src,folder,status)
@@ -24,8 +30,8 @@ def run(src,folder,status=print):
 
 
 def run_depth(src,folder,prompt='person',provider='auto',status=print):
-    from pipeline import run as run_advanced
-    from audio_workflow import prepare_seedance_video
+    from studiotbelt.core.pipeline import run as run_advanced
+    from studiotbelt.core.audio_workflow import prepare_seedance_video
     folder=Path(folder)
     python=ROOT/'.venv-face/bin/python'
     if not python.exists():
@@ -34,7 +40,8 @@ def run_depth(src,folder,prompt='person',provider='auto',status=print):
     run_advanced(src,folder,prompt,provider,status)
     shutil.copy2(folder/'composite-silent.mp4',folder/'depth-composite-silent.mp4')
     status('Adding face mesh from original video onto depth composite')
-    subprocess.run([str(python),str(ROOT/'mesh_worker.py'),str(folder),'--depth'],check=True)
+    subprocess.run([str(python),str(_get_worker_script()),str(folder),'--depth'],check=True)
     (folder/'workflow-mode.json').write_text(json.dumps({'mode':'depth_mesh'}))
     prepare_seedance_video(folder)
     status('Depth + face mesh ready · full mask and facial tracking review required')
+

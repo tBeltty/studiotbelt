@@ -1,7 +1,7 @@
 """Project-local credentials and hardened environment configuration."""
 import os, sys, shutil
 from pathlib import Path
-ROOT=Path(__file__).resolve().parent
+ROOT=Path(__file__).resolve().parent.parent.parent
 
 # Hardened PATH resolution for system daemons (macOS LaunchAgents, systemd, etc.)
 KNOWN_BIN_DIRS = [

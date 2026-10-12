@@ -1,6 +1,6 @@
 """A callback-only receiver. Exposes no UI, local files, credentials or job mutation."""
 import http.server,json,os,re,secrets,shutil,subprocess,threading
-from config import ROOT
+from studiotbelt.config import ROOT
 
 def main():
     executable=shutil.which('cloudflared')

@@ -16,6 +16,7 @@ if ! command -v rubberband >/dev/null 2>&1; then
 fi
 if [ ! -d .venv ]; then "$PYTHON" -m venv .venv; fi
 .venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pip install -e .
 if [ ! -f .env ]; then cp .env.example .env; chmod 600 .env; fi
-.venv/bin/python doctor.py
-printf '\nNext: populate .env with your credentials, run bash start.sh, and verify with .venv/bin/python doctor.py --require-keys\n'
+.venv/bin/python -m studiotbelt.cli.doctor
+printf '\nNext: populate .env with your credentials, run bash start.sh, and verify with .venv/bin/python -m studiotbelt.cli.doctor --require-keys\n'

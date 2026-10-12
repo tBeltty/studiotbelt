@@ -7,4 +7,4 @@ if [ ! -x "$PYTHON" ]; then
   PYTHON="$(command -v python3 || command -v python)"
 fi
 
-exec "$PYTHON" launch.py
+exec "$PYTHON" -m studiotbelt.cli.launch "$@"

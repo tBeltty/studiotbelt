@@ -2,7 +2,7 @@
 from pathlib import Path
 from urllib.parse import urlparse
 import requests,re,html,time,warnings
-from config import setting
+from studiotbelt.config import setting
 
 def _upload_once(path,host):
     path=Path(path)

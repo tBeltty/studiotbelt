@@ -5,7 +5,7 @@ import av, numpy as np, requests
 from PIL import Image
 from gradio_client import Client, handle_file
 
-from config import load_env, setting, find_binary
+from studiotbelt.config import load_env, setting, find_binary
 load_env()
 
 def get_depth_hf_space():
@@ -219,7 +219,7 @@ def run(src,directory,prompt='person',provider=None,status=print):
     directory=Path(directory);directory.mkdir(parents=True,exist_ok=True)
     active_prov = provider
     if not active_prov or active_prov in ['auto', 'local']:
-        from providers import get_active_provider, is_provider_configured
+        from studiotbelt.services.providers import get_active_provider, is_provider_configured
         active_gen = get_active_provider()
         if active_gen == 'replicate' and is_provider_configured('replicate'):
             active_prov = 'replicate'
@@ -248,7 +248,7 @@ def run(src,directory,prompt='person',provider=None,status=print):
         status('Compositing · depth subject over original background')
         composite_fal(directory / 'original.mp4', directory / 'depth.mp4', directory / 'sam.mp4', directory, src)
         status(f'4/4 Aislamiento vocal y ajuste de tono ({setting("PITCH_SEMITONES", "+3")} semitonos)...')
-        from audio_workflow import separate, prepare_seedance_video
+        from studiotbelt.core.audio_workflow import separate, prepare_seedance_video
         separate(src, directory, status)
         prepare_seedance_video(directory)
         meta.update(prompt=prompt, depth_provider='fal', sam_space=setting('FAL_SAM_MODEL', 'fal-ai/sam-3/video'), mask_method='SAM 3 video mask')
@@ -257,7 +257,7 @@ def run(src,directory,prompt='person',provider=None,status=print):
         return meta
     else:
         status('1/4 Aislamiento vocal...')
-        from audio_workflow import separate
+        from studiotbelt.core.audio_workflow import separate
         separate(src, directory, status)
         status(f'2/4 Preparando video ({setting("TARGET_FPS", "24")} fps)...')
         meta = normalize(src, directory / 'original.mp4')
@@ -268,11 +268,11 @@ def run(src,directory,prompt='person',provider=None,status=print):
             depth_replicate(directory / 'original.mp4', directory / 'depth-raw.mp4', 'chenxwh/depth-any-video' if active_prov == 'replicate-chenxwh' else setting('REPLICATE_DEPTH_MODEL', 'lucataco/depth-anything-video'))
         shutil.copyfile(directory / 'depth-raw.mp4', directory / 'depth.mp4')
         status('4/4 SAM 3 · segmentando sujetos...')
-        from raw_masks import segment_raw, clean_border_fragments
+        from studiotbelt.vision.raw_masks import segment_raw, clean_border_fragments
         raw_dir = clean_border_fragments(segment_raw(directory / 'depth.mp4', directory, prompt))
         status('Compositing · depth subject over original background')
         composite(directory / 'original.mp4', directory / 'depth.mp4', raw_dir, directory, src)
-        from audio_workflow import prepare_seedance_video
+        from studiotbelt.core.audio_workflow import prepare_seedance_video
         status(f'Ajuste de tono vocal ({setting("PITCH_SEMITONES", "+3")} semitonos)...')
         prepare_seedance_video(directory)
         meta.update(prompt=prompt, depth_provider=active_prov, sam_space=get_sam_hf_space(), mask_method='SAM 3 raw PNG masks')
