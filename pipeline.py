@@ -28,12 +28,10 @@ def finish(c,s):
     c.close()
 
 def normalize(src,dst):
-    import subprocess, shutil
-    ffmpeg_bin = shutil.which('ffmpeg') or '/opt/homebrew/bin/ffmpeg'
-    if not Path(ffmpeg_bin).exists() and not shutil.which('ffmpeg'):
-        ffmpeg_bin = '/usr/local/bin/ffmpeg' if Path('/usr/local/bin/ffmpeg').exists() else 'ffmpeg'
+    import subprocess
+    from config import find_binary
     cmd = [
-        str(ffmpeg_bin), '-y', '-i', str(src),
+        find_binary('ffmpeg'), '-y', '-i', str(src),
         '-vf', "fps=24,scale='min(960,iw)':-2",
         '-c:v', 'libx264', '-crf', '18', '-preset', 'fast',
         '-c:a', 'aac', '-b:a', '192k',

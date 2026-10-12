@@ -118,9 +118,10 @@ def finish_preview(generated,folder):
 
 def prepare_seedance_video(folder, semitones=3):
     """Embed +3-semitone isolated vocals into the colored-depth composite."""
-    import subprocess,shutil
-    folder=Path(folder);binary=shutil.which('rubberband')
-    if not binary:raise RuntimeError('Rubber Band is required for pitch shifting.')
+    import subprocess
+    from config import find_binary
+    folder=Path(folder)
+    binary = find_binary('rubberband')
     pitched=folder/f'vocals-plus{semitones}.wav'
     subprocess.run([binary,'--fine','--pitch',str(semitones),'--time','1',str(folder/'vocals.wav'),str(pitched)],check=True,capture_output=True)
     original=read_audio(folder/'vocals.wav');samples=read_audio(pitched)

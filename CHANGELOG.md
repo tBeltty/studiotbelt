@@ -18,7 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Interactive settings modal (⚙️ Ajustes) with provider selector cards, connection indicators, and key persistence.
   - Active engine indicator badge in top navigation and Step 03 character creation panel.
   - Non-intrusive onboarding banner displayed when no generation engine is configured.
-  - Direct deep-links to provider developer dashboards for retrieving API credentials.
+- **Daemon Environment & Binary Resolution Hardening (`config.py`, `pipeline.py`, `audio_workflow.py`)**:
+  - Implemented centralized `find_binary()` with automatic PATH injection across all macOS launchd and system daemon runners.
+  - Added `/api/health` diagnostic endpoint reporting runtime binary resolution (FFmpeg, Rubberband, Python).
+  - Sanitized frontend URL state (`history.replaceState`) on job failure to prevent error persistence across browser reloads.
 
 ### Security
 - **Strict Credential Encapsulation**:

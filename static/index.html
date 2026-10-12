@@ -1955,6 +1955,11 @@
         if (Array.isArray(j.files)) jobFiles = new Set(j.files);
         busy = j.state === 'running';
         status(j.status, j.state === 'error');
+        if (j.state === 'error') {
+          if (window.location.search) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        }
         $('#go').disabled = busy;
         $('#draft-button').disabled = busy || $('#input-ready').hidden || !maskApproved;
 

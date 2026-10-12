@@ -1,5 +1,5 @@
 from pathlib import Path
-import os,threading,uuid,shutil,json
+import os,sys,threading,uuid,shutil,json
 
 # Guarantee standard binary paths for ffmpeg, sox, and rubberband across all daemon runners
 for _p in ['/opt/homebrew/bin', '/opt/homebrew/sbin', '/usr/local/bin']:
@@ -44,6 +44,18 @@ def update_settings_endpoint(payload: dict):
     key = payload.get('key')
     extra = payload.get('extra')
     return update_settings(provider, key, extra)
+@app.get('/api/health')
+def health_endpoint():
+    from config import find_binary
+    bins = {}
+    for b in ['ffmpeg', 'rubberband']:
+        try:
+            bins[b] = find_binary(b)
+        except Exception as e:
+            bins[b] = f"MISSING: {e}"
+    bins['python'] = sys.executable
+    return {'status': 'ok', 'binaries': bins}
+
 @app.post('/jobs')
 def create(video:UploadFile=File(...),prompt:str=Form('person'),provider:str=Form('local'),mode:str=Form('face_mesh')):
     if mode not in ['face_mesh','depth','depth_mesh']:raise HTTPException(400,'Unknown workflow mode')
