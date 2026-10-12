@@ -105,12 +105,15 @@ The Mac mini remains responsive throughout local execution, leaving over 6 GB of
 ### Prerequisites
 - macOS or Linux
 - Python 3.12+
-- `ffmpeg`, `sox`, `rubberband`
+- `ffmpeg`, `rubberband`
 - An API key for your chosen video engine (fal.ai, Enhancor, or Replicate) or a local ComfyUI URL.
 
 ```bash
-# macOS installation
-brew install ffmpeg sox rubberband python@3.12
+# macOS (Homebrew)
+brew install ffmpeg rubberband python@3.12
+
+# Ubuntu / Debian
+sudo apt update && sudo apt install -y ffmpeg rubberband-cli python3 python3-venv python3-pip
 ```
 
 ### Installation

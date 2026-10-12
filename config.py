@@ -31,8 +31,8 @@ def find_binary(name: str) -> str:
         if candidate.is_file() and os.access(candidate, os.X_OK):
             return str(candidate)
     raise RuntimeError(
-        f"El binario esencial '{name}' no fue encontrado en el sistema. "
-        f"Instálalo ejecutando: brew install {name}"
+        f"Essential binary '{name}' was not found. "
+        f"Install it via your package manager (macOS: brew install {name} | Ubuntu/Debian: sudo apt install {name})"
     )
 
 def load_env():

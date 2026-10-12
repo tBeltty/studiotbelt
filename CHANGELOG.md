@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Temporal landmark smoothing across momentary head turns and occlusions, eliminating tracking gap crashes.
 - **Local Audio Stem Isolation & Pitch Modulation (`audio_workflow.py`)**:
   - Embedded local Demucs (`htdemucs` CPU) vocal separation, removing external paid API audio dependencies.
-  - Seamless +3 semitone pitch-shift via Rubber Band / FFmpeg with tempo and timing strictly preserved.
+  - Sample-accurate +3 semitone pitch-shift via Rubber Band / FFmpeg with tempo and timing strictly preserved.
   - Automated multiplexing of pitched vocal stems into the synthesis guidance composite video.
 - **Modern Cloud Synthesis with fal.ai (`seedance_bridge.py`)**:
   - Direct integration with `fal.ai` Live Portrait and Video-to-Video models.

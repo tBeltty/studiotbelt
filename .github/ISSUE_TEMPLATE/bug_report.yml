@@ -1,0 +1,40 @@
+name: Bug Report
+description: File a reproducible bug report or diagnostic failure
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Please ensure you do not include private credentials or API keys (`FAL_KEY`, `ENHANCOR_API_KEY`, etc.) in this issue.
+  - type: input
+    id: version
+    attributes:
+      label: Python & OS Environment
+      description: What OS and Python version are you using?
+      placeholder: "e.g., macOS Sonoma (Apple Silicon) / Ubuntu 24.04, Python 3.12.3"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps or commands to reproduce the observed behavior.
+      placeholder: |
+        1. Run `python launch.py`
+        2. Upload a 15-second video...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Doctor Output / Terminal Logs
+      description: Run `python doctor.py` and paste the output below.
+      render: shell

@@ -9,7 +9,8 @@ def main():
     for name in ['av','numpy','PIL','requests','fastapi','uvicorn','multipart','gradio_client','scipy']:
         try:importlib.import_module(name);print(name+': OK')
         except Exception as exc:print(name+': FAILED ('+type(exc).__name__+')');failed=True
-    binary=shutil.which('rubberband');print('rubberband:', 'OK' if binary else 'MISSING — see docs/SETUP-AGENT.md');failed=failed or not binary
+    binary_ffmpeg=shutil.which('ffmpeg');print('ffmpeg:', 'OK' if binary_ffmpeg else 'MISSING — install via brew or apt');failed=failed or not binary_ffmpeg
+    binary_rubber=shutil.which('rubberband');print('rubberband:', 'OK' if binary_rubber else 'MISSING — see docs/SETUP-AGENT.md');failed=failed or not binary_rubber
     if args.mesh:
         from pathlib import Path
         import subprocess

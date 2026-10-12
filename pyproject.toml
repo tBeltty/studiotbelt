@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "studiotbelt"
+version = "1.1.0"
+description = "Lightweight local video preparation, facial motion tracking, and provider-agnostic character synthesis."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "tBeltty", email = "jhonatan@tbelt.online" }
+]
+keywords = [
+    "video-synthesis",
+    "motion-transfer",
+    "face-mesh",
+    "vocal-isolation",
+    "ai-video",
+    "fastapi"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+dependencies = [
+    "av>=17.0.0",
+    "demucs>=4.0.0",
+    "fal-client>=1.0.0",
+    "fastapi>=0.115.0",
+    "gradio_client>=2.0.0",
+    "numpy>=2.0.0",
+    "opencv-python-headless>=4.10.0",
+    "pillow>=11.0.0",
+    "python-multipart>=0.0.9",
+    "replicate>=1.0.0",
+    "requests>=2.31.0",
+    "scipy>=1.13.0",
+    "uvicorn>=0.30.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.4.0"
+]
+mesh = [
+    "mediapipe>=0.10.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/tBeltty/studiotbelt"
+Repository = "https://github.com/tBeltty/studiotbelt"
+Issues = "https://github.com/tBeltty/studiotbelt/issues"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

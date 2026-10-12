@@ -1,10 +1,7 @@
 from pathlib import Path
 import os,sys,threading,uuid,shutil,json
 
-# Guarantee standard binary paths for ffmpeg, sox, and rubberband across all daemon runners
-for _p in ['/opt/homebrew/bin', '/opt/homebrew/sbin', '/usr/local/bin']:
-    if _p not in os.environ.get('PATH', ''):
-        os.environ['PATH'] = f"{_p}:{os.environ.get('PATH', '')}"
+import config  # Initializes hardened cross-platform PATH and environment
 
 from fastapi import FastAPI,UploadFile,File,Form,HTTPException
 from fastapi.responses import FileResponse

@@ -4,11 +4,19 @@ set -euo pipefail
 
 PORT="${PORT:-8770}"
 
-CLOUDFLARED_BIN="$(command -v cloudflared || echo '/opt/homebrew/bin/cloudflared')"
+CLOUDFLARED_BIN="$(command -v cloudflared || true)"
+if [ -z "${CLOUDFLARED_BIN}" ]; then
+  for candidate in /usr/local/bin/cloudflared /opt/homebrew/bin/cloudflared /usr/bin/cloudflared; do
+    if [ -x "$candidate" ]; then
+      CLOUDFLARED_BIN="$candidate"
+      break
+    fi
+  done
+fi
 
-if [ ! -x "${CLOUDFLARED_BIN}" ]; then
-  echo "Error: cloudflared binary not found in PATH or /opt/homebrew/bin/cloudflared."
-  echo "Install it via 'brew install cloudflared' or from https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
+if [ -z "${CLOUDFLARED_BIN}" ] || [ ! -x "${CLOUDFLARED_BIN}" ]; then
+  echo "Error: cloudflared binary not found in PATH."
+  echo "Install it via your package manager (brew install cloudflared / apt install cloudflared) or from https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
   exit 1
 fi
 

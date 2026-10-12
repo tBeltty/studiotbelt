@@ -13,7 +13,7 @@
 We take the security of **tBelt Studio** seriously. If you discover a security vulnerability, please do NOT file a public issue on GitHub.
 
 Instead, please send an advisory email directly to:
-**security@tbelt.online** (or jhonatan@tbelt.online).
+**jhonatan@tbelt.online**
 
 Please include:
 1. A description of the vulnerability and its potential impact.

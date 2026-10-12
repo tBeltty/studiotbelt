@@ -31,7 +31,22 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Internal Agent & Research Notes
+# Internal Agent, Research Notes & Audit Reports
 HANDOFF.md
+*audit*.md
+*Audit*.md
+*hygiene*.md
+*Hygiene*.md
+*report*.md
+*Report*.md
+docs/*-ANALYSIS.md
+docs/*-AUDIT.md
+docs/*-HYGIENE.md
 docs/HIGGSFIELD-*.md
+plan-of-record.md
+execution-guide.md
+compliance-log.md
+annexes/
+.auditkit/
+scratch/
 .unity/
