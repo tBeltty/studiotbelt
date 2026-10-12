@@ -20,19 +20,29 @@ def submit_fal(folder, prompt, sirio, tein=None, status=print):
 
     from audio_workflow import prepare_seedance_video
     status('Pitching isolated vocals +3 semitones and embedding in guided video')
-    prepared = folder/'seedance-input.mp4' if is_mesh(folder) else prepare_seedance_video(folder)
+    prepared = folder/'seedance-input.mp4' if (folder/'seedance-input.mp4').exists() else prepare_seedance_video(folder)
 
     status('Uploading video and character references to fal.ai high-speed CDN')
     video_url = fal_client.upload_file(str(prepared))
-    image_url = fal_client.upload_file(str(sirio))
+    ref_images = [fal_client.upload_file(str(sirio))]
+    if tein:
+        ref_images.append(fal_client.upload_file(str(tein)))
 
-    model_id = setting('FAL_MODEL', 'fal-ai/live-portrait')
+    model_id = setting('FAL_MODEL', 'minimax/h3-max/recast')
     status(f'Submitting to {model_id} via fal.ai')
 
-    if 'live-portrait' in model_id:
+    if 'recast' in model_id:
         args = {
             'video_url': video_url,
-            'image_url': image_url
+            'reference_image_urls': ref_images,
+            'prompt': prompt,
+            'resolution': '1080P',
+            'enhance_realism': True
+        }
+    elif 'live-portrait' in model_id:
+        args = {
+            'video_url': video_url,
+            'image_url': ref_images[0]
         }
     else:
         args = {
@@ -51,7 +61,7 @@ def submit_fal(folder, prompt, sirio, tein=None, status=print):
         'request_id': ident,
         'prompt': prompt,
         'video': 'seedance-result.mp4',
-        'mode': 'fal_live_portrait' if 'live-portrait' in model_id else 'fal_video',
+        'mode': 'fal_recast' if 'recast' in model_id else 'fal_video',
         'provider': 'fal.ai'
     }, indent=2))
     status(f'fal.ai generation queued: {ident}')
@@ -61,7 +71,7 @@ def wait_and_finish_fal(folder, request_id, status=print):
     import fal_client
     folder = Path(folder)
     resp_file = folder/'seedance-response.json'
-    model_id = 'fal-ai/live-portrait'
+    model_id = 'minimax/h3-max/recast'
     if resp_file.exists():
         model_id = json.loads(resp_file.read_text()).get('model', model_id)
 
@@ -114,8 +124,9 @@ def submit_hd_fal(folder):
         import shutil; shutil.copy2(folder/'upload.mp4', source)
 
     import fal_client
-    model_id = original.get('model', 'fal-ai/live-portrait')
+    model_id = original.get('model', 'minimax/h3-max/recast')
     args = dict(original.get('arguments', {}))
+    args['resolution'] = '1080P'
 
     handler = fal_client.submit(model_id, arguments=args)
     ident = handler.request_id

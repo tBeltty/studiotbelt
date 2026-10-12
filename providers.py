@@ -9,7 +9,7 @@ PROVIDER_SPECS = {
     'fal': {
         'id': 'fal',
         'name': 'fal.ai',
-        'description': 'Live Portrait y modelos de difusión acelerados en la nube',
+        'description': 'H3 Max Recast (reemplazo cinematográfico de personajes 1080p) y Depth/SAM en la nube',
         'env_var': 'FAL_KEY',
         'help_url': 'https://fal.ai/dashboard/keys'
     },

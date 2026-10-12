@@ -2231,7 +2231,9 @@
         return;
       }
       const button = $('#draft-button');
+      const origText = button.textContent;
       button.disabled = true;
+      button.textContent = '✨ ' + (currentLang === 'en' ? 'Generating Character (fal.ai H3 Max)...' : 'Generando Personaje (fal.ai H3 Max)...');
       try {
         const data = new FormData(e.target);
         for (const name of ['sirio', 'tein']) {
@@ -2252,6 +2254,7 @@
       } catch (e) {
         status(e.message, true);
         button.disabled = false;
+        button.textContent = origText;
       }
     };
 

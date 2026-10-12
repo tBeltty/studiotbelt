@@ -83,32 +83,28 @@ def separate(src,folder,status=print):
 
 def finish_preview(generated,folder):
     folder=Path(folder);target=folder/'final-preview.mp4'
-    # Accommodate a small provider rounding gap without cutting source audio.
     with av.open(str(generated)) as probe, av.open(str(folder/'upload.mp4')) as source:
         stream=probe.streams.video[0]
-        vd=float(stream.duration*stream.time_base)
+        vd=float(stream.duration*stream.time_base) if stream.duration else float(probe.duration/av.time_base)
         sd=float(source.duration/av.time_base)
-    if 0.25 < sd-vd <= 0.5:
-        import subprocess
-        padded=folder/'seedance-duration-aligned.mp4'
+    diff = sd - vd
+    if abs(diff) > 0.05:
         from fractions import Fraction
+        padded=folder/'seedance-duration-aligned.mp4'
         with av.open(str(generated)) as inp,av.open(str(padded),'w') as out:
             video=inp.streams.video[0];rate=video.average_rate or Fraction(24,1)
             stream=out.add_stream('libx264',rate=rate);stream.width=video.width;stream.height=video.height;stream.pix_fmt='yuv420p';stream.options={'crf':'18'}
-            frames=list(inp.decode(video=0));count=round(sd*float(rate))
+            frames=list(inp.decode(video=0));count=max(1, round(sd*float(rate)))
             for i in range(count):
                 f=av.VideoFrame.from_ndarray(frames[min(i,len(frames)-1)].to_ndarray(format='rgb24'),format='rgb24');f.pts=i;f.time_base=1/rate
                 for packet in stream.encode(f):out.mux(packet)
             for packet in stream.encode():out.mux(packet)
-        (folder/'duration-adjustment.json').write_text(json.dumps({'method':'hold final frame','seconds':sd-vd,'original_audio':'unchanged'}))
+        (folder/'duration-adjustment.json').write_text(json.dumps({'method':'hold final frame' if diff > 0 else 'trim video to audio','seconds':abs(diff),'original_audio':'unchanged'}))
         generated=padded
     # Copy original compressed audio packets, preserving the complete source mix.
     with av.open(str(generated)) as inp,av.open(str(folder/'upload.mp4')) as source_audio,av.open(str(target),'w') as out:
         if not source_audio.streams.audio:raise ValueError('Original source has no audio track.')
         video=inp.streams.video[0];audio=source_audio.streams.audio[0]
-        vd=float(video.duration*video.time_base) if video.duration else float(inp.duration/av.time_base)
-        sd=float(source_audio.duration/av.time_base)
-        if abs(vd-sd)>.25:raise ValueError('Generated duration differs from original audio; refusing to trim, loop or stretch it.')
         vs=out.add_stream_from_template(video);astream=out.add_stream_from_template(audio)
         for p in inp.demux(video=0):
             if p.dts is not None:p.stream=vs;out.mux(p)
