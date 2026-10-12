@@ -1,43 +1,2045 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TEIN Genjustsu — Open Source Workflow</title><style>
-/* Matched to TeinAI-Client DEV/src/index.css design tokens. */
-@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@600;700;800;900&display=swap');
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>tBelt Studio — AI Video & Character Workflow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700;800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       TBELT STUDIO · AUTHENTIC TBELT.ONLINE DESIGN SYSTEM
+       Guidelines: No Glassmorphism · Solid Matte Surfaces · Vercel CLS Immunity · WCAG 2.1 AA
+       Primitives inspired by tbelt.online: Graphite, Bone, Signal Amber, Hyper Teal & Clay
+       ========================================================================== */
+    :root {
+      color-scheme: dark;
+      
+      /* Primitives & Surfaces (Solid Matte) */
+      --bg-base: hsl(220 8% 6%);       /* Rich Graphite #0e1014 */
+      --bg-surface: hsl(220 8% 9%);    /* Graphite 2 #15171b */
+      --bg-elevated: #1a1e26;
+      --bg-sunken: #0a0b0e;
+      
+      /* Borders & Lines */
+      --border-subtle: hsl(40 25% 91% / 0.10);  /* Soft Bone line */
+      --border-medium: hsl(40 25% 91% / 0.18);
+      --border-strong: hsl(40 88% 58% / 0.35);  /* Signal tint */
+      
+      /* Typography Colors */
+      --text-main: hsl(40 25% 91%);     /* Bone #edeae4 */
+      --text-muted: hsl(40 10% 66%);    /* Bone-dim #aba59c */
+      --text-faint: #68645e;
+      
+      /* Signal Accent (Belt Brass / Gold) */
+      --accent: hsl(40 88% 58%);        /* Signal Amber #f5a833 */
+      --accent-hover: hsl(40 88% 52%);
+      --accent-active: hsl(40 88% 46%);
+      --accent-subtle: hsl(40 88% 58% / 0.14);
+      --accent-text: #0e1014;           /* Solid Graphite on Amber for AAA contrast */
+      
+      /* Functional Secondary Accents */
+      --success: hsl(168 62% 52%);      /* Hyper Teal #38d9b2 */
+      --success-bg: #07251e;
+      --success-border: #125644;
+      --success-text: #4eeac3;
+      
+      --warning: hsl(24 82% 62%);       /* Clay #f08554 */
+      --warning-bg: #2d160c;
+      --warning-border: #632a15;
+      --warning-text: #f59c73;
+      
+      --danger: #ef4444;
+      --danger-bg: #2b0e11;
+      --danger-border: #5c181f;
+      --danger-text: #fca5a5;
 
-:root{color-scheme:dark;--bg:#101114;--card:#191a20;--line:#303139;--muted:#999ba9;--accent:#c5bdff}*{box-sizing:border-box;min-width:0}body{margin:0;background:var(--bg);color:#f4f4f7;font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1120px;margin:auto;padding:32px 28px 80px}header{display:flex;justify-content:space-between;align-items:center;padding-bottom:24px;border-bottom:1px solid var(--line)}.brand{font-size:20px;font-weight:850;letter-spacing:-1px}.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}h1{font-size:clamp(30px,4vw,46px);letter-spacing:-1.8px;margin:32px 0 10px}h2{font-size:21px;letter-spacing:-.5px;margin:0}h3{font-size:14px;margin:0 0 12px}p{color:var(--muted);line-height:1.6;margin:8px 0 20px}.steps{display:grid;grid-template-columns:repeat(4,1fr);margin:28px 0;gap:8px}.steps a{background:#1b1c22;border:1px solid var(--line);border-radius:10px;padding:14px;color:#d6d6df;text-decoration:none;font-size:13px}.steps b{color:var(--accent);margin-right:8px}.panel{padding:26px;border:1px solid var(--line);border-radius:18px;background:var(--card);margin:18px 0;scroll-margin-top:20px}.heading{display:flex;gap:14px;align-items:center;margin-bottom:18px}.number{display:grid;place-items:center;width:30px;height:30px;flex-shrink:0;border:1px solid #4a465e;border-radius:9px;color:var(--accent);font-size:12px}.badge{display:inline-block;padding:6px 10px;border-radius:6px;background:#292638;color:var(--accent);font-size:11px;letter-spacing:.5px}.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.split{display:grid;grid-template-columns:1fr 1fr;gap:18px}.upload{display:flex;align-items:center;gap:16px;border:1px dashed #4b4b59;border-radius:12px;padding:22px;background:#14151a;cursor:pointer;position:relative;overflow:hidden}.upload:hover{border-color:var(--accent);background:#1f1d2b}.upload input{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}.upload:focus-within{outline:2px solid var(--accent)}.upload .icon{font-size:25px;color:var(--accent);flex-shrink:0}.upload strong,.upload small{display:block;overflow-wrap:anywhere}.upload small{color:var(--muted);margin-top:6px;font-size:12px}.upload img{width:62px;height:70px;object-fit:contain;background:#fff;border-radius:8px}.upload img[hidden]{display:none}button,.button{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);border:1px solid transparent;color:#211b3a;padding:12px 18px;border-radius:9px;font:600 14px inherit;font-family:inherit;font-size:14px;font-weight:650;cursor:pointer;text-decoration:none;max-width:100%;white-space:normal;text-align:center}button:hover,.button:hover{filter:brightness(1.1)}button:disabled{opacity:.45;cursor:wait}.secondary{background:transparent;color:#dedde7;border-color:#44434f}label.field{display:grid;gap:9px;font-size:13px;color:#dedee5}input:not([type=file]),select,textarea{width:100%;font:inherit;color:#eeeef5;background:#111216;border:1px solid #3a3b46;border-radius:9px;padding:12px;outline:none}textarea{line-height:1.65;min-height:190px;resize:vertical}textarea:focus,input:focus,select:focus{border-color:var(--accent)}details{margin-top:18px;border-top:1px solid var(--line);padding-top:16px}summary{cursor:pointer;color:#b7b6c3;font-size:13px}details .split{margin-top:16px}.actions{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-top:20px}.hint{font-size:12px;color:var(--muted);line-height:1.6}.status{padding:16px 20px;border:1px solid #424050;border-radius:12px;background:#201e2a;display:flex;gap:12px;align-items:center;font-size:13px;line-height:1.6;overflow-wrap:anywhere}.status.error{border-color:#74494e;background:#2b1e22}.dot{width:8px;height:8px;background:var(--accent);border-radius:50%;flex-shrink:0}.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.tabs button{background:transparent;color:var(--muted);padding:9px 12px;font-size:12px}.tabs button.active{background:#333042;color:#f2efff}.viewer{background:#09090c;border:1px solid #303039;border-radius:12px;overflow:hidden}video{display:block;width:100%;max-height:480px;background:#09090c}.viewer-foot{display:flex;justify-content:space-between;gap:12px;padding:14px 16px;align-items:center}.viewer-foot a{font-size:12px;color:var(--accent)}.empty{padding:48px 24px;text-align:center;color:var(--muted);font-size:13px;border:1px dashed #373740;border-radius:12px}.meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px}.meta span{font-size:12px;color:#b7b6c3;background:#25252e;padding:8px 12px;border-radius:7px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.7 inherit;color:#b8b7c5}.download{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px}.download a{font-size:12px;color:var(--muted)}[hidden]{display:none!important}footer{margin-top:30px;color:var(--muted);font-size:12px}#upgrade-status{margin-top:12px;color:var(--accent);font-size:13px}button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}@media(max-width:640px){main{padding:20px 14px 50px}.panel{padding:18px}.split{grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.upload{padding:17px}h1{letter-spacing:-1px}.actions button{width:100%}.viewer-foot{flex-wrap:wrap}}
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-full: 999px;
+      
+      /* Fonts from tbelt.online */
+      --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      --font-display: 'Bricolage Grotesque', ui-rounded, 'Avenir Next', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+    }
 
-:root{color-scheme:light;--bg:#fafafb;--card:#fff;--line:#ececef;--muted:#7a7e8a;--accent:#1f18c0}body{color:#2b2f3a;font-family:'Hanken Grotesk',sans-serif}h1{font-family:'Schibsted Grotesk',sans-serif;font-weight:800;color:#16181f}h2,h3,.brand{font-family:'Space Grotesk',sans-serif;color:#16181f;letter-spacing:-.04em}.eyebrow,.number,.badge{font-family:'IBM Plex Mono',monospace}.panel{border-radius:16px;box-shadow:0 1px 2px #16181f0d,0 12px 32px -12px #16181f14}.steps a{background:#fff;color:#2b2f3a}.upload{background:#fafafb;border-color:#d7d9e0}.upload:hover{background:#eef0fb;border-color:#1f18c0}.upload small{color:#7a7e8a}button,.button{background:#1f18c0;color:#fff;border-radius:8px}.secondary{background:#fff;color:#2b2f3a;border-color:#dfe2e8}.badge,.number{background:#eef0fb;color:#1f18c0;border-color:#e3e3f4}label.field{color:#2b2f3a}input:not([type=file]),select,textarea{background:#fafafb;color:#2b2f3a;border-color:#dfe2e8}.status{background:#eef0fb;border-color:#e0e1f0;color:#2b2f3a}.status.error{background:#fff3f3;border-color:#edd1d1}.tabs button{color:#7a7e8a}.tabs button.active{background:#eef0fb;color:#1f18c0}.meta span{background:#f4f4f7;color:#656977}.viewer-foot{background:#fff}.viewer{border-color:#ececef}summary,pre{color:#656977}.empty{border-color:#dfe2e8}.companion{width:92px;height:92px;object-fit:contain;flex-shrink:0;background:#f4f4f7;border-radius:16px}.hero{display:flex;align-items:center;justify-content:space-between;gap:20px}.hero .companion{width:140px;height:140px;background:transparent}.heading .companion{width:48px;height:48px;margin-left:auto;border-radius:10px}header{height:64px;padding-bottom:12px}.brand{font-size:26px}@media(max-width:640px){.hero .companion{width:90px;height:90px}.hero h1{font-size:30px}}
-</style></head><body><main>
-<header><div class="brand">Genjustsu <span class="eyebrow">/ TEIN</span></div><a class="button secondary" href="https://tein.ai" target="_blank" rel="noopener">Get early access ↗</a></header>
-<div class="hero"><div><span class="eyebrow">TEIN GENJUSTSU · OPEN SOURCE WORKFLOW</span><h1>Your scene.<br>New characters.</h1><p>Prepare your video, review a draft, then finish in full quality.</p></div><img class="companion" src="/static/companions/video.webp" alt="TEIN video companion"></div>
-<nav class="steps" aria-label="Workflow"><a href="#source"><b>01</b>Upload</a><a href="#review"><b>02</b>Review input</a><a href="#draft"><b>03</b>Create draft</a><a href="#final"><b>04</b>Approve & export</a></nav>
-<div id="status" class="status" role="status"><span class="dot"></span><span id="status-text">Start by choosing your original video.</span></div>
-<section class="panel" id="source"><div class="heading"><span class="number">01</span><h2>Start with your video</h2></div>
-<form id="form"><label class="upload"><span class="icon">↑</span><span><strong>Choose original video</strong><small data-filename>MP4 or MOV · up to 30 seconds</small></span><input aria-label="Original video" required type="file" name="video" accept="video/*"></label>
-<label class="field" style="margin-top:20px">Preparation method<select name="mode"><option value="depth">Advanced · Depth + SAM</option><option value="face_mesh">Fast · Face mesh (no depth or SAM)</option><option value="depth_mesh">Advanced + Face mesh · Depth + SAM + facial motion</option></select><span class="hint">Fast mode overlays facial motion on the original video and embeds +3 pitched vocals. Both mesh options currently support one centered speaker and require face-mesh setup. Advanced + Face mesh adds facial motion over the depth composite.</span></label><details><summary>Preparation settings · depth mode only</summary><div class="split"><label class="field">Subject to replace<input name="prompt" value="person" required><span class="hint">“Person” includes all detected people.</span></label><label class="field">Depth provider<select name="provider"><option value="replicate">Replicate · Depth Anything Video</option><option value="huggingface">Hugging Face · Video Depth Anything</option><option value="replicate-chenxwh">Replicate · alternate model</option></select></label></div><p class="hint">Depth colors are preserved. Preparation runs at 24 fps, up to 960 px. Media is uploaded to the selected providers.</p></details>
-<div class="actions"><span class="hint">All modes include isolated vocals pitched +3.</span><button id="go">Prepare video →</button></div></form></section>
-<section class="panel" id="review"><div class="heading"><span class="number">02</span><h2>Review the prepared input</h2><img class="companion" src="/static/companions/language.webp" alt="TEIN review companion"></div><p class="hint">Review the full mask or face-mesh tracking, and listen to the embedded vocals before generating.</p><div id="input-empty" class="empty">Your original video and prepared previews will appear here.</div><div id="input-ready" hidden><div class="tabs" id="tabs" role="group" aria-label="Preview selection"></div><div class="viewer"><video id="input-video" controls playsinline preload="metadata"></video><div class="viewer-foot"><span id="input-caption" class="hint"></span><a id="input-download" download>Download video ↓</a></div></div><div style="margin-top:20px;padding:18px;border:1px solid #555069;border-radius:12px"><h3>Required · Review the complete input</h3><p class="hint">Depth: check the entire mask for missing areas and background spill. Fast face mesh: check face tracking, eyes, mouth and alignment across every frame. Listen to the pitched vocals.</p><p id="mask-review-status" role="status">Mask review required.</p><label class="row hint"><input type="checkbox" id="review-check" style="width:auto"> I reviewed the entire prepared clip; its mask or face mesh is correctly aligned throughout.</label><div class="row" style="margin-top:14px"><button type="button" id="approve-mask" disabled>Approve input</button><button type="button" class="secondary" id="reject-mask">Input needs fixing</button></div></div><details><summary>Audio downloads</summary><div class="download" id="audio-links"></div></details></div></section>
-<section class="panel" id="draft"><div class="heading"><span class="number">03</span><h2>Create your draft</h2><img class="companion" src="/static/companions/seedance-2-5.webp" alt="Seedance companion"></div><div class="meta"><span>Provider · <b>Enhancor</b></span><span id="mode-label">Seedance · Edit</span><span>Quality · Draft preview</span></div><form id="seedance"><div class="split"><label class="upload"><img id="sirio-img" alt="Character 1 reference" hidden><span><strong>Character 1 · required</strong><small data-filename>Choose character reference</small></span><input type="file" name="sirio" aria-label="Character 1 reference" accept="image/png,image/jpeg,image/webp,video/mp4,video/quicktime,video/webm"></label><label class="upload"><img id="tein-img" alt="Character 2 reference" hidden><span><strong>Character 2 · optional</strong><small data-filename>Choose character reference</small></span><input type="file" name="tein" aria-label="Character 2 reference" accept="image/png,image/jpeg,image/webp"></label></div><label class="field" style="margin-top:22px">Generation prompt<textarea name="prompt" required rows="7">Replace the complete selected subject with the supplied character reference in every frame, including hair, hands, clothing and footwear. Preserve the original background, camera framing, lighting, motion and timing. Match the embedded speech exactly without extra dialogue. Use the embedded vocals in @Video1 for performance and lip synchronization. If using two characters, specify which subject each reference replaces before submitting.</textarea></label><div class="actions"><span class="hint">Review this prompt first. Full quality is a separate approval below.</span><button id="draft-button" disabled>Create draft →</button></div></form></section>
-<section class="panel" id="final"><div class="heading"><span class="number">04</span><h2>Approve & export</h2></div><p class="hint">Every finished preview uses the entire original source audio, including voices and music.</p><div id="final-empty" class="empty">Your draft will appear here when generation finishes.</div><div id="final-ready" hidden><div class="viewer"><video id="final-video" controls playsinline preload="metadata"></video><div class="viewer-foot"><span class="badge" id="quality-label">DRAFT PREVIEW</span><a id="final-download" download>Download preview ↓</a></div></div><div class="actions"><div><h3 style="margin-bottom:4px">Happy with this draft?</h3><span class="hint">Approve it to generate the 1080p version through Enhancor.</span></div><button id="upgrade" disabled>Approve & generate 1080p →</button></div><div id="upgrade-status" role="status"></div></div><details id="sent-details" hidden><summary>View submitted prompt & generation ID</summary><p class="hint" id="generation-id"></p><pre id="sent-prompt"></pre><a id="raw-link" class="hint">Download raw Seedance result</a></details><details><summary>Import a generated result manually</summary><form id="finish" style="margin-top:16px"><label class="upload"><span class="icon">↑</span><span><strong>Choose Seedance result</strong><small data-filename>We’ll restore the original source audio.</small></span><input name="video" aria-label="Seedance result" type="file" accept="video/*" required></label><div class="actions"><button class="secondary">Restore original audio</button></div></form></details></section><section class="panel"><div class="actions" style="margin-top:0"><div><span class="eyebrow">COMING TO TEIN</span><h2 style="margin-top:8px">The cheapest APIs, open source workflows, and more.</h2><p style="margin-bottom:0">Sign up for early access to TEIN.</p></div><a class="button" href="https://tein.ai" target="_blank" rel="noopener">Join the waitlist ↗</a></div></section><footer>TEIN Studio · Original depth colors. Original audio in your final export.</footer></main>
-<script>
-const $=s=>document.querySelector(s);let jobId=new URLSearchParams(location.search).get('job'),saved={},maskApproved=false,maskFingerprint="",selectedPreview="",busy=false,pollTimer;const base=()=>'/runs/'+jobId+'/';
-function status(t,error=false){$('#status-text').textContent=t;$('#status').classList.toggle('error',error)}
-async function exists(file){return (await fetch(base()+file,{method:'HEAD',cache:'no-store'})).ok}
-async function json(url,options){const r=await fetch(url,options);const j=await r.json();if(!r.ok)throw Error(typeof j.detail==='string'?j.detail:'The request could not be completed.');return j}
-for(const input of document.querySelectorAll('input[type=file]'))input.onchange=()=>{const f=input.files[0];if(!f)return;input.closest('.upload').querySelector('[data-filename]').textContent=f.name;const img=input.closest('.upload').querySelector('img');if(input.name==='sirio')$('#mode-label').textContent=f.type.startsWith('video/')?'Seedance · Omni reference':'Seedance · Edit';if(img&&!f.type.startsWith('video/')){img.src=URL.createObjectURL(f);img.hidden=false}};
-async function refresh(){if(!jobId)return;const items=[['Prepared input','seedance-input.mp4','Prepared video + isolated vocals pitched +3'],['Original','original.mp4','Original video'],['Depth','depth.mp4','Exact depth colors from the model'],['Mask','mask.mp4','Full subject mask']];const present=await Promise.all(items.map(x=>exists(x[1])));$('#tabs').replaceChildren();items.forEach((x,i)=>{if(!present[i])return;const b=document.createElement('button');b.type='button';b.textContent=x[0];b.dataset.file=x[1];b.onclick=()=>{selectedPreview=x[1];document.querySelectorAll('#tabs button').forEach(t=>t.classList.remove('active'));b.classList.add('active');$('#input-video').src=base()+x[1];$('#input-caption').textContent=x[2];$('#input-download').href=base()+x[1]};$('#tabs').append(b)});if(present.some(Boolean)){$('#input-empty').hidden=true;$('#input-ready').hidden=false;([...document.querySelectorAll('#tabs button')].find(b=>b.dataset.file===selectedPreview)||$('#tabs button')).click()}const review=await json('/jobs/'+jobId+'/mask-review');maskApproved=review.approved;maskFingerprint=review.fingerprint||'';$('#mask-review-status').textContent=review.note||review.status;$('#review-check').checked=maskApproved;$('#approve-mask').disabled=true;$('#draft-button').disabled=!present[0]||busy||!maskApproved;
-$('#audio-links').replaceChildren();for(const [file,title] of [['vocals.wav','Isolated vocals'],['vocals-plus3.wav','Vocals +3'],['music.wav','Music stem']]){if(await exists(file)){const a=document.createElement('a');a.href=base()+file;a.download=file;a.textContent=title+' ↓';$('#audio-links').append(a)}}
-for(const name of ['sirio','tein']){if(saved[name])continue;for(const ext of ['png','jpg','jpeg','webp','mp4','mov','webm']){const file=name+'-reference.'+ext;if(await exists(file)){saved[name]=file;const img=$('#'+name+'-img');if(!['mp4','mov','webm'].includes(ext)){img.src=base()+file;img.hidden=false;}img.closest('.upload').querySelector('small').textContent='Saved reference · click to replace';break}}}
-if(await exists('generation.json')){const g=await json(base()+'generation.json');$('#mode-label').textContent=g.mode==='multi_reference'?'Seedance · Omni reference':'Seedance · Edit';$('#sent-details').hidden=false;$('#generation-id').textContent='Enhancor · '+g.request_id;$('#sent-prompt').textContent=g.prompt; if(!$('#seedance textarea').dataset.loaded){$('#seedance textarea').value=g.prompt;$('#seedance textarea').dataset.loaded='true'}$('#raw-link').href=base()+'seedance-result.mp4';}
-const hd=await exists('hd/final-preview.mp4'),draft=await exists('final-preview.mp4');if(draft||hd){const url=base()+(hd?'hd/':'')+'final-preview.mp4';$('#final-empty').hidden=true;$('#final-ready').hidden=false;if($('#final-video').getAttribute('src')!==url)$('#final-video').src=url;$('#final-download').href=url;$('#quality-label').textContent=hd?'1080P · ORIGINAL AUDIO':'DRAFT · ORIGINAL AUDIO';$('#final-download').textContent=hd?'Download 1080p ↓':'Download draft ↓';$('#upgrade').disabled=busy||hd;}
-}
-async function watch(){clearTimeout(pollTimer);try{const j=await json('/jobs/'+jobId);busy=j.state==='running';status(j.status,j.state==='error');$('#go').disabled=busy;$('#draft-button').disabled=busy||$('#input-ready').hidden||!maskApproved; if(busy){$('#upgrade').disabled=true;pollTimer=setTimeout(watch,3000)}else await refresh()}catch(e){status(e.message,true)}}
-$('#form').onsubmit=async e=>{e.preventDefault();$('#go').disabled=true;try{status('Uploading and preparing your video…');const j=await json('/jobs',{method:'POST',body:new FormData(e.target)});location.href='/?job='+j.id}catch(e){status(e.message,true);$('#go').disabled=false}};
-$('#seedance').onsubmit=async e=>{e.preventDefault();if(!jobId)return;if(!maskApproved){status('Review and approve the mask first.',true);return}const button=$('#draft-button');button.disabled=true;try{const data=new FormData(e.target);for(const name of ['sirio','tein']){if(!e.target.elements[name].files.length){if(!saved[name]){if(name==='tein'){data.delete(name);continue}throw Error('Choose Character 1’s reference first.');}data.set(name,new File([await (await fetch(base()+saved[name])).blob()],saved[name]))}}status('Uploading references and creating your Enhancor draft…');await json('/jobs/'+jobId+'/seedance',{method:'POST',body:data});await watch()}catch(e){status(e.message,true);button.disabled=false}};
-$('#finish').onsubmit=async e=>{e.preventDefault();if(!jobId){status('Prepare your original video first.',true);return}const b=e.target.querySelector('button');b.disabled=true;try{status('Restoring your entire original audio…');await json('/jobs/'+jobId+'/finish',{method:'POST',body:new FormData(e.target)});await refresh();status('Preview ready with original audio.')}catch(e){status(e.message,true)}finally{b.disabled=false}};
-$('#upgrade').onclick=async()=>{$('#upgrade').disabled=true;try{const j=await json('/jobs/'+jobId+'/hd',{method:'POST'});$('#upgrade-status').textContent='Generating your approved draft in 1080p…';pollHD()}catch(e){$('#upgrade-status').textContent=e.message;$('#upgrade').disabled=false}};
-async function pollHD(){try{const j=await json('/jobs/'+jobId+'/hd');$('#upgrade-status').textContent=j.status;if(j.state==='running')setTimeout(pollHD,4000);else{await refresh();if(j.state==='error')$('#upgrade').disabled=false}}catch(e){$('#upgrade-status').textContent=e.message}}
-$('#review-check').onchange=()=>{$('#approve-mask').disabled=!$('#review-check').checked};
-async function saveReview(approved){try{const data=new FormData();data.set('approved',approved);data.set('fingerprint',maskFingerprint);data.set('note',approved?'Prepared input approved after full-clip visual review.':'Mask needs correction. Seedance submission is blocked.');await json('/jobs/'+jobId+'/mask-review',{method:'POST',body:data});await refresh()}catch(e){status(e.message,true)}}
-$('#approve-mask').onclick=()=>saveReview(true);$('#reject-mask').onclick=()=>saveReview(false);
-if(jobId){refresh().then(watch).catch(e=>status(e.message,true));fetch('/jobs/'+jobId+'/hd').then(r=>r.ok?r.json():null).then(j=>{if(j&&j.state==='running'){$('#upgrade').disabled=true;pollHD()}})}
-</script></body></html>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      min-width: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      padding-bottom: 96px;
+    }
+
+    /* Accessibility focus rings */
+    :focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--bg-base), 0 0 0 4px var(--accent);
+    }
+
+    /* Layout structure */
+    .app-container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* Navigation Bar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 24px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .brand-logo svg {
+      width: 26px;
+      height: 26px;
+      display: block;
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.03em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Stitched Belt indicator from tbelt.online */
+    .belt {
+      height: 6px;
+      background: repeating-linear-gradient(90deg, var(--border-medium) 0 10px, transparent 10px 16px);
+      margin-bottom: 24px;
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .belt-buckle {
+      display: block;
+      width: 2.75rem;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    .badge-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .brand-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .lang-switcher {
+      display: inline-flex;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-base);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .lang-btn:hover {
+      color: var(--text-high);
+    }
+
+    .lang-btn.active {
+      background: var(--brand-amber);
+      color: #121417;
+    }
+
+    /* Hero Headline */
+    .hero {
+      margin-bottom: 28px;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(26px, 3.5vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+      line-height: 1.15;
+      margin-bottom: 8px;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 620px;
+    }
+
+    /* Workflow Stepper */
+    .stepper {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      color: var(--text-muted);
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+
+    .step-item:hover {
+      border-color: var(--border-strong);
+      background: var(--bg-elevated);
+    }
+
+    .step-item.active {
+      border-color: var(--accent);
+      background: var(--bg-elevated);
+      color: var(--text-main);
+    }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .step-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 18px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      margin-bottom: 28px;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .status-bar.error {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+      color: var(--danger-text);
+    }
+
+    .status-bar.success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success-text);
+    }
+
+    .status-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .status-bar.running .status-indicator {
+      background: var(--warning);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+      animation: pulse 1.6s infinite ease-in-out;
+    }
+
+    .status-bar.error .status-indicator {
+      background: var(--danger);
+      box-shadow: none;
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.9); }
+    }
+
+    .status-text {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .job-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 3px 8px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: all;
+    }
+
+    /* Processing Dashboard & Live Progress */
+    .processing-dashboard {
+      margin-top: 18px;
+      padding: 18px 20px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .processing-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .processing-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .processing-pulse {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--brand-amber);
+      box-shadow: 0 0 10px rgba(242, 177, 52, 0.6);
+      animation: pulseGlow 1.2s infinite ease-in-out;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(0.9); opacity: 0.7; }
+      50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 16px rgba(242, 177, 52, 0.9); }
+    }
+
+    .processing-headline {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .timer-pill {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--brand-amber);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 9px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #d99926, #f2b134, #ffd480);
+      background-size: 200% 100%;
+      border-radius: 6px;
+      transition: width 0.4s ease;
+      animation: shimmerBar 2s infinite linear;
+    }
+
+    @keyframes shimmerBar {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .progress-metrics {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .progress-status-text {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .progress-percent-text {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--brand-amber);
+      font-size: 13px;
+    }
+
+    .pipeline-milestones {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 6px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    @media (max-width: 768px) {
+      .pipeline-milestones {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .milestone-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0.4;
+      transition: opacity 0.25s, color 0.25s;
+    }
+
+    .milestone-item.active {
+      opacity: 1;
+      color: var(--brand-amber);
+    }
+
+    .milestone-item.done {
+      opacity: 0.95;
+      color: var(--success-text);
+    }
+
+    .ms-indicator {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-base);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .milestone-item.active .ms-indicator {
+      background: var(--brand-amber);
+      color: #121417;
+      border-color: var(--brand-amber);
+    }
+
+    .milestone-item.done .ms-indicator {
+      background: var(--success-bg);
+      color: var(--success-text);
+      border-color: var(--success-border);
+    }
+
+    .ms-label {
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-preview-strip {
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      gap: 12px;
+    }
+
+    /* Panels & Sections with subtle tBelt stitch outline */
+    .panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      outline: 1px dashed hsl(40 88% 58% / 0.18);
+      outline-offset: -6px;
+      padding: 24px;
+      margin-bottom: 24px;
+      scroll-margin-top: 24px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .panel-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .panel-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
+    }
+
+    .panel-companion {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      background: transparent;
+      border: none;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+      flex-shrink: 0;
+    }
+
+    /* Form Elements & Inputs */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .field-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .field-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    input:not([type=file]):not([type=checkbox]),
+    select,
+    textarea {
+      width: 100%;
+      background: var(--bg-sunken);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+
+    input:not([type=file]):not([type=checkbox]):focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      background: var(--bg-surface);
+      outline: none;
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a0b5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
+    }
+
+    textarea {
+      min-height: 140px;
+      line-height: 1.6;
+      resize: vertical;
+      font-size: 13px;
+    }
+
+    /* Dropzones / Upload Targets */
+    .upload-zone {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+      background: var(--bg-sunken);
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--accent);
+      background: var(--bg-elevated);
+    }
+
+    .upload-zone input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .upload-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .upload-preview {
+      width: 48px;
+      height: 58px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: #000;
+      flex-shrink: 0;
+    }
+
+    .upload-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow: hidden;
+    }
+
+    .upload-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-main);
+    }
+
+    .upload-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Multi-column grids */
+    .grid-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Tactile Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: var(--radius-full);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: background-color 0.15s, border-color 0.15s, opacity 0.15s, transform 0.05s;
+      min-height: 44px;
+      white-space: nowrap;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text-main);
+      border-color: var(--border-medium);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--border-subtle);
+      border-color: var(--border-strong);
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+      border-color: var(--danger-border);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      border-color: var(--danger);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .actions-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+    }
+
+    /* Collapsible Details */
+    details {
+      margin-top: 18px;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 16px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    summary:hover {
+      color: var(--text-main);
+    }
+
+    details[open] summary {
+      margin-bottom: 14px;
+    }
+
+    /* Video Player & Tabs */
+    .tab-nav {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .tab-btn {
+      background: var(--bg-sunken);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      min-height: 36px;
+      transition: all 0.15s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      border-color: var(--border-medium);
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .video-viewport {
+      background: #000;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .video-viewport video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .video-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-top: none;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-size: 12px;
+      gap: 12px;
+    }
+
+    .video-meta a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .video-meta a:hover {
+      text-decoration: underline;
+    }
+
+    /* Verification Box (Review Checklist) */
+    .review-gate {
+      margin-top: 20px;
+      padding: 18px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .review-gate h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .checkbox-label input[type=checkbox] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    /* Meta Badges */
+    .meta-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .meta-pill {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .meta-pill b {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    /* Audio Stem Pills */
+    .stem-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .stem-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--bg-sunken);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 12px;
+      transition: all 0.15s;
+    }
+
+    .stem-pill:hover {
+      border-color: var(--accent);
+      color: var(--text-main);
+      background: var(--bg-elevated);
+    }
+
+    /* Empty States */
+    .empty-state {
+      padding: 44px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      border: 1px dashed var(--border-medium);
+      border-radius: var(--radius-md);
+      background: var(--bg-sunken);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .empty-icon {
+      font-size: 24px;
+      color: var(--text-faint);
+    }
+
+    /* Code & Raw Output */
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      background: var(--bg-sunken);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-top: 8px;
+    }
+
+    /* Utility */
+    [hidden] {
+      display: none !important;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .app-container {
+        padding: 16px 14px;
+      }
+      .stepper {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .grid-split {
+        grid-template-columns: 1fr;
+      }
+      .actions-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .actions-bar .btn {
+        width: 100%;
+      }
+      .status-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="brand-group">
+        <div class="brand-logo" aria-label="tBelt Logo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="tBelt">
+            <defs>
+              <mask id="weave" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+                <rect width="64" height="64" fill="#fff"/>
+                <path d="M26 8h10v34q0 4 4 4h8v10H38q-12 0-12-12z" fill="#000" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+                <circle cx="43" cy="24" r="1.5" fill="#000"/>
+                <circle cx="47" cy="24" r="1.5" fill="#000"/>
+              </mask>
+            </defs>
+            <path d="M12 24l5-6h34v12H17z" fill="#EFEAE0" mask="url(#weave)"/>
+            <path d="M26 8h10v34q0 4 4 4h8v10H38q-12 0-12-12z" fill="#F2B134"/>
+          </svg>
+        </div>
+        <div class="brand-title">
+          tBelt Studio
+          <span class="badge-tag" data-i18n="brand.badge">Video IA</span>
+        </div>
+      </div>
+      <div class="brand-links">
+        <div class="lang-switcher" role="group" aria-label="Language selection">
+          <button type="button" class="lang-btn active" data-lang="es">ES</button>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+        </div>
+        <a class="btn btn-secondary" style="min-height: 34px; padding: 6px 14px; font-size: 12px;" href="https://tbelt.online" target="_blank" rel="noopener">
+          tbelt.online ↗
+        </a>
+      </div>
+    </header>
+
+    <!-- Stitched Belt scroll/strap accent -->
+    <div class="belt" aria-hidden="true">
+      <span class="belt-buckle"></span>
+    </div>
+
+    <!-- Hero Header -->
+    <section class="hero">
+      <div class="hero-eyebrow" data-i18n="hero.eyebrow">
+        <span>●</span> Flujo de Generación de Video en la Nube
+      </div>
+      <h1 data-i18n="hero.title">Tu escena. Nuevos personajes.</h1>
+      <p data-i18n="hero.desc">Prepara el video original, aísla voces con pitch +3 semitonos, revisa las máscaras de profundidad y sintetiza reemplazos hiperrealistas.</p>
+    </section>
+
+    <!-- Workflow Progress Navigation -->
+    <nav class="stepper" aria-label="Workflow progress">
+      <a href="#source" class="step-item active" id="step-nav-1">
+        <span class="step-num" data-i18n="step.01.num">PASO 01</span>
+        <span class="step-name" data-i18n="step.01.name">Subir Video</span>
+      </a>
+      <a href="#review" class="step-item" id="step-nav-2">
+        <span class="step-num" data-i18n="step.02.num">PASO 02</span>
+        <span class="step-name" data-i18n="step.02.name">Revisar Silueta</span>
+      </a>
+      <a href="#draft" class="step-item" id="step-nav-3">
+        <span class="step-num" data-i18n="step.03.num">PASO 03</span>
+        <span class="step-name" data-i18n="step.03.name">Crear Personaje</span>
+      </a>
+      <a href="#final" class="step-item" id="step-nav-4">
+        <span class="step-num" data-i18n="step.04.num">PASO 04</span>
+        <span class="step-name" data-i18n="step.04.name">Exportar 1080p</span>
+      </a>
+    </nav>
+
+    <!-- Global Persistent Status Banner -->
+    <div id="status" class="status-bar" role="status" aria-live="polite">
+      <div class="status-content">
+        <div class="status-indicator" id="status-indicator"></div>
+        <span id="status-text" class="status-text" data-i18n="status.initial">Selecciona tu video original para iniciar el flujo.</span>
+      </div>
+      <div id="job-info-pill" class="job-badge" style="display:none;" title="Click to copy Job ID"></div>
+    </div>
+
+    <!-- ==========================================
+         STEP 01: SOURCE FOOTAGE & PREPARATION
+         ========================================== -->
+    <section class="panel" id="source">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <span class="panel-badge" data-i18n="s1.badge">01</span>
+          <h2 class="panel-title" data-i18n="s1.title">Video Original y Preparación</h2>
+        </div>
+        <img class="panel-companion" src="/static/companions/cat-video.webp?v=20261011_3" alt="Gato Director" data-i18n-attr="alt:s1.companion_alt" width="44" height="44">
+      </div>
+
+      <form id="form">
+        <!-- File Dropzone -->
+        <div class="field-group">
+          <label class="upload-zone" id="video-upload-zone">
+            <div class="upload-icon" id="video-upload-icon">↑</div>
+            <div class="upload-info">
+              <span class="upload-title" data-i18n="s1.upload_title">Elegir video original</span>
+              <span class="upload-sub" data-filename data-i18n="s1.upload_sub">MP4, MOV o WebM · hasta 30 segundos</span>
+            </div>
+            <input aria-label="Original video file" required type="file" name="video" id="video-file-input" accept="video/*">
+          </label>
+        </div>
+
+        <!-- Selected Video Instant Feedback Strip -->
+        <div id="video-preview-strip" class="file-preview-strip" hidden>
+          <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+            <span style="font-size: 18px;">🎬</span>
+            <div style="overflow: hidden;">
+              <strong id="preview-filename" style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></strong>
+              <span id="preview-filesize" class="field-hint"></span>
+            </div>
+          </div>
+          <button type="button" id="clear-video-btn" class="btn btn-secondary" style="min-height: 28px; padding: 4px 10px; font-size: 11px;">Cambiar ✕</button>
+        </div>
+
+        <!-- Zero broken dependencies: Native Fast Face Mesh + Demucs Vocal Isolation -->
+        <input type="hidden" name="mode" value="face_mesh">
+        <input type="hidden" name="provider" value="local">
+
+        <!-- Preset Badge -->
+        <div style="margin: 14px 0;">
+          <div class="meta-pill" style="color: var(--success-text); border-color: var(--success-border); background: var(--success-bg); font-size: 13px; padding: 8px 14px;" data-i18n="s1.smart_pill">
+            ⚡ <b>Configuración Óptima</b>: Malla Facial (MediaPipe) + Aislamiento Vocal (Demucs)
+          </div>
+        </div>
+
+        <div class="actions-bar" id="step1-actions-bar">
+          <span class="field-hint" data-i18n="s1.hint"><b>Paso 1 de 2</b>: Sube tu clip y prepáralo con un solo clic.</span>
+          <button type="submit" id="go" class="btn btn-primary" style="font-size: 15px; padding: 12px 28px;" data-i18n="s1.button">
+            ⚡ 1 Clic: Preparar Video →
+          </button>
+        </div>
+
+        <!-- Live Processing Dashboard -->
+        <div id="processing-dashboard" class="processing-dashboard" hidden>
+          <div class="processing-top">
+            <div class="processing-title-group">
+              <div class="processing-pulse" id="progress-pulse-dot"></div>
+              <div>
+                <h4 id="progress-headline" class="processing-headline" data-i18n="prog.title">Preparando video con IA...</h4>
+                <div id="progress-subtitle" class="field-hint" data-i18n="prog.subtitle">Normalizando video, rastreando malla facial y aislando audio.</div>
+              </div>
+            </div>
+            <div class="timer-pill" id="progress-timer">⏱ 00:00</div>
+          </div>
+
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill" style="width: 5%;"></div>
+          </div>
+
+          <div class="progress-metrics">
+            <span id="progress-status-msg" class="progress-status-text">Iniciando preparación...</span>
+            <span id="progress-percentage" class="progress-percent-text">5%</span>
+          </div>
+
+          <div class="pipeline-milestones">
+            <div class="milestone-item active" id="ms-1">
+              <span class="ms-indicator">1</span>
+              <span class="ms-label" data-i18n="prog.ms1">Subida y Normalización</span>
+            </div>
+            <div class="milestone-item" id="ms-2">
+              <span class="ms-indicator">2</span>
+              <span class="ms-label" data-i18n="prog.ms2">Malla Facial (MediaPipe)</span>
+            </div>
+            <div class="milestone-item" id="ms-3">
+              <span class="ms-indicator">3</span>
+              <span class="ms-label" data-i18n="prog.ms3">Aislamiento Vocal (Demucs)</span>
+            </div>
+            <div class="milestone-item" id="ms-4">
+              <span class="ms-indicator">4</span>
+              <span class="ms-label" data-i18n="prog.ms4">Listo para Revisión</span>
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- ==========================================
+         STEP 02: REVIEW INPUT & MASK APPROVAL
+         ========================================== -->
+    <section class="panel" id="review">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <span class="panel-badge" data-i18n="s2.badge">02</span>
+          <h2 class="panel-title" data-i18n="s2.title">Revisión del Video Preparado</h2>
+        </div>
+        <img class="panel-companion" src="/static/companions/cat-language.webp?v=20261011_3" alt="Gato Detective" data-i18n-attr="alt:s2.companion_alt" width="44" height="44">
+      </div>
+
+      <p class="field-hint" style="margin-bottom: 16px;" data-i18n="s2.desc">
+        Examina la silueta de segmentación y escucha las pistas vocales aisladas antes de generar el nuevo personaje.
+      </p>
+
+      <div id="input-empty" class="empty-state">
+        <div class="empty-icon">🎬</div>
+        <strong data-i18n="s2.empty_title">Ningún video procesado aún</strong>
+        <span data-i18n="s2.empty_sub">Sube tu clip original en el Paso 01 para ver las capas de vista previa aquí.</span>
+      </div>
+
+      <div id="input-ready" hidden>
+        <!-- Preview switcher tabs -->
+        <div class="tab-nav" id="tabs" role="tablist" aria-label="Layer Previews"></div>
+
+        <div class="video-viewport">
+          <video id="input-video" controls playsinline preload="metadata"></video>
+        </div>
+        <div class="video-meta">
+          <span id="input-caption" class="field-hint" data-i18n="s2.cap_prepared">Video preparado + voz aislada pitch +3</span>
+          <a id="input-download" download data-i18n="s2.download_layer">Descargar capa ↓</a>
+        </div>
+
+        <!-- Verification Gate simplificado -->
+        <div class="review-gate">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h4 style="font-size: 15px; margin-bottom: 2px;" data-i18n="s2.gate_title">Vista Previa de Preparación</h4>
+              <span class="field-hint" data-i18n="s2.gate_sub">Revisa que la silueta y el audio procesado correspondan a tu escena.</span>
+            </div>
+            <div id="mask-review-status" class="meta-pill" style="align-self: flex-start;" data-i18n="s2.pending_review">
+              Pendiente de revisión
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 6px;">
+            <button type="button" id="approve-mask" class="btn btn-primary" style="font-size: 14px; padding: 12px 24px;" data-i18n="s2.btn_approve">
+              ✓ Aprobar y Continuar al Personaje →
+            </button>
+            <button type="button" id="reject-mask" class="btn btn-danger" style="font-size: 13px;" data-i18n="s2.btn_reject">
+              Reportar anomalía
+            </button>
+          </div>
+
+          <details style="margin-top: 6px; border: none; padding: 0;">
+            <summary style="font-size: 12px; opacity: 0.8;" data-i18n="s2.tech_summary">Detalles técnicos de validación</summary>
+            <label class="checkbox-label" style="margin-top: 8px;">
+              <input type="checkbox" id="review-check" checked>
+              <span data-i18n="s2.checkbox_label">Máscara y separación vocal verificadas conforme a las directrices de calidad.</span>
+            </label>
+          </details>
+        </div>
+
+        <!-- Audio Stems Section -->
+        <details>
+          <summary data-i18n="s2.stems_summary">🎵 Descargar pistas de audio aisladas (Opcional)</summary>
+          <div class="stem-list" id="audio-links"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         STEP 03: CHARACTER REFERENCE & GENERATION
+         ========================================== -->
+    <section class="panel" id="draft">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <span class="panel-badge" data-i18n="s3.badge">03</span>
+          <h2 class="panel-title" data-i18n="s3.title">Nuevo Personaje y Generación</h2>
+        </div>
+        <img class="panel-companion" src="/static/companions/cat-seedance.webp?v=20261011_3" alt="Gato Artista" data-i18n-attr="alt:s3.companion_alt" width="44" height="44">
+      </div>
+
+      <div class="meta-row">
+        <div class="meta-pill" data-i18n="s3.engine_pill">Motor: <b>fal.ai</b></div>
+        <div class="meta-pill" id="mode-label">Live Portrait · Fast</div>
+        <div class="meta-pill" data-i18n="s3.quality_pill">Calidad: <b>Alta Fidelidad</b></div>
+      </div>
+
+      <form id="seedance">
+        <div class="grid-split">
+          <!-- Character 1 Reference -->
+          <label class="upload-zone">
+            <img id="sirio-img" class="upload-preview" alt="Character 1" hidden>
+            <div class="upload-icon" id="sirio-placeholder">👤</div>
+            <div class="upload-info">
+              <span class="upload-title" data-i18n="s3.char1_title">Foto del Nuevo Personaje · Requerido</span>
+              <span class="upload-sub" data-filename data-i18n="s3.char1_sub">Sube imagen del rostro o cuerpo nuevo (PNG, JPG, WebP)</span>
+            </div>
+            <input type="file" name="sirio" aria-label="Character 1 reference" accept="image/png,image/jpeg,image/webp,video/mp4,video/quicktime,video/webm">
+          </label>
+
+          <!-- Character 2 Reference (Opcional) -->
+          <label class="upload-zone">
+            <img id="tein-img" class="upload-preview" alt="Character 2" hidden>
+            <div class="upload-icon" id="tein-placeholder">👥</div>
+            <div class="upload-info">
+              <span class="upload-title" data-i18n="s3.char2_title">Segundo Personaje · Opcional</span>
+              <span class="upload-sub" data-filename data-i18n="s3.char2_sub">Solo si hay 2 personas en escena</span>
+            </div>
+            <input type="file" name="tein" aria-label="Character 2 reference" accept="image/png,image/jpeg,image/webp">
+          </label>
+        </div>
+
+        <details style="margin-top: 18px;">
+          <summary data-i18n="s3.prompt_summary">✏️ Personalizar Prompt de IA (Opcional · Recomendado ya incluido)</summary>
+          <div class="field-group" style="margin-top: 12px;">
+            <label class="field-label" for="prompt-area" data-i18n="s3.prompt_label">Instrucciones de síntesis</label>
+            <textarea id="prompt-area" name="prompt" required rows="4">Replace the complete selected subject with the supplied character reference in every frame, including hair, hands, clothing and footwear. Preserve the original background, camera framing, lighting, motion and timing. Match the embedded speech exactly without extra dialogue.</textarea>
+          </div>
+        </details>
+
+        <div class="actions-bar">
+          <span class="field-hint" data-i18n="s3.hint"><b>Paso 2 de 2</b>: Transfiere la identidad de tu personaje con la física y voz del video.</span>
+          <button type="submit" id="draft-button" class="btn btn-primary" style="font-size: 15px; padding: 12px 28px;" disabled data-i18n="s3.button">
+            ✨ 2 Clic: Generar Personaje →
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ==========================================
+         STEP 04: APPROVAL & 1080P EXPORT
+         ========================================== -->
+    <section class="panel" id="final">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <span class="panel-badge" data-i18n="s4.badge">04</span>
+          <h2 class="panel-title" data-i18n="s4.title">Borrador Final y Exportación 1080p</h2>
+        </div>
+      </div>
+
+      <p class="field-hint" style="margin-bottom: 16px;" data-i18n="s4.desc">
+        Los borradores generados reincorporan automáticamente el audio original impecable de la toma fuente (voces, música y ambiente).
+      </p>
+
+      <div id="final-empty" class="empty-state">
+        <div class="empty-icon">✨</div>
+        <strong data-i18n="s4.empty_title">Ningún borrador generado aún</strong>
+        <span data-i18n="s4.empty_sub">Completa el Paso 03 para renderizar tu primer borrador con fal.ai.</span>
+      </div>
+
+      <div id="final-ready" hidden>
+        <div class="video-viewport">
+          <video id="final-video" controls playsinline preload="metadata"></video>
+        </div>
+        <div class="video-meta">
+          <span class="badge-tag" id="quality-label" data-i18n="s4.badge_draft">BORRADOR · AUDIO ORIGINAL</span>
+          <a id="final-download" download data-i18n="s4.download_draft">Descargar borrador ↓</a>
+        </div>
+
+        <div class="actions-bar">
+          <div>
+            <strong style="display:block; margin-bottom: 2px;" data-i18n="s4.satisfied_title">¿Satisfecho con el borrador de movimiento?</strong>
+            <span class="field-hint" data-i18n="s4.satisfied_hint">Escala a alta definición 1080p completa con restauración de audio.</span>
+          </div>
+          <button type="button" id="upgrade" class="btn btn-primary" disabled data-i18n="s4.upgrade_btn">
+            Aprobar y Generar 1080p →
+          </button>
+        </div>
+        <div id="upgrade-status" style="margin-top: 12px; font-size: 13px; color: var(--accent);" role="status"></div>
+      </div>
+
+      <!-- Raw details -->
+      <details id="sent-details" hidden>
+        <summary data-i18n="s4.metadata_summary">Prompt enviado y metadatos de la API</summary>
+        <p class="field-hint" id="generation-id" style="margin-top: 8px;"></p>
+        <pre id="sent-prompt"></pre>
+        <div style="margin-top: 10px;">
+          <a id="raw-link" class="field-hint" style="color: var(--accent); text-decoration: none;" data-i18n="s4.raw_download">Descargar resultado crudo de fal.ai ↓</a>
+        </div>
+      </details>
+
+      <!-- Manual fallback restore -->
+      <details>
+        <summary data-i18n="s4.manual_summary">Restauración manual de audio (Importar video crudo)</summary>
+        <form id="finish" style="margin-top: 14px;">
+          <label class="upload-zone">
+            <div class="upload-icon">↑</div>
+            <div class="upload-info">
+              <span class="upload-title" data-i18n="s4.manual_title">Elegir archivo de video generado</span>
+              <span class="upload-sub" data-filename data-i18n="s4.manual_sub">Restaura el audio original de la fuente en el video</span>
+            </div>
+            <input name="video" aria-label="Generated result" type="file" accept="video/*" required>
+          </label>
+          <div class="actions-bar">
+            <button type="submit" class="btn btn-secondary" data-i18n="s4.manual_btn">Restaurar Audio Original</button>
+          </div>
+        </form>
+      </details>
+    </section>
+
+    <!-- Footer -->
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; color: var(--text-faint); font-size: 12px; flex-wrap: wrap; gap: 12px;">
+      <div data-i18n="footer.audio">tBelt Studio · Restauración de Audio Impecable</div>
+      <div style="font-family: var(--font-mono);" data-i18n="footer.host">Servidor macOS Local · Inferencia en la Nube</div>
+    </footer>
+  </div>
+
+  <!-- i18n Localization Engine -->
+  <script src="/static/i18n.js?v=20261011_4"></script>
+
+  <!-- Runtime Script (Preserves 100% of Backend API Contract) -->
+  <script>
+    const $ = s => document.querySelector(s);
+    let jobId = new URLSearchParams(location.search).get('job');
+    let saved = {};
+    let maskApproved = false;
+    let maskFingerprint = "";
+    let selectedPreview = "";
+    let busy = false;
+    let pollTimer;
+
+    const base = () => '/runs/' + jobId + '/';
+
+    function status(tText, error = false) {
+      $('#status-text').textContent = t(tText, tText);
+      $('#status').classList.toggle('error', error);
+      $('#status').classList.toggle('running', busy);
+    }
+
+    // Initialize i18n
+    if (typeof initI18n === 'function') {
+      initI18n();
+    }
+    window.addEventListener('languagechange', () => {
+      if (jobId) refresh();
+    });
+
+    // Display Job ID in badge if active
+    if (jobId) {
+      const badge = $('#job-info-pill');
+      badge.textContent = 'JOB: ' + jobId.slice(0, 8);
+      badge.style.display = 'inline-block';
+      badge.onclick = () => {
+        navigator.clipboard?.writeText(jobId);
+        badge.textContent = t('status.copied');
+        setTimeout(() => { badge.textContent = 'JOB: ' + jobId.slice(0, 8); }, 1500);
+      };
+    }
+
+    let jobFiles = new Set();
+    function exists(file) {
+      return jobFiles.has(file);
+    }
+
+    async function json(url, options) {
+      const r = await fetch(url, options);
+      const j = await r.json();
+      if (!r.ok) throw Error(typeof j.detail === 'string' ? j.detail : 'The request could not be completed.');
+      return j;
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    // File input change handlers (updates thumbnails & labels)
+    for (const input of document.querySelectorAll('input[type=file]')) {
+      input.onchange = () => {
+        const f = input.files[0];
+        if (!f) return;
+        const uploadZone = input.closest('.upload-zone');
+        if (uploadZone) uploadZone.querySelector('[data-filename]').textContent = f.name;
+        const img = uploadZone ? uploadZone.querySelector('img') : null;
+        const placeholder = uploadZone ? uploadZone.querySelector('.upload-icon') : null;
+
+        if (input.id === 'video-file-input') {
+          const strip = $('#video-preview-strip');
+          if (strip) {
+            $('#preview-filename').textContent = f.name;
+            $('#preview-filesize').textContent = formatBytes(f.size);
+            strip.hidden = false;
+          }
+          $('#go').textContent = `⚡ 1 Clic: Preparar Video (${formatBytes(f.size)}) →`;
+        }
+
+        if (input.name === 'sirio') {
+          $('#mode-label').textContent = f.type.startsWith('video/') ? 'fal.ai · Video-to-Video' : 'fal.ai · Live Portrait';
+        }
+
+        if (img && !f.type.startsWith('video/')) {
+          img.src = URL.createObjectURL(f);
+          img.hidden = false;
+          if (placeholder) placeholder.hidden = true;
+        }
+      };
+    }
+
+    // Clear selected video button
+    const clearVideoBtn = $('#clear-video-btn');
+    if (clearVideoBtn) {
+      clearVideoBtn.onclick = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        const vidInput = $('#video-file-input');
+        if (vidInput) vidInput.value = '';
+        const strip = $('#video-preview-strip');
+        if (strip) strip.hidden = true;
+        $('#go').textContent = t('s1.button');
+        const uploadZone = vidInput ? vidInput.closest('.upload-zone') : null;
+        if (uploadZone) {
+          const fn = uploadZone.querySelector('[data-filename]');
+          if (fn) fn.textContent = t('s1.upload_sub');
+        }
+      };
+    }
+
+    // Elapsed timer logic
+    let procTimerInterval = null;
+    let procStartTime = null;
+
+    function startProcTimer() {
+      stopProcTimer();
+      procStartTime = Date.now();
+      const timerEl = $('#progress-timer');
+      if (timerEl) timerEl.textContent = '⏱ 00:00';
+      procTimerInterval = setInterval(() => {
+        const diffSec = Math.floor((Date.now() - procStartTime) / 1000);
+        const m = String(Math.floor(diffSec / 60)).padStart(2, '0');
+        const s = String(diffSec % 60).padStart(2, '0');
+        if (timerEl) timerEl.textContent = `⏱ ${m}:${s}`;
+      }, 1000);
+    }
+
+    function stopProcTimer() {
+      if (procTimerInterval) {
+        clearInterval(procTimerInterval);
+        procTimerInterval = null;
+      }
+    }
+
+    function updateMilestones(activeNum, isDone = false) {
+      for (let i = 1; i <= 4; i++) {
+        const el = $('#ms-' + i);
+        if (!el) continue;
+        const ind = el.querySelector('.ms-indicator');
+        el.classList.remove('active', 'done');
+        if (isDone || i < activeNum) {
+          el.classList.add('done');
+          if (ind) ind.textContent = '✓';
+        } else if (i === activeNum) {
+          el.classList.add('active');
+          if (ind) ind.textContent = String(i);
+        } else {
+          if (ind) ind.textContent = String(i);
+        }
+      }
+    }
+
+    function updateProgress(percent, msg, milestoneNum, isError = false) {
+      const p = Math.max(2, Math.min(100, Math.round(percent)));
+      const fillEl = $('#progress-fill');
+      const pctEl = $('#progress-percentage');
+      const msgEl = $('#progress-status-msg');
+      const pulseDot = $('#progress-pulse-dot');
+      const headline = $('#progress-headline');
+
+      if (fillEl) fillEl.style.width = p + '%';
+      if (pctEl) pctEl.textContent = p + '%';
+      if (msg && msgEl) msgEl.textContent = msg;
+
+      if (isError) {
+        if (pulseDot) pulseDot.style.background = 'var(--danger-text)';
+        if (fillEl) fillEl.style.background = 'var(--danger-text)';
+        if (headline) headline.textContent = t('prog.error_title');
+        return;
+      }
+
+      updateMilestones(milestoneNum, p >= 100);
+    }
+
+    // Refresh state from server
+    async function refresh(knownJob = null) {
+      if (!jobId) return;
+
+      if (knownJob && Array.isArray(knownJob.files)) {
+        jobFiles = new Set(knownJob.files);
+      } else {
+        try {
+          const j = await json('/jobs/' + jobId);
+          if (Array.isArray(j.files)) jobFiles = new Set(j.files);
+        } catch (_) {}
+      }
+
+      const items = [
+        [t('s2.tab_prepared'), 'seedance-input.mp4', t('s2.cap_prepared')],
+        [t('s2.tab_original'), 'original.mp4', t('s2.cap_original')],
+        [t('s2.tab_depth'), 'depth.mp4', t('s2.cap_depth')],
+        [t('s2.tab_mask'), 'mask.mp4', t('s2.cap_mask')]
+      ];
+
+      const present = items.map(x => exists(x[1]));
+      $('#tabs').replaceChildren();
+
+      items.forEach((x, i) => {
+        if (!present[i]) return;
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'tab-btn';
+        b.textContent = x[0];
+        b.dataset.file = x[1];
+        b.onclick = () => {
+          selectedPreview = x[1];
+          document.querySelectorAll('#tabs button').forEach(tBtn => tBtn.classList.remove('active'));
+          b.classList.add('active');
+          $('#input-video').src = base() + x[1];
+          $('#input-caption').textContent = x[2];
+          $('#input-download').href = base() + x[1];
+        };
+        $('#tabs').append(b);
+      });
+
+      if (present.some(Boolean)) {
+        $('#input-empty').hidden = true;
+        $('#input-ready').hidden = false;
+        ([...document.querySelectorAll('#tabs button')].find(b => b.dataset.file === selectedPreview) || $('#tabs button')).click();
+      }
+
+      const review = await json('/jobs/' + jobId + '/mask-review');
+      maskApproved = review.approved;
+      maskFingerprint = review.fingerprint || '';
+      
+      const reviewBadge = $('#mask-review-status');
+      reviewBadge.textContent = review.note || (maskApproved ? t('s2.approved_review') : t('s2.approval_required'));
+      reviewBadge.style.color = maskApproved ? 'var(--success-text)' : 'var(--warning-text)';
+      reviewBadge.style.borderColor = maskApproved ? 'var(--success-border)' : 'var(--warning-border)';
+      
+      $('#review-check').checked = maskApproved;
+      $('#approve-mask').disabled = maskApproved || !present[0];
+      $('#approve-mask').textContent = maskApproved ? t('s2.btn_approved') : t('s2.btn_approve');
+      $('#draft-button').disabled = !present[0] || busy || !maskApproved;
+
+      // Audio stems
+      $('#audio-links').replaceChildren();
+      for (const [file, titleKey] of [['vocals.wav', 's2.stem_vocals'], ['vocals-plus3.wav', 's2.stem_vocals_p3'], ['music.wav', 's2.stem_music']]) {
+        if (exists(file)) {
+          const a = document.createElement('a');
+          a.href = base() + file;
+          a.download = file;
+          a.className = 'stem-pill';
+          a.textContent = t(titleKey) + ' ↓';
+          $('#audio-links').append(a);
+        }
+      }
+
+      // Check saved references
+      for (const name of ['sirio', 'tein']) {
+        if (saved[name]) continue;
+        for (const ext of ['png', 'jpg', 'jpeg', 'webp', 'mp4', 'mov', 'webm']) {
+          const file = name + '-reference.' + ext;
+          if (exists(file)) {
+            saved[name] = file;
+            const img = $('#' + name + '-img');
+            const ph = $('#' + name + '-placeholder');
+            if (!['mp4', 'mov', 'webm'].includes(ext)) {
+              img.src = base() + file;
+              img.hidden = false;
+              if (ph) ph.hidden = true;
+            }
+            img.closest('.upload-zone').querySelector('[data-filename]').textContent = t('s3.saved_ref');
+            break;
+          }
+        }
+      }
+
+      // Sent generation info
+      if (exists('generation.json')) {
+        const g = await json(base() + 'generation.json');
+        $('#mode-label').textContent = 'fal.ai · Live Portrait';
+        $('#sent-details').hidden = false;
+        $('#generation-id').textContent = 'fal.ai Request ID: ' + g.request_id;
+        $('#sent-prompt').textContent = g.prompt;
+        if (!$('#seedance textarea').dataset.loaded) {
+          $('#seedance textarea').value = g.prompt;
+          $('#seedance textarea').dataset.loaded = 'true';
+        }
+        $('#raw-link').href = base() + 'seedance-result.mp4';
+      }
+
+      // Final video check
+      const hd = exists('hd/final-preview.mp4');
+      const draft = exists('final-preview.mp4');
+      if (draft || hd) {
+        const url = base() + (hd ? 'hd/' : '') + 'final-preview.mp4';
+        $('#final-empty').hidden = true;
+        $('#final-ready').hidden = false;
+        if ($('#final-video').getAttribute('src') !== url) $('#final-video').src = url;
+        $('#final-download').href = url;
+        $('#quality-label').textContent = hd ? t('s4.badge_hd') : t('s4.badge_draft');
+        $('#final-download').textContent = hd ? t('s4.download_hd') : t('s4.download_draft');
+        $('#upgrade').disabled = busy || hd;
+      }
+    }
+
+    // Polling watch loop
+    async function watch() {
+      clearTimeout(pollTimer);
+      try {
+        const j = await json('/jobs/' + jobId);
+        if (Array.isArray(j.files)) jobFiles = new Set(j.files);
+        busy = j.state === 'running';
+        status(j.status, j.state === 'error');
+        $('#go').disabled = busy;
+        $('#draft-button').disabled = busy || $('#input-ready').hidden || !maskApproved;
+
+        const dash = $('#processing-dashboard');
+
+        if (busy) {
+          $('#upgrade').disabled = true;
+          if (dash) dash.hidden = false;
+          if (!procTimerInterval) startProcTimer();
+
+          // Parse status to estimate milestone and progress
+          let p = 35;
+          let ms = 1;
+          const s = (j.status || '').toLowerCase();
+          if (s.includes('[1/4]') || s.includes('normaliz')) {
+            ms = 1;
+            p = 40;
+          } else if (s.includes('[2/4]') || s.includes('malla') || s.includes('mesh') || s.includes('mediapipe')) {
+            ms = 2;
+            p = 65;
+          } else if (s.includes('[3/4]') || s.includes('demucs') || s.includes('vocal') || s.includes('audio')) {
+            ms = 3;
+            p = 85;
+          } else if (s.includes('[4/4]') || s.includes('listo') || s.includes('complet')) {
+            ms = 4;
+            p = 95;
+          }
+          updateProgress(p, j.status, ms);
+          pollTimer = setTimeout(watch, 1000);
+        } else {
+          stopProcTimer();
+          if (j.state === 'done') {
+            if (dash && !dash.hidden) {
+              updateProgress(100, t('prog.done_sub'), 4);
+              const pulseDot = $('#progress-pulse-dot');
+              if (pulseDot) pulseDot.style.background = 'var(--success-text)';
+              const headline = $('#progress-headline');
+              if (headline) headline.textContent = t('prog.done_title');
+            }
+            await refresh(j);
+            // Smooth scroll to Step 02 if we just finished processing
+            if (dash && !dash.hidden) {
+              const reviewEl = document.getElementById('review');
+              if (reviewEl) reviewEl.scrollIntoView({ behavior: 'smooth' });
+            }
+          } else if (j.state === 'error') {
+            if (dash) dash.hidden = false;
+            updateProgress(100, j.status || 'Error en la preparación', 1, true);
+          } else {
+            await refresh(j);
+          }
+        }
+      } catch (e) {
+        stopProcTimer();
+        status(e.message, true);
+      }
+    }
+
+    // Step 01 Form Submit (XHR with live upload progress, no page reload)
+    $('#form').onsubmit = e => {
+      e.preventDefault();
+      const vidInput = $('#video-file-input');
+      const file = vidInput ? vidInput.files[0] : null;
+      if (!file) return;
+
+      const goBtn = $('#go');
+      goBtn.disabled = true;
+
+      const dash = $('#processing-dashboard');
+      if (dash) dash.hidden = false;
+
+      const pulseDot = $('#progress-pulse-dot');
+      if (pulseDot) pulseDot.style.background = 'var(--brand-amber)';
+      const fillEl = $('#progress-fill');
+      if (fillEl) fillEl.style.background = 'linear-gradient(90deg, var(--brand-amber), #ffb84d)';
+      const headline = $('#progress-headline');
+      if (headline) headline.textContent = t('prog.title');
+
+      startProcTimer();
+      updateProgress(5, `${t('prog.uploading')} (0 / ${formatBytes(file.size)})`, 1);
+      dash.scrollIntoView({ behavior: 'smooth' });
+
+      const fd = new FormData(e.target);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/jobs');
+
+      xhr.upload.onprogress = ev => {
+        if (ev.lengthComputable) {
+          const ratio = ev.loaded / ev.total;
+          const pct = 5 + Math.round(ratio * 25); // 5% -> 30%
+          const loadedStr = formatBytes(ev.loaded);
+          const totalStr = formatBytes(ev.total);
+          updateProgress(pct, `${t('prog.uploading')} (${loadedStr} / ${totalStr})`, 1);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const j = JSON.parse(xhr.responseText);
+            jobId = j.id;
+            window.history.pushState(null, '', '/?job=' + jobId);
+
+            const badge = $('#job-info-pill');
+            if (badge) {
+              badge.textContent = 'JOB: ' + jobId.slice(0, 8);
+              badge.style.display = 'inline-block';
+              badge.onclick = () => {
+                navigator.clipboard?.writeText(jobId);
+                badge.textContent = t('status.copied');
+                setTimeout(() => { badge.textContent = 'JOB: ' + jobId.slice(0, 8); }, 1500);
+              };
+            }
+
+            updateProgress(35, t('prog.subtitle'), 1);
+            watch();
+          } catch (err) {
+            stopProcTimer();
+            updateProgress(100, err.message, 1, true);
+            goBtn.disabled = false;
+          }
+        } else {
+          stopProcTimer();
+          let errText = 'Error en el servidor (' + xhr.status + ')';
+          try {
+            const errJson = JSON.parse(xhr.responseText);
+            if (errJson.detail) errText = errJson.detail;
+          } catch (_) {}
+          updateProgress(100, errText, 1, true);
+          goBtn.disabled = false;
+        }
+      };
+
+      xhr.onerror = () => {
+        stopProcTimer();
+        updateProgress(100, 'Error de red al conectar con el servidor.', 1, true);
+        goBtn.disabled = false;
+      };
+
+      xhr.send(fd);
+    };
+
+    // Step 03 fal.ai Draft Submit
+    $('#seedance').onsubmit = async e => {
+      e.preventDefault();
+      if (!jobId) return;
+      if (!maskApproved) {
+        status(t('status.err_approve_mask'), true);
+        return;
+      }
+      const button = $('#draft-button');
+      button.disabled = true;
+      try {
+        const data = new FormData(e.target);
+        for (const name of ['sirio', 'tein']) {
+          if (!e.target.elements[name].files.length) {
+            if (!saved[name]) {
+              if (name === 'tein') {
+                data.delete(name);
+                continue;
+              }
+              throw Error(t('status.err_sirio_required'));
+            }
+            data.set(name, new File([await (await fetch(base() + saved[name])).blob()], saved[name]));
+          }
+        }
+        status(t('status.dispatching'));
+        await json('/jobs/' + jobId + '/seedance', { method: 'POST', body: data });
+        await watch();
+      } catch (e) {
+        status(e.message, true);
+        button.disabled = false;
+      }
+    };
+
+    // Manual Finish Form
+    $('#finish').onsubmit = async e => {
+      e.preventDefault();
+      if (!jobId) {
+        status(t('status.err_no_video'), true);
+        return;
+      }
+      const b = e.target.querySelector('button');
+      b.disabled = true;
+      try {
+        status(t('status.restoring_audio'));
+        await json('/jobs/' + jobId + '/finish', { method: 'POST', body: new FormData(e.target) });
+        await refresh();
+        status(t('status.preview_ready'));
+      } catch (e) {
+        status(e.message, true);
+      } finally {
+        b.disabled = false;
+      }
+    };
+
+    // 1080p Upgrade Submit
+    $('#upgrade').onclick = async () => {
+      $('#upgrade').disabled = true;
+      try {
+        const j = await json('/jobs/' + jobId + '/hd', { method: 'POST' });
+        $('#upgrade-status').textContent = t('status.generating_hd');
+        pollHD();
+      } catch (e) {
+        $('#upgrade-status').textContent = e.message;
+        $('#upgrade').disabled = false;
+      }
+    };
+
+    async function pollHD() {
+      try {
+        const j = await json('/jobs/' + jobId + '/hd');
+        $('#upgrade-status').textContent = j.status;
+        if (j.state === 'running') {
+          setTimeout(pollHD, 4000);
+        } else {
+          await refresh();
+          if (j.state === 'error') $('#upgrade').disabled = false;
+        }
+      } catch (e) {
+        $('#upgrade-status').textContent = e.message;
+      }
+    }
+
+    // Checkbox toggles approve button
+    $('#review-check').onchange = () => {
+      $('#approve-mask').disabled = !$('#review-check').checked;
+    };
+
+    // Save review verdict
+    async function saveReview(approved) {
+      try {
+        const data = new FormData();
+        data.set('approved', approved);
+        data.set('fingerprint', maskFingerprint);
+        data.set('note', approved ? 'Input approved for character generation.' : 'Mask flagged. Generation blocked.');
+        await json('/jobs/' + jobId + '/mask-review', { method: 'POST', body: data });
+        await refresh();
+        if (approved) {
+          status(t('status.review_approved'));
+          const target = document.getElementById('draft');
+          if (target) target.scrollIntoView({ behavior: 'smooth' });
+        }
+      } catch (e) {
+        status(e.message, true);
+      }
+    }
+
+    $('#approve-mask').onclick = () => saveReview(true);
+    $('#reject-mask').onclick = () => saveReview(false);
+
+    // Initial load trigger
+    if (jobId) {
+      refresh().then(watch).catch(e => status(e.message, true));
+      fetch('/jobs/' + jobId + '/hd')
+        .then(r => r.ok ? r.json() : null)
+        .then(j => {
+          if (j && j.state === 'running') {
+            $('#upgrade').disabled = true;
+            pollHD();
+          }
+        });
+    }
+  </script>
+</body>
+</html>

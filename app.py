@@ -7,12 +7,28 @@ from pipeline import run
 ROOT=Path(__file__).resolve().parent
 RUNS=ROOT/'runs';RUNS.mkdir(exist_ok=True)
 app=FastAPI();jobs={}
-@app.get('/')
+
+@app.middleware("http")
+async def add_no_cache_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+@app.api_route('/', methods=['GET', 'HEAD'])
 def index():return FileResponse(ROOT/'static/index.html')
+
+@app.api_route('/favicon.ico', methods=['GET', 'HEAD'], include_in_schema=False)
+def favicon():
+    fav = ROOT / 'static/favicon.svg'
+    if fav.exists():
+        return FileResponse(fav, media_type='image/svg+xml')
+    raise HTTPException(404)
 @app.post('/jobs')
-def create(video:UploadFile=File(...),prompt:str=Form('person'),provider:str=Form('replicate'),mode:str=Form('depth')):
-    if mode not in ['depth','face_mesh','depth_mesh']:raise HTTPException(400,'Unknown workflow mode')
-    if provider not in ['huggingface','replicate','replicate-chenxwh']:raise HTTPException(400,'Unknown provider')
+def create(video:UploadFile=File(...),prompt:str=Form('person'),provider:str=Form('local'),mode:str=Form('face_mesh')):
+    if mode not in ['face_mesh','depth','depth_mesh']:raise HTTPException(400,'Unknown workflow mode')
+    if provider not in ['local','fal','huggingface','replicate','replicate-chenxwh']:raise HTTPException(400,'Unknown provider')
     ident=uuid.uuid4().hex;folder=RUNS/ident;folder.mkdir();src=folder/'upload.mp4'
     with src.open('wb') as out:shutil.copyfileobj(video.file,out)
     jobs[ident]={'state':'running','status':'Starting','id':ident}
@@ -34,9 +50,19 @@ def create(video:UploadFile=File(...),prompt:str=Form('person'),provider:str=For
 @app.get('/jobs/{ident}')
 def get(ident:str):
     if ident not in jobs:
-        if len(ident)==32 and all(c in '0123456789abcdef' for c in ident) and (RUNS/ident/'status.json').exists():return json.loads((RUNS/ident/'status.json').read_text())
-        raise HTTPException(404)
-    return jobs[ident]
+        if len(ident)==32 and all(c in '0123456789abcdef' for c in ident) and (RUNS/ident/'status.json').exists():
+            data = json.loads((RUNS/ident/'status.json').read_text())
+        else:
+            raise HTTPException(404)
+    else:
+        data = dict(jobs[ident])
+    folder = RUNS/ident
+    if folder.exists():
+        files = [p.name for p in folder.iterdir() if p.is_file()]
+        if (folder / 'hd').exists():
+            files.extend(['hd/' + p.name for p in (folder / 'hd').iterdir() if p.is_file()])
+        data['files'] = files
+    return data
 @app.post('/jobs/{ident}/seedance')
 def seedance(ident:str,prompt:str=Form(...),sirio:UploadFile=File(...),tein:UploadFile|None=File(None)):
     if len(ident)!=32 or not all(c in '0123456789abcdef' for c in ident):raise HTTPException(404)
