@@ -1547,7 +1547,7 @@
           <span data-i18n="settings.active_engine">Motor Activo</span>: <b id="step3-engine-name">fal.ai</b>
           <button type="button" class="btn btn-ghost" id="step3-change-engine" style="padding: 2px 8px; font-size: 11px; margin-left: 6px; cursor: pointer;">⚙️</button>
         </div>
-        <div class="meta-pill" id="mode-label">Live Portrait · Fast</div>
+        <div class="meta-pill" id="mode-label">H3 Max Recast · 1080p</div>
         <div class="meta-pill" data-i18n="s3.quality_pill">Calidad: <b>Alta Fidelidad</b></div>
       </div>
 
@@ -1589,6 +1589,48 @@
           <button type="submit" id="draft-button" class="btn btn-primary" style="font-size: 15px; padding: 12px 28px;" disabled data-i18n="s3.button">
             ✨ 2 Clic: Generar Personaje →
           </button>
+        </div>
+
+        <!-- Live Character Generation Dashboard (Step 03) -->
+        <div id="generation-dashboard" class="processing-dashboard" hidden style="margin-top: 18px;">
+          <div class="processing-top">
+            <div class="processing-title-group">
+              <div class="processing-pulse" id="gen-pulse-dot"></div>
+              <div>
+                <h4 id="gen-headline" class="processing-headline" data-i18n="s3.rendering_title">Generando Personaje con fal.ai (H3 Max)...</h4>
+                <div id="gen-subtitle" class="field-hint" data-i18n="s3.rendering_sub">Difusión de video 1080p en la nube. Reemplazo de identidad cinematográfico (~2-3 min).</div>
+              </div>
+            </div>
+            <div class="timer-pill" id="gen-timer">⏱ 00:00</div>
+          </div>
+
+          <div class="progress-track">
+            <div class="progress-fill" id="gen-progress-fill" style="width: 15%;"></div>
+          </div>
+
+          <div class="progress-metrics">
+            <span id="gen-status-msg" class="progress-status-text">Conectando con fal.ai...</span>
+            <span id="gen-percentage" class="progress-percent-text">15%</span>
+          </div>
+
+          <div class="pipeline-milestones">
+            <div class="milestone-item active" id="gen-ms-1">
+              <span class="ms-indicator">1</span>
+              <span class="ms-label" data-i18n="s3.ms1">Envío y Referencias</span>
+            </div>
+            <div class="milestone-item" id="gen-ms-2">
+              <span class="ms-indicator">2</span>
+              <span class="ms-label" data-i18n="s3.ms2">Difusión Video (fal.ai)</span>
+            </div>
+            <div class="milestone-item" id="gen-ms-3">
+              <span class="ms-indicator">3</span>
+              <span class="ms-label" data-i18n="s3.ms3">Restauración de Audio</span>
+            </div>
+            <div class="milestone-item" id="gen-ms-4">
+              <span class="ms-indicator">4</span>
+              <span class="ms-label" data-i18n="s3.ms4">Borrador Final Listo</span>
+            </div>
+          </div>
         </div>
       </form>
     </section>
@@ -1944,6 +1986,70 @@
       updateMilestones(milestoneNum, p >= 100);
     }
 
+    // Step 03 Character Generation Timer & Milestones
+    let genTimerInterval = null;
+    let genStartTime = null;
+
+    function startGenTimer() {
+      stopGenTimer();
+      genStartTime = Date.now();
+      const timerEl = $('#gen-timer');
+      if (timerEl) timerEl.textContent = '⏱ 00:00';
+      genTimerInterval = setInterval(() => {
+        const diffSec = Math.floor((Date.now() - genStartTime) / 1000);
+        const m = String(Math.floor(diffSec / 60)).padStart(2, '0');
+        const s = String(diffSec % 60).padStart(2, '0');
+        if (timerEl) timerEl.textContent = `⏱ ${m}:${s}`;
+      }, 1000);
+    }
+
+    function stopGenTimer() {
+      if (genTimerInterval) {
+        clearInterval(genTimerInterval);
+        genTimerInterval = null;
+      }
+    }
+
+    function updateGenMilestones(activeNum, isDone = false) {
+      for (let i = 1; i <= 4; i++) {
+        const el = $('#gen-ms-' + i);
+        if (!el) continue;
+        const ind = el.querySelector('.ms-indicator');
+        el.classList.remove('active', 'done');
+        if (isDone || i < activeNum) {
+          el.classList.add('done');
+          if (ind) ind.textContent = '✓';
+        } else if (i === activeNum) {
+          el.classList.add('active');
+          if (ind) ind.textContent = String(i);
+        } else {
+          if (ind) ind.textContent = String(i);
+        }
+      }
+    }
+
+    function updateGenProgress(percent, msg, milestoneNum, isError = false) {
+      const p = Math.max(2, Math.min(100, Math.round(percent)));
+      const fillEl = $('#gen-progress-fill');
+      const pctEl = $('#gen-percentage');
+      const msgEl = $('#gen-status-msg');
+      const pulseDot = $('#gen-pulse-dot');
+      const headline = $('#gen-headline');
+
+      if (fillEl) fillEl.style.width = p + '%';
+      if (pctEl) pctEl.textContent = p + '%';
+      if (msg && msgEl) msgEl.textContent = (window.localizeStatus ? window.localizeStatus(msg) : msg);
+
+      if (isError) {
+        if (pulseDot) pulseDot.style.background = 'var(--danger-text)';
+        if (fillEl) fillEl.style.background = 'var(--danger-text)';
+        if (headline) headline.textContent = t('s3.error_title') || 'Error en la generación';
+        return;
+      }
+
+      updateGenMilestones(milestoneNum, p >= 100);
+    }
+
     // Refresh state from server
     async function refresh(knownJob = null) {
       if (!jobId) return;
@@ -2068,6 +2174,8 @@
     }
 
     // Polling watch loop
+    let isSeedanceActive = false;
+
     async function watch() {
       clearTimeout(pollTimer);
       try {
@@ -2084,56 +2192,111 @@
         $('#draft-button').disabled = busy || $('#input-ready').hidden || !maskApproved;
 
         const dash = $('#processing-dashboard');
+        const genDash = $('#generation-dashboard');
+        const s = (j.status || '').toLowerCase();
+        const isStep3 = isSeedanceActive || s.includes('seedance') || s.includes('fal.ai') || s.includes('rendering') || s.includes('retrieving') || s.includes('untouched') || s.includes('recast');
 
         if (busy) {
           $('#upgrade').disabled = true;
-          if (dash) dash.hidden = false;
-          if (!procTimerInterval) startProcTimer();
 
-          // Parse status to estimate milestone and progress
-          let p = 35;
-          let ms = 1;
-          const s = (j.status || '').toLowerCase();
-          if (s.includes('4/4') || s.includes('[4/4]') || s.includes('listo') || s.includes('complet')) {
-            ms = 4;
-            p = 95;
-          } else if (s.includes('3/4') || s.includes('[3/4]') || s.includes('sam') || s.includes('segment') || s.includes('compositing') || s.includes('composición')) {
-            ms = 3;
-            p = 80;
-          } else if (s.includes('2/4') || s.includes('[2/4]') || s.includes('depth') || s.includes('profundidad') || s.includes('malla') || s.includes('mesh') || s.includes('mediapipe')) {
-            ms = 2;
-            p = 60;
-          } else if (s.includes('1/4') || s.includes('[1/4]') || s.includes('normaliz')) {
-            ms = 1;
-            p = 40;
+          if (isStep3) {
+            isSeedanceActive = true;
+            if (genDash) genDash.hidden = false;
+            if (!genTimerInterval) startGenTimer();
+
+            let gp = 35;
+            let gms = 2;
+            if (s.includes('restoring') || s.includes('untouched') || s.includes('audio')) {
+              gms = 3;
+              gp = 92;
+            } else if (s.includes('retrieving') || s.includes('descargando')) {
+              gms = 2;
+              gp = 85;
+            } else if (s.includes('in_progress') || s.includes('rendering video through fal.ai') || s.includes('generando')) {
+              gms = 2;
+              gp = 60;
+            } else if (s.includes('in_queue') || s.includes('queued') || s.includes('seedance rendering')) {
+              gms = 2;
+              gp = 35;
+            } else if (s.includes('dispatching') || s.includes('uploading') || s.includes('enviando')) {
+              gms = 1;
+              gp = 20;
+            }
+            updateGenProgress(gp, j.status, gms);
+          } else {
+            if (dash) dash.hidden = false;
+            if (!procTimerInterval) startProcTimer();
+
+            // Parse status to estimate milestone and progress
+            let p = 35;
+            let ms = 1;
+            if (s.includes('4/4') || s.includes('[4/4]') || s.includes('listo') || s.includes('complet')) {
+              ms = 4;
+              p = 95;
+            } else if (s.includes('3/4') || s.includes('[3/4]') || s.includes('sam') || s.includes('segment') || s.includes('compositing') || s.includes('composición')) {
+              ms = 3;
+              p = 80;
+            } else if (s.includes('2/4') || s.includes('[2/4]') || s.includes('depth') || s.includes('profundidad') || s.includes('malla') || s.includes('mesh') || s.includes('mediapipe')) {
+              ms = 2;
+              p = 60;
+            } else if (s.includes('1/4') || s.includes('[1/4]') || s.includes('normaliz')) {
+              ms = 1;
+              p = 40;
+            }
+            updateProgress(p, j.status, ms);
           }
-          updateProgress(p, j.status, ms);
           pollTimer = setTimeout(watch, 1000);
         } else {
           stopProcTimer();
+          stopGenTimer();
           if (j.state === 'done') {
-            if (dash && !dash.hidden) {
+            if (isStep3 && genDash && !genDash.hidden) {
+              updateGenProgress(100, t('s3.done_sub'), 4);
+              const pulseDot = $('#gen-pulse-dot');
+              if (pulseDot) pulseDot.style.background = 'var(--success-text)';
+              const headline = $('#gen-headline');
+              if (headline) headline.textContent = t('s3.done_title');
+              const dBtn = $('#draft-button');
+              if (dBtn) {
+                dBtn.disabled = false;
+                dBtn.textContent = t('s3.button');
+              }
+              isSeedanceActive = false;
+              await refresh(j);
+              const finalEl = document.getElementById('final');
+              if (finalEl) finalEl.scrollIntoView({ behavior: 'smooth' });
+            } else if (dash && !dash.hidden) {
               updateProgress(100, t('prog.done_sub'), 4);
               const pulseDot = $('#progress-pulse-dot');
               if (pulseDot) pulseDot.style.background = 'var(--success-text)';
               const headline = $('#progress-headline');
               if (headline) headline.textContent = t('prog.done_title');
-            }
-            await refresh(j);
-            // Smooth scroll to Step 02 if we just finished processing
-            if (dash && !dash.hidden) {
+              await refresh(j);
               const reviewEl = document.getElementById('review');
               if (reviewEl) reviewEl.scrollIntoView({ behavior: 'smooth' });
+            } else {
+              await refresh(j);
             }
           } else if (j.state === 'error') {
-            if (dash) dash.hidden = false;
-            updateProgress(100, j.status || 'Error en la preparación', 1, true);
+            if (isStep3 && genDash && !genDash.hidden) {
+              updateGenProgress(100, j.status || 'Error en la generación', 2, true);
+              const dBtn = $('#draft-button');
+              if (dBtn) {
+                dBtn.disabled = false;
+                dBtn.textContent = t('s3.button');
+              }
+              isSeedanceActive = false;
+            } else if (dash) {
+              dash.hidden = false;
+              updateProgress(100, j.status || 'Error en la preparación', 1, true);
+            }
           } else {
             await refresh(j);
           }
         }
       } catch (e) {
         stopProcTimer();
+        stopGenTimer();
         status(e.message, true);
       }
     }

@@ -25,10 +25,10 @@ flowchart TD
 
     subgraph Cloud ["Generative Infrastructure (Agnostic Layer)"]
         Router["Provider Router\n(providers.py)"]
-        Fal["fal.ai Live Portrait / V2V"]
-        Enhancor["Enhancor Seedance 2.5"]
-        Replicate["Replicate LivePortrait"]
-        Comfy["ComfyUI Local Instance"]
+        Fal["fal.ai\nWan 2.2 Animate Replace / MiniMax H3 Max"]
+        Enhancor["Enhancor\nSeedance 2.5 Edit & Omni"]
+        Replicate["Replicate\nWan 2.2 Serverless Video-to-Video"]
+        Comfy["ComfyUI Local\nAnimateDiff / IP-Adapter Video"]
         Draft["Draft Synthesis Validation"]
         HD["Approved 1080p Render"]
     end
@@ -53,10 +53,10 @@ flowchart TD
 2. **Generative Synthesis (Provider-Agnostic Abstraction Layer):**
    - The preparation stage yields a normalized guidance video `seedance-input.mp4` with pitched audio.
    - The character generation layer is decoupled into `providers.py`, allowing dynamic routing to:
-     - **fal.ai**: Fast serverless video diffusion and Live Portrait models.
-     - **Enhancor**: Seedance 2.5 motion transfer and facial identity preservation.
-     - **Replicate**: Serverless LivePortrait endpoints.
-     - **ComfyUI**: Self-hosted local instances for fully offline workflows.
+     - **fal.ai**: Wan 2.2 Animate Replace ($0.04-$0.08/s, budget pay-as-you-go) and MiniMax H3 Max Recast ($0.30-$0.45/s, cinematic 1080p).
+     - **Enhancor**: Seedance 2.5 Edit & Omni motion transfer and facial identity preservation ($45/mo API plan).
+     - **Replicate**: Serverless Wan 2.2 video-to-video execution billed by GPU-seconds.
+     - **ComfyUI**: Self-hosted local instances for fully offline, free workflows.
    - Credentials and engine selection are managed dynamically via `/api/settings` and stored securely with `chmod 600`.
 
 ---

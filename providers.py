@@ -9,28 +9,28 @@ PROVIDER_SPECS = {
     'fal': {
         'id': 'fal',
         'name': 'fal.ai',
-        'description': 'H3 Max Recast (reemplazo cinematográfico de personajes 1080p) y Depth/SAM en la nube',
+        'description': 'Pay-as-you-go video recasting: Wan 2.2 Animate Replace ($0.04-$0.08/s) & MiniMax H3 Max Recast ($0.30-$0.45/s)',
         'env_var': 'FAL_KEY',
         'help_url': 'https://fal.ai/dashboard/keys'
     },
     'enhancor': {
         'id': 'enhancor',
         'name': 'Enhancor (Seedance 2.5)',
-        'description': 'Transferencia de movimiento con Seedance 2.5 y preservación facial',
+        'description': 'ByteDance Seedance 2.5 Edit & Omni ($45/mo plan required for API; ~$0.15-$0.35/draft in credits)',
         'env_var': 'ENHANCOR_API_KEY',
         'help_url': 'https://app.enhancor.ai/api-dashboard'
     },
     'replicate': {
         'id': 'replicate',
         'name': 'Replicate',
-        'description': 'LivePortrait y difusión de video en infraestructura serverless',
+        'description': 'Wan 2.2 Animate Replace & video-to-video diffusion on serverless GPUs (billed per GPU-second)',
         'env_var': 'REPLICATE_API_TOKEN',
         'help_url': 'https://replicate.com/account/api-tokens'
     },
     'comfy': {
         'id': 'comfy',
         'name': 'ComfyUI Local',
-        'description': 'Instancia local autohospedada de ComfyUI (100% offline)',
+        'description': 'Self-hosted local video recasting workflow (100% free with dedicated local GPU)',
         'env_var': 'COMFY_URL',
         'help_url': 'http://127.0.0.1:8188'
     }

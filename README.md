@@ -27,13 +27,15 @@ The entire source audio (vocal stems, music, sound design, and ambience) is pres
    - Adaptive portrait cropping (`x0=0.20*w, cw=0.60*w, ch=0.75*h`) for facial detection across both close-ups and wide cinematic shots.
    - Temporal smoothing across rapid head turns to maintain continuous tracking coordinates.
 
-3. **Provider-Agnostic Synthesis Engine & In-App Settings**:
-   - Connect and switch generative video backends through the in-app Settings modal (⚙️ Ajustes) or environment variables.
-   - Supported engines:
-     - **fal.ai**: Fast cloud Live Portrait and video diffusion (`FAL_KEY`).
-     - **Enhancor**: Seedance 2.5 motion transfer and facial identity preservation (`ENHANCOR_API_KEY`).
-     - **Replicate**: Serverless LivePortrait models (`REPLICATE_API_TOKEN`).
-     - **ComfyUI Local**: Self-hosted local workflows for offline generation (`COMFY_URL`).
+3. **Provider-Agnostic Video Recasting & In-App Settings**:
+   - Connect and switch generative video backends through the in-app Settings modal (⚙️ Settings) or environment variables.
+   - Strictly engineered for **Video Recasting / Character Replacement with Identity Transfer** (not potato talking-head avatars, not camera-hallucinating text-to-video).
+   - Supported engines & transparent pricing:
+     - **fal.ai — Wan 2.2 Animate Replace (`fal-ai/wan/v2.2-14b/animate/replace`)**: Budget pay-as-you-go ($0.04/s at 480p, $0.08/s at 720p; ~$0.60–$1.20 for 15s). No monthly subscription required.
+     - **fal.ai — MiniMax H3 Max Recast (`minimax/h3-max/recast`)**: Premium cinematic quality ($0.45/s at 1080p, $0.30/s at 768p; ~$6.75 for 15s). Multi-subject tracking and cinematic lighting.
+     - **Enhancor (Seedance 2.5 Edit / Omni)**: Subscription-gated ($45/month plan required to unlock API; ~$0.15–$0.35/draft in subscription credits).
+     - **Replicate**: Wan 2.2 Animate Replace & video-to-video on serverless GPUs (billed per GPU-second).
+     - **ComfyUI Local**: Self-hosted local AnimateDiff / Wan workflows for offline generation (100% free with local GPU).
    - Two-stage workflow: draft preview validation before committing to full 1080p high-definition generation.
 
 4. **Single Page Application with Live Progress**:
@@ -47,6 +49,26 @@ The entire source audio (vocal stems, music, sound design, and ambience) is pres
 
 6. **macOS System Daemons & Public Tunneling**:
    - Managed background execution via macOS `LaunchAgents` and Cloudflare Named Tunnels for SSL remote access without terminal dependencies.
+
+---
+
+## Exact Model Category: Video Recasting vs. Talking Heads & Text-to-Video
+
+To achieve cinematic, shot-for-shot character replacement with full body motion, lighting, and dialogue retention, **tBelt Studio** enforces a strict model taxonomy:
+
+- ❌ **Generic Text-to-Video / Image-to-Video** (e.g. Sora, Runway Gen-2/3, standard Kling/Hailuo): These hallucinate brand new camera angles, alter pacing, and fail to preserve existing multi-shot choreography.
+- ❌ **Talking-Head / Avatar mesh retargeters** (e.g. LivePortrait, SadTalker): These crop down to 512×512 facial bounding boxes, warp faces like rubber, cut off actor bodies, and distort aspect ratios.
+- ✅ **Video Recasting (Subject Identity Transfer)**: Models that accept a driving composite video + character reference images, track subject motion, gestures, camera framing, cuts, and lighting, and transfer the new identity across the full body while leaving the background and choreography intact.
+
+### Provider & Pricing Trade-Off Matrix
+
+| Provider & Model | Pricing Structure | Estimated Cost (15s Clip) | Best For | Subscription Required? |
+|---|---|---|---|---|
+| **fal.ai — Wan 2.2 Animate Replace** | Pay-as-you-go ($0.04/s at 480p, $0.08/s at 720p) | **$0.60 – $1.20 USD** | Fast test iterations & budget production | **No** (Prepaid balance) |
+| **Enhancor (ByteDance Seedance 2.5)** | Subscription credits (~$0.15–$0.35/draft) | **~$0.25 USD** (in credits) | High-volume production | **Yes** ($45/mo to unlock API) |
+| **fal.ai — MiniMax H3 Max Recast** | Pay-as-you-go ($0.30/s at 768p, $0.45/s at 1080p) | **$4.50 – $6.75 USD** | Premium 1080p cinematic delivery | **No** (Prepaid balance) |
+| **Replicate (Wan 2.2 / Video2Video)** | Serverless GPU-seconds (~$0.0005–$0.001/s) | **$0.40 – $0.90 USD** | Scalable cloud rendering | **No** (Pay per second) |
+| **ComfyUI Local** | Self-hosted local GPU hardware | **$0.00** | Offline privacy & local setups | **No** (Free open weights) |
 
 ---
 

@@ -15,6 +15,29 @@ Carry authorized jobs through preparation, quality review, generation and delive
 9. On explicit approval, complete the draft at 1080p using draft_id and webhook_url, then restore original audio again.
 10. Show the final preview and download. Keep status persisted and UI preview selection stable. Never expose credentials.
 
+## Exact Model Category Requirement: Video Recasting / Character Replacement
+The character generation stage (Step 03) requires a **Video Recasting / Video Character Replacement with Identity Transfer** model. It MUST NOT be confused with or substituted by:
+- ❌ **Generic Text-to-Video or Image-to-Video models** (e.g. Sora, Runway Gen-2/3, standard Kling/Hailuo): These hallucinate brand new camera paths, change choreographies, and ruin shot-for-shot pacing.
+- ❌ **Talking-Head / Avatar mesh retargeters** (e.g. LivePortrait, SadTalker): These crop down to 512×512 facial bounding boxes, warp faces into uncanny rubber, cut off actor bodies, and distort aspect ratios.
+- ✅ **Video Recasting Models (Subject Identity Transfer)**: Models that accept a driving composite video + character reference images, track subject motion, gestures, camera framing, cuts, and lighting, and transfer the new character's identity across the full body while leaving background and choreography intact.
+
+### Provider & Pricing Matrix for Video Recasting
+The system maintains a provider-agnostic architecture allowing instant switching:
+
+1. **Enhancor (ByteDance Seedance 2.5 Edit / Omni)**:
+   - **Cost**: ~\$0.15 – \$0.35 USD per generation (via subscription credits).
+   - **Best for**: Routine production and high-volume iterations.
+   - **Routing**: Image reference uses Seedance Edit; video reference uses Omni multi-reference.
+2. **fal.ai — Wan 2.2 Animate Replace (`fal-ai/wan/v2.2-14b/animate/replace`)**:
+   - **Cost**: **\$0.08 / second** at 720p (~\$0.90 – \$1.20 for 15s) | **\$0.04 / second** at 480p (~\$0.60 for 15s).
+   - **Best for**: Ultra-budget cloud testing without a fixed subscription. Open-weights video character swap preserving motion and scene lighting.
+3. **fal.ai — MiniMax H3 Max Recast (`minimax/h3-max/recast`)**:
+   - **Cost**: **\$0.45 / second** at 1080p (~\$6.75 for 15s) | **\$0.30 / second** at 768p (~\$4.50 for 15s).
+   - **Best for**: Premium, high-end cinematic delivery where multi-person tracking, camera cuts, and maximum photorealism are strictly required.
+4. **Replicate / ComfyUI Local**:
+   - Replicate: Wan 2.2 Animate Replace on serverless GPUs.
+   - ComfyUI Local: Free (\$0.00) using local AnimateDiff / IP-Adapter Video / Wan workflows on capable local GPUs.
+
 ## Reference-mode routing (required)
 Enhancor Edit accepts exactly one video: the prepared source. If the replacement identity reference is a video, use multi_reference (Omni), with prepared source @Video1 and identity reference @Video2. Use the identity clip for appearance only unless the user explicitly asks to use its voice or performance. Do not convert that reference to pictures without permission. For image references, default to Edit. Show the actual mode in the UI and saved generation metadata. Omni requires duration and aspect ratio; use the source framing and nearest supported duration. Preserve the full source audio in the final export and disclose any necessary short last-frame hold.
 

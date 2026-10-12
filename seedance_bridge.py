@@ -36,8 +36,15 @@ def submit_fal(folder, prompt, sirio, tein=None, status=print):
             'video_url': video_url,
             'reference_image_urls': ref_images,
             'prompt': prompt,
-            'resolution': '1080P',
+            'resolution': setting('FAL_RECAST_RESOLUTION', '1080P'),
             'enhance_realism': True
+        }
+    elif 'wan' in model_id or 'replace' in model_id:
+        args = {
+            'video_url': video_url,
+            'image_url': ref_images[0],
+            'resolution': setting('FAL_WAN_RESOLUTION', '720p'),
+            'guidance_scale': 1.0
         }
     elif 'live-portrait' in model_id:
         args = {
@@ -80,6 +87,7 @@ def wait_and_finish_fal(folder, request_id, status=print):
         s = fal_client.status(model_id, request_id, with_logs=True)
         status_str = getattr(s, 'status', str(s))
         (folder/'provider-status.json').write_text(json.dumps({'status': status_str, 'request_id': request_id}, indent=2))
+        status(f'fal.ai status: {status_str}')
 
         if 'COMPLETED' in status_str or 'OK' in status_str or type(s).__name__ == 'Completed':
             status('Retrieving result from fal.ai')
@@ -275,6 +283,7 @@ def wait_and_finish(folder, request_id, status=print):
     for _ in range(360):
         r=requests.post(setting('ENHANCOR_BASE_URL','https://apireq.enhancor.ai/api/seedance2.5/v1').rstrip('/')+'/status',headers={'x-api-key':key},json={'request_id':request_id},timeout=30);r.raise_for_status();j=r.json()
         (folder/'provider-status.json').write_text(json.dumps(j,indent=2))
+        status(f"Seedance status: {j.get('status')}")
         if j.get('status')=='COMPLETED':
             url=j.get('result')
             if not isinstance(url,str) or not url.startswith('https://'):raise ValueError('Seedance result URL missing.')

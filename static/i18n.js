@@ -130,6 +130,15 @@ const I18N = {
     's3.prompt_default': 'Reemplaza completamente al sujeto seleccionado con la referencia del personaje en cada fotograma, incluyendo cabello, manos, ropa y calzado. Preserva el fondo original, encuadre de cámara, iluminación, movimiento y tiempos. Coincide exactamente con el habla integrada sin diálogo extra.',
     's3.hint': '<b>Paso 2 de 2</b>: Transfiere la identidad de tu personaje con la física y voz del video.',
     's3.button': '✨ 2 Clic: Generar Personaje →',
+    's3.rendering_title': 'Generando Personaje con fal.ai (H3 Max)...',
+    's3.rendering_sub': 'Difusión de video 1080p en la nube. Reemplazo de identidad cinematográfico (~2-3 min).',
+    's3.ms1': 'Envío y Referencias',
+    's3.ms2': 'Difusión Video (fal.ai)',
+    's3.ms3': 'Restauración de Audio',
+    's3.ms4': 'Borrador Final Listo',
+    's3.done_title': '¡Borrador Generado con Éxito!',
+    's3.done_sub': 'El video ha sido renderizado en 1080p y el audio original fue restaurado.',
+    's3.error_title': 'Error al generar personaje',
 
     's4.badge': '04',
     's4.title': 'Borrador Final y Exportación 1080p',
@@ -279,6 +288,15 @@ const I18N = {
     's3.prompt_default': 'Replace the complete selected subject with the supplied character reference in every frame, including hair, hands, clothing and footwear. Preserve the original background, camera framing, lighting, motion and timing. Match the embedded speech exactly without extra dialogue.',
     's3.hint': '<b>Step 2 of 2</b>: Transfer your character\'s identity with the motion physics and audio of the video.',
     's3.button': '✨ 2 Click: Generate Character →',
+    's3.rendering_title': 'Generating Character with fal.ai (H3 Max)...',
+    's3.rendering_sub': '1080p cloud video diffusion. Cinematic identity replacement (~2-3 min).',
+    's3.ms1': 'Dispatch & References',
+    's3.ms2': 'Video Diffusion (fal.ai)',
+    's3.ms3': 'Audio Restoration',
+    's3.ms4': 'Final Draft Ready',
+    's3.done_title': 'Draft Generated Successfully!',
+    's3.done_sub': '1080p video rendered and full untouched original audio restored.',
+    's3.error_title': 'Character generation failed',
 
     's4.badge': '04',
     's4.title': 'Final Draft & 1080p Export',
@@ -379,6 +397,18 @@ function localizeStatus(status) {
   }
   if (s.includes('complete') || s.includes('exitosamente') || s.includes('listo para revisión') || s.includes('input review required')) {
     return t('prog.status_done');
+  }
+  if (s.includes('fal.ai') || s.includes('seedance rendering') || s.includes('in_progress')) {
+    return currentLang === 'en' ? 'Rendering 1080p diffusion video on fal.ai (H3 Max)...' : 'Renderizando video de difusión 1080p en fal.ai (H3 Max)...';
+  }
+  if (s.includes('in_queue') || s.includes('queued')) {
+    return currentLang === 'en' ? 'Queued at fal.ai for processing...' : 'En cola de renderizado en fal.ai...';
+  }
+  if (s.includes('restoring entire') || s.includes('restaurando') || s.includes('untouched original source audio')) {
+    return currentLang === 'en' ? 'Restoring untouched original source audio...' : 'Restaurando audio original sin pérdidas...';
+  }
+  if (s.includes('final preview ready')) {
+    return currentLang === 'en' ? 'Final preview ready with original source audio' : 'Vista previa final lista con audio original intacto';
   }
   if (s.includes('rendering') || s.includes('generando')) {
     return t('status.rendering');
