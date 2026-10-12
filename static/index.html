@@ -1173,7 +1173,7 @@
   <div class="app-container">
     <!-- Navbar -->
     <header class="navbar">
-      <div class="brand-group">
+      <div class="brand-group" style="cursor: pointer;" onclick="resetJob()" title="Reiniciar sesión">
         <div class="brand-logo" aria-label="tBelt Logo">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="tBelt">
             <defs>
@@ -1627,6 +1627,8 @@
 
     function resetJob() {
       jobId = null;
+      saved = {};
+      maskApproved = false;
       if (window.location.search) {
         history.replaceState(null, '', window.location.pathname);
       }
@@ -1638,6 +1640,14 @@
       $('#status-text').textContent = t('status.initial');
       const dash = $('#processing-dashboard');
       if (dash) dash.hidden = true;
+      $('#input-ready').hidden = true;
+      $('#input-empty').hidden = false;
+      $('#final-ready').hidden = true;
+      $('#final-empty').hidden = false;
+      const form = $('#form');
+      if (form) form.reset();
+      const fn = document.querySelector('[data-filename]');
+      if (fn) fn.textContent = t('s1.upload_sub');
       $('#go').disabled = false;
       stopProcTimer();
     }
