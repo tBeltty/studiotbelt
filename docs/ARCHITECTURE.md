@@ -23,8 +23,12 @@ flowchart TD
         Mux["Audio Multiplexer\n(Embedded Guidance Stream)"]
     end
 
-    subgraph Cloud ["Cloud GPU Infrastructure"]
-        Fal["fal.ai Live Portrait / Video-to-Video\n(Enterprise A100 Clusters)"]
+    subgraph Cloud ["Generative Infrastructure (Agnostic Layer)"]
+        Router["Provider Router\n(providers.py)"]
+        Fal["fal.ai Live Portrait / V2V"]
+        Enhancor["Enhancor Seedance 2.5"]
+        Replicate["Replicate LivePortrait"]
+        Comfy["ComfyUI Local Instance"]
         Draft["Draft Synthesis Validation"]
         HD["Approved 1080p Render"]
     end
@@ -34,8 +38,9 @@ flowchart TD
     Norm --> Audio
     Mesh & Audio --> Mux
     Mux --> Tracker
-    Tracker --> Draft --> Fal
-    Fal --> HD
+    Tracker --> Draft --> Router
+    Router --> Fal & Enhancor & Replicate & Comfy
+    Fal & Enhancor & Replicate & Comfy --> HD
     HD --> UI
 ```
 
@@ -45,9 +50,14 @@ flowchart TD
    - **Audio Separation & Modulation:** Local Demucs (`htdemucs`) isolates vocals and instrumental tracks. Vocals are pitch-shifted +3 semitones while retaining identical temporal alignment.
    - **Resource Footprint:** Maximum RAM peak of ~1.1 GB, allowing smooth execution on low-memory devices (such as entry-level Mac mini 8GB).
 
-2. **Cloud GPU (Neural Synthesis & Diffusion):**
-   - Heavy diffusion steps (Live Portrait and Video-to-Video character replacement) are dispatched to **fal.ai** enterprise GPU infrastructure.
-   - Two-stage lifecycle: rapid low-cost draft preview followed by explicit human approval for full 1080p master export.
+2. **Generative Synthesis (Provider-Agnostic Abstraction Layer):**
+   - The preparation stage yields a normalized guidance video `seedance-input.mp4` with pitched audio.
+   - The character generation layer is decoupled into `providers.py`, allowing dynamic routing to:
+     - **fal.ai**: Fast serverless video diffusion and Live Portrait models.
+     - **Enhancor**: Seedance 2.5 motion transfer and facial identity preservation.
+     - **Replicate**: Serverless LivePortrait endpoints.
+     - **ComfyUI**: Self-hosted local instances for fully offline workflows.
+   - Credentials and engine selection are managed dynamically via `/api/settings` and stored securely with `chmod 600`.
 
 ---
 
@@ -89,5 +99,5 @@ To prevent browser console pollution (404 errors), the backend `/jobs/{id}` resp
 
 ## 5. Security & Daemon Management
 
-- **Zero Plain-Text Exposure:** API credentials (`FAL_KEY`) are managed strictly via environment variables with `chmod 600` access controls.
+- **Zero Plain-Text Exposure:** API credentials (`FAL_KEY`, `ENHANCOR_API_KEY`, `REPLICATE_API_TOKEN`) are never exposed via client JSON payloads. The settings API exposes only a Boolean configuration status, and values are persisted locally in `.env` with strict `chmod 600` access controls.
 - **Persistent Service Architecture:** The API server (`uvicorn`) and secure Cloudflare Tunnel (`cloudflared`) run as isolated macOS `LaunchAgents`, decoupled from terminal shells.

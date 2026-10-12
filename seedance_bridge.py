@@ -1,5 +1,5 @@
 from pathlib import Path
-import json, requests, re, time, concurrent.futures
+import os, json, requests, re, time, concurrent.futures
 from config import credential, setting
 from audio_workflow import finish_preview
 
@@ -125,10 +125,73 @@ def submit_hd_fal(folder):
     (hd/'seedance-response.json').write_text(json.dumps(res_data, indent=2))
     return ident
 
-def submit(folder, prompt, sirio, tein=None, status=print):
-    if is_fal_active():
-        return submit_fal(folder, prompt, sirio, tein, status)
+def submit_replicate(folder, prompt, sirio, tein=None, status=print):
+    import replicate
+    folder = Path(folder)
+    from mask_review import require_approved, is_mesh
+    require_approved(folder)
+    if (folder/'seedance-response.json').exists():
+        raise ValueError('Este trabajo ya tiene una respuesta de proveedor registrada.')
 
+    if not (folder/'audio-manifest.json').exists():
+        raise ValueError('El aislamiento de audio debe completarse antes de enviar.')
+
+    from audio_workflow import prepare_seedance_video
+    status('Preparando video guía con audio aislado embedido...')
+    prepared = folder/'seedance-input.mp4' if is_mesh(folder) else prepare_seedance_video(folder)
+
+    status('Iniciando tarea en Replicate (LivePortrait)...')
+    model = setting('REPLICATE_MODEL', 'fofr/live-portrait')
+    token = os.environ.get('REPLICATE_API_TOKEN') or setting('REPLICATE_API_TOKEN')
+    client = replicate.Client(api_token=token)
+
+    with open(prepared, 'rb') as vf, open(sirio, 'rb') as imgf:
+        prediction = client.predictions.create(
+            model=model,
+            input={
+                'driving_video': vf,
+                'source_image': imgf
+            }
+        )
+    ident = prediction.id
+    res_data = {'requestId': ident, 'provider': 'replicate', 'model': model}
+    (folder/'seedance-request.json').write_text(json.dumps({'provider': 'replicate', 'model': model, 'prompt': prompt}, indent=2))
+    (folder/'seedance-response.json').write_text(json.dumps(res_data, indent=2))
+    (folder/'generation.json').write_text(json.dumps({
+        'request_id': ident,
+        'prompt': prompt,
+        'video': 'seedance-result.mp4',
+        'provider': 'replicate',
+        'model': model
+    }, indent=2))
+    status(f'Tarea en Replicate enviada: {ident}')
+    return ident
+
+def wait_and_finish_replicate(folder, request_id, status=print):
+    import replicate
+    folder = Path(folder)
+    token = os.environ.get('REPLICATE_API_TOKEN') or setting('REPLICATE_API_TOKEN')
+    client = replicate.Client(api_token=token)
+    status('Procesando video en Replicate…')
+    for _ in range(180):
+        prediction = client.predictions.get(request_id)
+        if prediction.status == 'succeeded':
+            status('Descargando resultado de Replicate...')
+            output_url = prediction.output
+            if isinstance(output_url, list):
+                output_url = output_url[0]
+            r = requests.get(str(output_url), timeout=180)
+            r.raise_for_status()
+            (folder/'seedance-result.mp4').write_bytes(r.content)
+            status('Restaurando audio original...')
+            finish_preview(folder/'seedance-result.mp4', folder)
+            return
+        elif prediction.status in ['failed', 'canceled']:
+            raise RuntimeError(f'Tarea de Replicate fallida: {prediction.error}')
+        time.sleep(5)
+    raise TimeoutError('La tarea de Replicate sigue pendiente.')
+
+def submit_enhancor(folder, prompt, sirio, tein=None, status=print):
     folder = Path(folder)
     from mask_review import require_approved, is_mesh
     require_approved(folder)
@@ -167,12 +230,33 @@ def submit(folder, prompt, sirio, tein=None, status=print):
     j=r.json();(folder/'seedance-response.json').write_text(json.dumps(j))
     ident=j.get('requestId')
     if not ident:raise ValueError('Seedance did not return a request ID.')
-    (folder/'generation.json').write_text(json.dumps({'request_id':ident,'prompt':p['prompt'],'video':'seedance-result.mp4','mode':p['mode']}))
+    (folder/'generation.json').write_text(json.dumps({'request_id':ident,'prompt':p['prompt'],'video':'seedance-result.mp4','mode':p['mode'], 'provider': 'enhancor'}))
     status('Seedance draft submitted: '+ident)
     return ident
 
+def submit(folder, prompt, sirio, tein=None, status=print):
+    from providers import get_active_provider
+    active = get_active_provider()
+    if active == 'replicate':
+        return submit_replicate(folder, prompt, sirio, tein, status)
+    elif active == 'enhancor':
+        return submit_enhancor(folder, prompt, sirio, tein, status)
+    else:
+        return submit_fal(folder, prompt, sirio, tein, status)
+
 def wait_and_finish(folder, request_id, status=print):
-    if is_fal_active():
+    folder = Path(folder)
+    provider = 'fal'
+    if (folder/'seedance-response.json').exists():
+        try:
+            resp = json.loads((folder/'seedance-response.json').read_text())
+            provider = resp.get('provider', 'fal')
+        except Exception:
+            pass
+
+    if provider == 'replicate':
+        return wait_and_finish_replicate(folder, request_id, status)
+    elif provider in ['fal.ai', 'fal']:
         return wait_and_finish_fal(folder, request_id, status)
 
     folder=Path(folder)

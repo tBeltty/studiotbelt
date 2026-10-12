@@ -553,6 +553,93 @@
       gap: 12px;
     }
 
+    /* Settings Modal & Backdrop */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(8, 10, 13, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-dialog {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-base);
+      border-radius: var(--radius-lg);
+      outline: 1px dashed hsl(40 88% 58% / 0.25);
+      outline-offset: -6px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      transform: translateY(12px) scale(0.98);
+      transition: transform 0.2s ease;
+    }
+    .modal-backdrop.open .modal-dialog {
+      transform: translateY(0) scale(1);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .provider-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 14px 0;
+    }
+    @media (max-width: 600px) {
+      .provider-grid { grid-template-columns: 1fr; }
+    }
+    .provider-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .provider-card:hover {
+      border-color: var(--brand-amber);
+    }
+    .provider-card.selected {
+      border-color: var(--brand-amber);
+      background: rgba(242, 177, 52, 0.08);
+    }
+    .provider-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .provider-card-name {
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-main);
+    }
+    .provider-card-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+
     /* Panels & Sections with subtle tBelt stitch outline */
     .panel {
       background: var(--bg-surface);
@@ -1107,6 +1194,10 @@
         </div>
       </div>
       <div class="brand-links">
+        <button type="button" id="open-settings-btn" class="btn btn-secondary" style="min-height: 34px; padding: 6px 12px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+          <span>⚙️</span>
+          <span id="active-engine-badge" style="color: var(--brand-amber); font-weight: 600;">fal.ai</span>
+        </button>
         <div class="lang-switcher" role="group" aria-label="Language selection">
           <button type="button" class="lang-btn active" data-lang="es">ES</button>
           <button type="button" class="lang-btn" data-lang="en">EN</button>
@@ -1160,6 +1251,20 @@
       <div style="display: flex; align-items: center; gap: 8px;">
         <button type="button" id="dismiss-error-btn" class="btn btn-secondary" style="display:none; padding: 2px 8px; font-size: 11px; min-height: 24px;">✕ Descartar</button>
         <div id="job-info-pill" class="job-badge" style="display:none;" title="Click to copy Job ID"></div>
+      </div>
+    </div>
+
+    <!-- Non-intrusive Onboarding Alert (shown only if no API key is configured) -->
+    <div id="onboarding-banner" class="panel" style="margin-bottom: 24px; border-left: 3px solid var(--brand-amber); padding: 18px 24px;" hidden>
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <span style="font-size: 26px;">⚙️</span>
+          <div>
+            <strong style="font-size: 15px; display: block; margin-bottom: 2px;" data-i18n="settings.onboarding_title">Configura tu motor generativo</strong>
+            <span class="field-hint" data-i18n="settings.onboarding_banner">Conecta tu proveedor preferido (fal.ai, Enhancor, Replicate o ComfyUI) para habilitar la generación.</span>
+          </div>
+        </div>
+        <button type="button" id="onboarding-open-btn" class="btn btn-primary" style="font-size: 13px; padding: 10px 20px;" data-i18n="settings.onboarding_btn">Configurar Motor ⚙️</button>
       </div>
     </div>
 
@@ -1347,7 +1452,10 @@
       </div>
 
       <div class="meta-row">
-        <div class="meta-pill" data-i18n="s3.engine_pill">Motor: <b>fal.ai</b></div>
+        <div class="meta-pill" id="step3-engine-pill">
+          <span data-i18n="settings.active_engine">Motor Activo</span>: <b id="step3-engine-name">fal.ai</b>
+          <button type="button" class="btn btn-ghost" id="step3-change-engine" style="padding: 2px 8px; font-size: 11px; margin-left: 6px; cursor: pointer;">⚙️</button>
+        </div>
         <div class="meta-pill" id="mode-label">Live Portrait · Fast</div>
         <div class="meta-pill" data-i18n="s3.quality_pill">Calidad: <b>Alta Fidelidad</b></div>
       </div>
@@ -1470,6 +1578,35 @@
       <div data-i18n="footer.audio">tBelt Studio · Restauración de Audio Impecable</div>
       <div style="font-family: var(--font-mono);" data-i18n="footer.host">Servidor macOS Local · Inferencia en la Nube</div>
     </footer>
+  </div>
+
+  <!-- ==========================================
+       SETTINGS MODAL (PROVIDER CONFIGURATION)
+       ========================================== -->
+  <div class="modal-backdrop" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 class="panel-title" id="modal-settings-title" style="font-size: 16px; margin: 0;" data-i18n="settings.title">Ajustes del Motor Generativo</h3>
+          <p class="field-hint" style="margin-top: 4px; margin-bottom: 0;" data-i18n="settings.subtitle">Elige el servicio de IA para la síntesis de personajes. La preparación siempre se ejecuta localmente en tu Mac.</p>
+        </div>
+        <button type="button" class="btn btn-ghost" id="close-settings-btn" aria-label="Close" style="font-size: 18px; padding: 4px 8px; cursor: pointer;">✕</button>
+      </div>
+
+      <div class="provider-grid" id="provider-grid"></div>
+
+      <div id="provider-config-box" style="margin-top: 16px; background: var(--bg-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 14px;">
+        <label class="field-label" id="provider-key-label" for="provider-key-input" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 6px;">API Key</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="password" id="provider-key-input" style="flex: 1; font-family: var(--font-mono); font-size: 13px;" placeholder="Pega tu clave o token de API" autocomplete="off">
+          <button type="button" class="btn btn-primary" id="save-settings-btn" style="min-height: auto; padding: 0 16px; font-size: 13px;" data-i18n="settings.save_btn">Guardar y Conectar</button>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+          <span id="settings-feedback" style="font-size: 12px; color: var(--brand-amber); font-weight: 500;"></span>
+          <a id="provider-docs-link" href="#" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: var(--brand-amber); text-decoration: underline;" data-i18n="settings.get_key">Obtener clave →</a>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- i18n Localization Engine -->
@@ -2071,6 +2208,210 @@
           }
         });
     }
+
+    // ==========================================
+    // SETTINGS & PROVIDER MANAGEMENT
+    // ==========================================
+    let currentSettings = null;
+    let selectedProviderId = 'fal';
+
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        if (!res.ok) return;
+        currentSettings = await res.json();
+        selectedProviderId = currentSettings.active_provider || 'fal';
+
+        const activeSpec = currentSettings.providers[selectedProviderId];
+        const activeName = activeSpec ? activeSpec.name : selectedProviderId;
+        const navBadge = $('#active-engine-badge');
+        if (navBadge) navBadge.textContent = activeName;
+        const step3Name = $('#step3-engine-name');
+        if (step3Name) step3Name.textContent = activeName;
+
+        const obBanner = $('#onboarding-banner');
+        if (obBanner) {
+          obBanner.hidden = !!currentSettings.has_any_provider;
+        }
+
+        renderProviderGrid();
+      } catch (err) {
+        console.warn('Error loading settings:', err);
+      }
+    }
+
+    function renderProviderGrid() {
+      if (!currentSettings || !currentSettings.providers) return;
+      const grid = $('#provider-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      Object.values(currentSettings.providers).forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'provider-card' + (p.id === selectedProviderId ? ' selected' : '');
+        card.onclick = () => selectProvider(p.id);
+
+        const top = document.createElement('div');
+        top.className = 'provider-card-top';
+
+        const name = document.createElement('span');
+        name.className = 'provider-card-name';
+        name.textContent = p.name;
+
+        const badge = document.createElement('span');
+        badge.style.fontSize = '11px';
+        badge.style.fontWeight = '600';
+        badge.style.color = p.configured ? 'var(--success-text)' : 'var(--text-faint)';
+        badge.textContent = p.configured ? t('settings.connected') : t('settings.not_configured');
+
+        top.appendChild(name);
+        top.appendChild(badge);
+
+        const desc = document.createElement('div');
+        desc.className = 'provider-card-desc';
+        desc.textContent = p.description;
+
+        card.appendChild(top);
+        card.appendChild(desc);
+        grid.appendChild(card);
+      });
+
+      updateProviderConfigBox();
+    }
+
+    function selectProvider(pid) {
+      selectedProviderId = pid;
+      renderProviderGrid();
+    }
+
+    function updateProviderConfigBox() {
+      if (!currentSettings) return;
+      const p = currentSettings.providers[selectedProviderId];
+      if (!p) return;
+
+      const label = $('#provider-key-label');
+      const input = $('#provider-key-input');
+      const docsLink = $('#provider-docs-link');
+      const feedback = $('#settings-feedback');
+      if (feedback) feedback.textContent = '';
+
+      if (label) {
+        label.textContent = p.id === 'comfy' ? 'ComfyUI Server URL' : `${p.name} API Key / Token (${p.env_var})`;
+      }
+      if (input) {
+        input.value = '';
+        input.placeholder = p.id === 'comfy' ? 'http://127.0.0.1:8188' : (p.configured ? '•••••••••••••••• (' + t('settings.connected') + ')' : t('settings.key_placeholder'));
+      }
+      if (docsLink) {
+        docsLink.href = p.help_url || '#';
+      }
+    }
+
+    async function saveCurrentSettings() {
+      const input = $('#provider-key-input');
+      const feedback = $('#settings-feedback');
+      const saveBtn = $('#save-settings-btn');
+      const keyVal = input ? input.value.trim() : '';
+
+      if (saveBtn) saveBtn.disabled = true;
+      if (feedback) feedback.textContent = '...';
+
+      try {
+        const payload = { provider: selectedProviderId };
+        if (keyVal) payload.key = keyVal;
+
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Error saving settings');
+
+        currentSettings = data;
+        selectedProviderId = currentSettings.active_provider;
+
+        const activeSpec = currentSettings.providers[selectedProviderId];
+        const activeName = activeSpec ? activeSpec.name : selectedProviderId;
+        const navBadge = $('#active-engine-badge');
+        if (navBadge) navBadge.textContent = activeName;
+        const step3Name = $('#step3-engine-name');
+        if (step3Name) step3Name.textContent = activeName;
+
+        const obBanner = $('#onboarding-banner');
+        if (obBanner) obBanner.hidden = !!currentSettings.has_any_provider;
+
+        renderProviderGrid();
+        if (feedback) {
+          feedback.style.color = 'var(--success-text)';
+          feedback.textContent = t('settings.saved_success');
+        }
+        setTimeout(() => {
+          if (feedback) feedback.textContent = '';
+        }, 3000);
+      } catch (err) {
+        if (feedback) {
+          feedback.style.color = 'var(--danger-text)';
+          feedback.textContent = err.message;
+        }
+      } finally {
+        if (saveBtn) saveBtn.disabled = false;
+      }
+    }
+
+    function openSettingsModal() {
+      const m = $('#settings-modal');
+      if (m) {
+        m.classList.add('open');
+        renderProviderGrid();
+        const input = $('#provider-key-input');
+        if (input) setTimeout(() => input.focus(), 100);
+      }
+    }
+
+    function closeSettingsModal() {
+      const m = $('#settings-modal');
+      if (m) m.classList.remove('open');
+    }
+
+    const openSetBtn = $('#open-settings-btn');
+    if (openSetBtn) openSetBtn.onclick = openSettingsModal;
+
+    const obOpenBtn = $('#onboarding-open-btn');
+    if (obOpenBtn) obOpenBtn.onclick = openSettingsModal;
+
+    const closeSetBtn = $('#close-settings-btn');
+    if (closeSetBtn) closeSetBtn.onclick = closeSettingsModal;
+
+    const step3ChangeBtn = $('#step3-change-engine');
+    if (step3ChangeBtn) step3ChangeBtn.onclick = openSettingsModal;
+
+    const setModal = $('#settings-modal');
+    if (setModal) {
+      setModal.onclick = (e) => {
+        if (e.target === setModal) closeSettingsModal();
+      };
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeSettingsModal();
+    });
+
+    const saveSetBtn = $('#save-settings-btn');
+    if (saveSetBtn) saveSetBtn.onclick = saveCurrentSettings;
+
+    const keyInput = $('#provider-key-input');
+    if (keyInput) {
+      keyInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveCurrentSettings();
+        }
+      });
+    }
+
+    // Load settings on startup
+    loadSettings();
   </script>
 </body>
 </html>

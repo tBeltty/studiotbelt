@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-10-12
+
+### Added
+- **Provider-Agnostic Generation Architecture (`providers.py`, `seedance_bridge.py`)**:
+  - Modular provider registry supporting `fal.ai`, `Enhancor` (Seedance 2.5), `Replicate`, and local self-hosted `ComfyUI`.
+  - Automated engine auto-detection with fallback to the user's active configured key.
+  - Endpoints `GET /api/settings` and `POST /api/settings` for runtime configuration without manual terminal intervention.
+- **In-App Engine Settings Modal & Onboarding (`static/index.html`, `static/i18n.js`)**:
+  - Interactive settings modal (⚙️ Ajustes) with provider selector cards, connection indicators, and key persistence.
+  - Active engine indicator badge in top navigation and Step 03 character creation panel.
+  - Non-intrusive onboarding banner displayed when no generation engine is configured.
+  - Direct deep-links to provider developer dashboards for retrieving API credentials.
+
+### Security
+- **Strict Credential Encapsulation**:
+  - Settings API endpoints return Boolean configuration status (`configured: true|false`), completely masking private keys from browser inspection.
+  - File permissions enforced on `.env` updates (`chmod 600`).
+
+---
+
 ## [1.0.0] - 2026-10-12
 
 ### Added

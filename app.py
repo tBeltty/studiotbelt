@@ -31,6 +31,19 @@ def favicon():
     if fav.exists():
         return FileResponse(fav, media_type='image/svg+xml')
     raise HTTPException(404)
+
+@app.get('/api/settings')
+def get_settings_endpoint():
+    from providers import get_settings
+    return get_settings()
+
+@app.post('/api/settings')
+def update_settings_endpoint(payload: dict):
+    from providers import update_settings
+    provider = payload.get('provider')
+    key = payload.get('key')
+    extra = payload.get('extra')
+    return update_settings(provider, key, extra)
 @app.post('/jobs')
 def create(video:UploadFile=File(...),prompt:str=Form('person'),provider:str=Form('local'),mode:str=Form('face_mesh')):
     if mode not in ['face_mesh','depth','depth_mesh']:raise HTTPException(400,'Unknown workflow mode')
