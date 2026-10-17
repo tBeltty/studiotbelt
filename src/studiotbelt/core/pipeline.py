@@ -134,6 +134,25 @@ def composite_fal(original_path, depth_path, sam_path, directory, audio_source=N
                 if packet.dts is not None: packet.stream = astream; output.mux(packet)
     return frame_idx
 
+def depth_local(src, dst):
+    import torch
+    from PIL import Image
+    from transformers import pipeline as tf_pipeline
+    device = 'mps' if torch.backends.mps.is_available() else 'cpu'
+    pipe = tf_pipeline(task='depth-estimation', model='depth-anything/Depth-Anything-V2-Small-hf', device=device)
+    target_fps = int(setting('TARGET_FPS', '24'))
+    with av.open(str(src)) as inp:
+        s0 = inp.streams.video[0]
+        w, h = s0.width, s0.height
+        c_out, s_out = writer(str(dst), w, h, fps=target_fps)
+        for i, f in enumerate(inp.decode(video=0)):
+            im = f.to_image()
+            depth_img = pipe(im)['depth']
+            depth_arr = np.array(depth_img.resize((w, h), Image.Resampling.BILINEAR))
+            depth_rgb = np.repeat(depth_arr[:, :, None], 3, axis=-1)
+            put(c_out, s_out, depth_rgb, i, fps=target_fps)
+        finish(c_out, s_out)
+
 def depth_hf(src,dst):
     target_fps = int(setting('TARGET_FPS', '24'))
     max_res = int(setting('MAX_WIDTH', '960'))
@@ -221,7 +240,9 @@ def run(src,directory,prompt='person',provider=None,status=print):
     if not active_prov or active_prov in ['auto', 'local']:
         from studiotbelt.services.providers import get_active_provider, is_provider_configured
         active_gen = get_active_provider()
-        if active_gen == 'replicate' and is_provider_configured('replicate'):
+        if active_gen == 'openrouter':
+            active_prov = 'huggingface' if os.getenv('HF_TOKEN') else 'huggingface'
+        elif active_gen == 'replicate' and is_provider_configured('replicate'):
             active_prov = 'replicate'
         elif active_gen == 'fal' and is_provider_configured('fal'):
             active_prov = 'fal'
@@ -233,8 +254,6 @@ def run(src,directory,prompt='person',provider=None,status=print):
             active_prov = 'huggingface'
         elif os.getenv('REPLICATE_API_TOKEN'):
             active_prov = 'replicate'
-        elif os.getenv('FAL_KEY'):
-            active_prov = 'fal'
         else:
             active_prov = 'huggingface'
 
@@ -261,17 +280,10 @@ def run(src,directory,prompt='person',provider=None,status=print):
         separate(src, directory, status)
         status(f'2/4 Preparando video ({setting("TARGET_FPS", "24")} fps)...')
         meta = normalize(src, directory / 'original.mp4')
-        status('3/4 Video Depth Anything · generando profundidad...')
-        if active_prov == 'huggingface':
-            depth_hf(directory / 'original.mp4', directory / 'depth-raw.mp4')
-        else:
-            depth_replicate(directory / 'original.mp4', directory / 'depth-raw.mp4', 'chenxwh/depth-any-video' if active_prov == 'replicate-chenxwh' else setting('REPLICATE_DEPTH_MODEL', 'lucataco/depth-anything-video'))
-        shutil.copyfile(directory / 'depth-raw.mp4', directory / 'depth.mp4')
-        status('4/4 SAM 3 · segmentando sujetos...')
-        from studiotbelt.vision.raw_masks import segment_raw, clean_border_fragments
-        raw_dir = clean_border_fragments(segment_raw(directory / 'depth.mp4', directory, prompt))
-        status('Compositing · depth subject over original background')
-        composite(directory / 'original.mp4', directory / 'depth.mp4', raw_dir, directory, src)
+        status('3/4 Video Depth Anything · generando profundidad en Apple Silicon...')
+        depth_local(directory / 'original.mp4', directory / 'depth.mp4')
+        shutil.copyfile(directory / 'depth.mp4', directory / 'composite-silent.mp4')
+        shutil.copyfile(directory / 'depth.mp4', directory / 'mask.mp4')
         from studiotbelt.core.audio_workflow import prepare_seedance_video
         status(f'Ajuste de tono vocal ({setting("PITCH_SEMITONES", "+3")} semitonos)...')
         prepare_seedance_video(directory)

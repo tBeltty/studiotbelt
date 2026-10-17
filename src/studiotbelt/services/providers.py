@@ -26,6 +26,13 @@ PROVIDER_SPECS = {
         'env_var': 'REPLICATE_API_TOKEN',
         'help_url': 'https://replicate.com/account/api-tokens'
     },
+    'openrouter': {
+        'id': 'openrouter',
+        'name': 'OpenRouter Video',
+        'description': 'Direct video generation: Alibaba Wan 3.0 ($0.05/s @ 480p) & ByteDance Seedance 2.5 ($0.0000064/tok)',
+        'env_var': 'OPENROUTER_API_KEY',
+        'help_url': 'https://openrouter.ai/settings/keys'
+    },
     'comfy': {
         'id': 'comfy',
         'name': 'ComfyUI Local',
@@ -88,6 +95,9 @@ def update_settings(provider_id, key=None, extra=None):
 
     ALLOWED_ENV_VARS = {
         'ACTIVE_PROVIDER',
+        'OPENROUTER_API_KEY',
+        'OPENROUTER_MODEL',
+        'OPENROUTER_RESOLUTION',
         'FAL_KEY',
         'ENHANCOR_API_KEY',
         'ENHANCOR_BASE_URL',

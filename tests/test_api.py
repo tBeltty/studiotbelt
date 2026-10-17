@@ -61,6 +61,30 @@ class ApiEndpointTests(unittest.TestCase):
         response_bad_hex = self.client.get('/jobs/1234567890abcdef1234567890abcdefZZ')
         self.assertEqual(response_bad_hex.status_code, 404)
 
+    def test_list_templates(self):
+        response = self.client.get('/api/templates')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('templates', data)
+        self.assertGreaterEqual(len(data['templates']), 1)
+        tpl = data['templates'][0]
+        self.assertEqual(tpl.get('id'), 'rap-god')
+        self.assertIn('scenes', tpl)
+
+    def test_load_template(self):
+        response = self.client.post('/api/templates/rap-god/load')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data.get('templateId'), 'rap-god')
+        self.assertEqual(data.get('state'), 'done')
+        self.assertIn('jobId', data)
+        # Clean up created run
+        from pathlib import Path
+        import shutil
+        folder = Path('runs') / data['jobId']
+        if folder.exists():
+            shutil.rmtree(folder)
+
 
 if __name__ == '__main__':
     unittest.main()

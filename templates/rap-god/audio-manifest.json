@@ -1,0 +1,9 @@
+{
+  "seedance_video": "seedance-input.mp4",
+  "seedance_audio": null,
+  "final_audio": "entire original source audio",
+  "discard_seedance_audio": true,
+  "separation": "Local Demucs (htdemucs)",
+  "pitch_semitones": 3,
+  "embedded_vocals": "vocals-plus3.wav"
+}

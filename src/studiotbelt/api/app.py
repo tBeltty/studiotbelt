@@ -5,7 +5,7 @@ import os,sys,threading,uuid,shutil,json,concurrent.futures
 from studiotbelt import config  # Initializes hardened cross-platform PATH and environment
 from studiotbelt.config import ROOT
 
-from fastapi import FastAPI,UploadFile,File,Form,HTTPException
+from fastapi import FastAPI,UploadFile,File,Form,HTTPException,Header
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from studiotbelt.core.pipeline import run
@@ -64,6 +64,63 @@ def health_endpoint():
     bins['python'] = sys.executable
     return {'status': 'ok', 'binaries': bins}
 
+TEMPLATES_DIR = ROOT / 'templates'
+
+@app.get('/api/templates')
+def get_templates():
+    items = []
+    if TEMPLATES_DIR.exists():
+        for d in sorted(TEMPLATES_DIR.iterdir()):
+            t_json = d / 'template.json'
+            if d.is_dir() and t_json.exists():
+                try:
+                    items.append(json.loads(t_json.read_text()))
+                except Exception:
+                    pass
+    return {'templates': items}
+
+@app.post('/api/templates/{template_id}/load')
+def load_template_endpoint(template_id: str):
+    tdir = TEMPLATES_DIR / template_id
+    t_json = tdir / 'template.json'
+    if not tdir.exists() or not t_json.exists():
+        raise HTTPException(404, f"Plantilla '{template_id}' no encontrada.")
+
+    meta = json.loads(t_json.read_text())
+    ident = uuid.uuid4().hex
+    folder = RUNS / ident
+    folder.mkdir(parents=True, exist_ok=True)
+
+    for item in tdir.iterdir():
+        if item.is_file():
+            shutil.copy2(item, folder / item.name)
+
+    if (folder / 'source.mp4').exists() and not (folder / 'original.mp4').exists():
+        shutil.copy2(folder / 'source.mp4', folder / 'original.mp4')
+    if (folder / 'source.mp4').exists() and not (folder / 'upload.mp4').exists():
+        shutil.copy2(folder / 'source.mp4', folder / 'upload.mp4')
+    if (folder / 'audio.wav').exists() and not (folder / 'original-audio.wav').exists():
+        shutil.copy2(folder / 'audio.wav', folder / 'original-audio.wav')
+    if (folder / 'composite.mp4').exists() and not (folder / 'seedance-input.mp4').exists():
+        shutil.copy2(folder / 'composite.mp4', folder / 'seedance-input.mp4')
+
+    jobs[ident] = {
+        'id': ident,
+        'state': 'done',
+        'status': f"Plantilla cargada: {meta.get('name', template_id)} · Listo para generar personaje",
+        'template': template_id
+    }
+    (folder / 'status.json').write_text(json.dumps(jobs[ident]))
+
+    return {
+        'jobId': ident,
+        'templateId': template_id,
+        'name': meta.get('name'),
+        'default_prompt': meta.get('default_prompt', ''),
+        'state': 'done',
+        'files': [p.name for p in folder.iterdir() if p.is_file()]
+    }
+
 @app.post('/jobs')
 def create(video:UploadFile=File(...),prompt:str=Form('person'),provider:str=Form('auto'),mode:str=Form('depth')):
     if mode not in ['face_mesh','depth','depth_mesh','cloud_depth']:raise HTTPException(400,'Unknown workflow mode')
@@ -106,7 +163,7 @@ def get(ident:str):
         data['files'] = files
     return data
 @app.post('/jobs/{ident}/seedance')
-def seedance(ident:str,prompt:str=Form(...),sirio:UploadFile=File(...),tein:UploadFile|None=File(None)):
+def seedance(ident:str,prompt:str=Form(...),sirio:UploadFile=File(...),tein:UploadFile|None=File(None),x_ai_key:str|None=Header(None,alias="X-AI-Key"),x_ai_provider:str|None=Header(None,alias="X-AI-Provider")):
     if len(ident)!=32 or not all(c in '0123456789abcdef' for c in ident):raise HTTPException(404)
     folder=RUNS/ident
     if not (folder/'audio-manifest.json').exists():raise HTTPException(400,'Audio separation must complete first.')
@@ -124,7 +181,7 @@ def seedance(ident:str,prompt:str=Form(...),sirio:UploadFile=File(...),tein:Uplo
         with path.open('wb') as f:shutil.copyfileobj(upload.file,f)
         paths.append(path)
     from studiotbelt.services.seedance_bridge import submit
-    try:request_id=submit(folder,prompt,*paths)
+    try:request_id=submit(folder,prompt,*paths,override_key=x_ai_key,override_provider=x_ai_provider)
     except Exception as e:raise HTTPException(502,str(e))
     jobs[ident]={'id':ident,'state':'running','status':'Seedance rendering: '+request_id}
     def collect():

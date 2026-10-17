@@ -21,29 +21,38 @@ The entire source audio (dialogue, music bed, sound effects) is preserved and re
 **tBelt Studio** combines lightweight local signal processing with flexible cloud and local neural diffusion models:
 
 1. **Multi-Engine Freedom & Zero Subscription Lock-in**:
-   - Dispatch generation across **fal.ai** (Wan 2.2 & MiniMax H3 Max Recast), **Replicate** (serverless GPU-seconds), **ComfyUI** (100% offline self-hosted open weights), or **Enhancor** (Seedance 2.5).
+   - Dispatch generation across **OpenRouter** (Alibaba Wan 3.0 / Wan 2.1 & Seedance 2.5), **fal.ai** (Wan 2.2 & MiniMax H3 Max Recast), **Replicate** (serverless GPU-seconds), **ComfyUI** (100% offline self-hosted open weights), or **Enhancor** (Seedance 2.5).
    - Generates without upfront monthly subscription commitments; configure credentials and switch backends directly inside the in-app Settings modal.
 
-2. **Dual-Mode Signal Engine (Hybrid Local-First or Cloud-Only)**:
+2. **Curated Motion Templates & Instant Prototyping**:
+   - Pre-computed, crowd-free motion templates (such as the 15-second **Rap God Challenge**) allow testing character transfer instantly (<50ms) without manual video cuts or segmentation waiting.
+   - Includes full demonstration media featuring reference character **`vc-chicken`**.
+
+3. **Guest Mode & Ephemeral Client-Side BYOK Security**:
+   - Zero-trust token model: users and collaborators can input their own provider keys directly in their browser.
+   - Keys are stored strictly in client-side `localStorage` or `sessionStorage` with configurable auto-expiration TTL (1h, 6h, 24h, or tab close).
+   - Guest keys are passed per-request via `X-AI-Key` headers and executed purely in memory, never written to server disk or `.env`.
+
+4. **Dual-Mode Signal Engine (Hybrid Local-First or Cloud-Only)**:
    - **Local CPU Mode (Zero-Cost Prep)**: All high-latency preparation stages run locally on consumer CPU hardware (benchmarked on 8 GB Apple Silicon Mac mini). Video normalization runs via hardware-accelerated FFmpeg C-filters in under 3 seconds, Demucs (`htdemucs`) separates vocal stems locally, and MediaPipe processes 3D landmarks in real time with ~1.1 GB RAM footprint and zero preparation API billing.
    - **Web-Only / Cloud-Only Mode**: When deployed via Docker to cloud PaaS or free Hugging Face Spaces, preparation gracefully offloads audio isolation to Replicate's Demucs API and volumetric segmentation to Hugging Face ZeroGPU or fal.ai SAM 3, enabling pure browser access without local Python or FFmpeg installation.
 
-3. **Fault-Tolerant Motion & Facial Guidance**:
-   - **Adaptive Cropping Geometry**: Centers bounding matrices ($x_0 = 0.20 \cdot W, w = 0.60 \cdot W, h = 0.75 \cdot H$) to maintain high landmark confidence on wide and medium cinematic shots.
+5. **Fault-Tolerant Motion & Facial Guidance**:
+   - **Adaptive Multi-Face Tracking**: MediaPipe tracking calibrated for up to 4 simultaneous faces, stabilizing multi-monitor setups (e.g. CRT video walls) without dropping subjects.
    - **Temporal Occlusion Smoothing**: Interpolates landmark matrices across rapid head turns, yaw rotations, and temporary occlusions, guaranteeing continuous tracking without dropping frames.
 
-4. **Studio-Grade Audio Engineering**:
+6. **Studio-Grade Audio Engineering**:
    - Demucs isolates speech and music beds into clean uncompressed PCM stems.
    - Isolated dialogue is frequency-modulated by +3 semitones with duration locking via Rubber Band to eliminate vocal identity bleed while keeping syllable timing and lip-sync intact.
    - Synthesis guidance embeds the modulated audio directly, and the final 1080p master export restores the complete original source mix (dialogue, score, sound effects).
 
-5. **Production SPA & Operator Ergonomics**:
+7. **Production SPA & Operator Ergonomics**:
    - Asynchronous upload telemetry via `XMLHttpRequest` with exact byte counts and percentage indicators (`X.X MB / Y.Y MB`).
    - Active session stopwatch (`mm:ss`) and 4-phase milestone tracking (Normalization, Mesh/Depth, Audio Separation, Review Gate).
    - In-memory artifact manifest (`Set.has()`) for O(1) artifact existence verification, eliminating blind HTTP 404 network probing.
    - Bilingual UI with one-click toggling between Spanish (`es`) and English (`en`).
 
-6. **Daemon & Security Hardening**:
+8. **Daemon & Security Hardening**:
    - Thread-safe background execution managed by `concurrent.futures.ThreadPoolExecutor` with graceful lifecycle cleanup.
    - Centralized binary resolution (`find_binary`) automatically locates FFmpeg and Rubber Band paths across macOS `launchd` and Linux `systemd` daemon environments.
    - Strict credential encapsulation: API endpoints mask secrets, and configuration is persisted with `chmod 600` access controls.

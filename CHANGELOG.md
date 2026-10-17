@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-10-17
+
+### Added
+- **Curated Motion Template Engine (`templates/`, `app.py`, `static/index.html`)**:
+  - Pre-computed 15-second "Rap God Challenge" template (`templates/rap-god/`) with clean cuts of Eminem (discarded crowd extras, background dancers, and floating scenes).
+  - API endpoints `GET /api/templates` and `POST /api/templates/{template_id}/load` to instantiate pre-approved synthesis jobs instantly (<50ms).
+  - Quick-Start template card in Step 01 UI with 1-click load and direct download of `eminem-clean-cut.mp4`.
+  - Integrated reference showcase featuring `vc-chicken` with full video demonstration.
+- **Guest Mode / Client-Side BYOK with TTL Auto-Expiration (`app.js`, `seedance_bridge.py`, `app.py`)**:
+  - Ephemeral API key storage directly in browser `localStorage` / `sessionStorage` with configurable TTL (1h, 6h, 24h, or active tab session).
+  - Automatic expiry daemon purging expired tokens on page load and action.
+  - Per-request header dispatch (`X-AI-Key`, `X-AI-Provider`) executing generation tasks in memory without writing guest tokens to server disk or `.env`.
+  - Real-time remaining time badge and instant one-click key clearance.
+- **OpenRouter Wan 3.0 & Wan 2.1 Provider Integration (`providers.py`, `seedance_bridge.py`)**:
+  - Native support for OpenRouter's video generation API with Alibaba Wan 3.0 (480p/720p) and ByteDance Seedance 2.5.
+  - Automatic initial/final credit calculation in USD and polling loop.
+- **Multi-Face MediaPipe Tracking Calibrations (`mesh_worker.py`)**:
+  - Multi-face detection (up to 4 faces) to properly segment CRT monitor arrays without skipping faces.
+  - Full-frame tracking mode (`crop=1.0`) preventing tracking drift on wide cinematic shots.
+
+### Changed
+- Updated English and Spanish i18n dictionaries (`static/i18n.js`) with complete template and BYOK localization strings.
+
+---
+
 ## [1.1.0] - 2026-10-12
 
 ### Added

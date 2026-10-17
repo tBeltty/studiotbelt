@@ -23,11 +23,11 @@ if not model.exists():
         raise ValueError(f"Model integrity verification failed: expected {MODEL_SHA256}, got {digest}")
     temporary.replace(model)
 
-min_conf = float(os.getenv('FACE_CONFIDENCE', '0.15'))
+min_conf = float(os.getenv('FACE_CONFIDENCE', '0.35'))
 opts = mp.tasks.vision.FaceLandmarkerOptions(
     base_options=mp.tasks.BaseOptions(model_asset_path=str(model)),
     running_mode=mp.tasks.vision.RunningMode.VIDEO,
-    num_faces=int(os.getenv('FACE_NUM_FACES', '1')),
+    num_faces=int(os.getenv('FACE_NUM_FACES', '4')),
     min_face_detection_confidence=min_conf,
     min_face_presence_confidence=min_conf,
     min_tracking_confidence=min_conf
@@ -55,10 +55,10 @@ with mp.tasks.vision.FaceLandmarker.create_from_options(opts) as detector, av.op
     vs.options = {'crf': crf}
     
     last_landmarks = None
-    crop_x0_pct = float(os.getenv('FACE_CROP_X0', '0.20'))
+    crop_x0_pct = float(os.getenv('FACE_CROP_X0', '0.0'))
     crop_y0_pct = float(os.getenv('FACE_CROP_Y0', '0.0'))
-    crop_cw_pct = float(os.getenv('FACE_CROP_CW', '0.60'))
-    crop_ch_pct = float(os.getenv('FACE_CROP_CH', '0.75'))
+    crop_cw_pct = float(os.getenv('FACE_CROP_CW', '1.0'))
+    crop_ch_pct = float(os.getenv('FACE_CROP_CH', '1.0'))
     for i, f in enumerate(inp.decode(video=0)):
         im = f.to_image()
         x0 = int(im.width * crop_x0_pct)
@@ -84,7 +84,7 @@ with mp.tasks.vision.FaceLandmarker.create_from_options(opts) as detector, av.op
             counts.append(0)
             saved.append({"frame": i, "time": i / target_fps, "faces": []})
         
-        active_faces = face_lms if face_lms else (last_landmarks if last_landmarks else [])
+        active_faces = face_lms if face_lms else []
         for face in active_faces:
             pts = [(round(x0 + l.x * cw), round(y0 + l.y * ch)) for l in face]
             for c in connections.FACE_LANDMARKS_TESSELATION:

@@ -1,0 +1,32 @@
+{
+  "id": "rap-god",
+  "name": "Eminem — Rap God Challenge",
+  "category": "Music & Performance",
+  "description": "Transform any character, mascot or avatar into Eminem rapping at supersonic speed in the iconic Rap God music video (CRT monitors, Max Headroom neon grid, cyber lab & laser climax).",
+  "duration_seconds": 15.0,
+  "fps": 24,
+  "resolution": {
+    "width": 640,
+    "height": 360
+  },
+  "default_prompt": "A character rapping with intense energy, open mouth, moving head to the fast beat, photorealistic 8k, cinematic studio lighting, detailed textures, dynamic motion",
+  "files": {
+    "source_video": "source.mp4",
+    "composite_video": "composite.mp4",
+    "depth_video": "depth.mp4",
+    "mask_video": "mask.mp4",
+    "audio_track": "audio.wav",
+    "demo_character": "demo-character.png",
+    "demo_character_name": "vc-chicken",
+    "demo_result": "demo-result.mp4"
+  },
+  "scenes": [
+    { "name": "CRT Monitors", "start": 0.00, "end": 3.08, "type": "multi_screen" },
+    { "name": "Neon Grid Intro", "start": 3.08, "end": 5.63, "type": "retro_grid" },
+    { "name": "Cyber Lab Chair", "start": 5.63, "end": 9.43, "type": "close_up" },
+    { "name": "Front Chair Rap", "start": 9.43, "end": 10.87, "type": "direct_rap" },
+    { "name": "Max Headroom Neon", "start": 10.87, "end": 12.07, "type": "energy_grid" },
+    { "name": "Laser Climax Fast Rap", "start": 12.07, "end": 13.47, "type": "supersonic_lasers" },
+    { "name": "Front Chair Finale", "start": 13.47, "end": 15.00, "type": "direct_rap" }
+  ]
+}

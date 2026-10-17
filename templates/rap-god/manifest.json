@@ -1,0 +1,11 @@
+{
+  "frames": 360,
+  "fps": 24,
+  "width": 640,
+  "height": 360,
+  "duration": 15.0,
+  "prompt": "person",
+  "depth_provider": "huggingface",
+  "sam_space": "linoyts/SAM3-Video",
+  "mask_method": "SAM 3 raw PNG masks"
+}

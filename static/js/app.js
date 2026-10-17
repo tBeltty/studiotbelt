@@ -699,8 +699,14 @@ const $ = s => document.querySelector(s);
             data.set(name, new File([await (await fetch(base() + saved[name])).blob()], saved[name]));
           }
         }
+        const clientKey = getStoredAIKey();
+        const fetchHeaders = {};
+        if (clientKey && clientKey.key) {
+          fetchHeaders['X-AI-Key'] = clientKey.key;
+          fetchHeaders['X-AI-Provider'] = clientKey.provider;
+        }
         status(t('status.dispatching'));
-        await json('/jobs/' + jobId + '/seedance', { method: 'POST', body: data });
+        await json('/jobs/' + jobId + '/seedance', { method: 'POST', body: data, headers: fetchHeaders });
         await watch();
       } catch (e) {
         status(e.message, true);
@@ -1005,5 +1011,148 @@ const $ = s => document.querySelector(s);
       });
     }
 
-    // Load settings on startup
+    // Ephemeral Client-Side BYOK Key Storage with TTL
+    const STORAGE_KEY = 'tbelt_ephemeral_ai_key';
+
+    function getStoredAIKey() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const data = JSON.parse(raw);
+        if (data.expiresAt && Date.now() > data.expiresAt) {
+          localStorage.removeItem(STORAGE_KEY);
+          sessionStorage.removeItem(STORAGE_KEY);
+          updateKeyStatusUI();
+          return null;
+        }
+        return data;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function setStoredAIKey(key, provider, ttlHours) {
+      if (!key) return;
+      const hours = parseFloat(ttlHours);
+      if (hours === 0) {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ key, provider, expiresAt: null, isSession: true }));
+        localStorage.removeItem(STORAGE_KEY);
+      } else {
+        const expiresAt = Date.now() + hours * 3600 * 1000;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ key, provider, expiresAt, isSession: false }));
+        sessionStorage.removeItem(STORAGE_KEY);
+      }
+      updateKeyStatusUI();
+    }
+
+    function clearStoredAIKey() {
+      localStorage.removeItem(STORAGE_KEY);
+      sessionStorage.removeItem(STORAGE_KEY);
+      updateKeyStatusUI();
+    }
+
+    function updateKeyStatusUI() {
+      const stored = getStoredAIKey();
+      const statusEl = $('#ephemeral-key-status');
+      const clearBtn = $('#clear-ephemeral-key-btn');
+      if (!statusEl) return;
+      if (stored) {
+        let expText = '';
+        if (stored.isSession) {
+          expText = t('settings.ttl_session_active');
+        } else if (stored.expiresAt) {
+          const remainingMin = Math.max(1, Math.round((stored.expiresAt - Date.now()) / 60000));
+          expText = `${t('settings.ttl_expires_in')} (~${remainingMin} min)`;
+        }
+        statusEl.innerHTML = `🟢 <strong>${stored.provider.toUpperCase()}</strong>: ${expText}`;
+        statusEl.style.display = 'block';
+        if (clearBtn) clearBtn.style.display = 'inline-block';
+      } else {
+        statusEl.textContent = '';
+        statusEl.style.display = 'none';
+        if (clearBtn) clearBtn.style.display = 'none';
+      }
+    }
+
+    const saveBrowserBtn = $('#save-browser-btn');
+    if (saveBrowserBtn) {
+      saveBrowserBtn.onclick = () => {
+        const input = $('#provider-key-input');
+        const ttlSelect = $('#key-ttl-select');
+        const feedback = $('#settings-feedback');
+        const keyVal = input ? input.value.trim() : '';
+        if (!keyVal) {
+          if (feedback) {
+            feedback.style.color = 'var(--danger-text)';
+            feedback.textContent = 'Ingresa una clave primero';
+          }
+          return;
+        }
+        const ttl = ttlSelect ? ttlSelect.value : '1';
+        setStoredAIKey(keyVal, selectedProviderId, ttl);
+        if (input) input.value = '';
+        if (feedback) {
+          feedback.style.color = 'var(--success-text)';
+          feedback.textContent = 'Clave guardada en tu navegador';
+        }
+        setTimeout(() => { if (feedback) feedback.textContent = ''; }, 3000);
+      };
+    }
+
+    const clearKeyBtn = $('#clear-ephemeral-key-btn');
+    if (clearKeyBtn) {
+      clearKeyBtn.onclick = () => {
+        clearStoredAIKey();
+        const feedback = $('#settings-feedback');
+        if (feedback) {
+          feedback.style.color = 'var(--brand-amber)';
+          feedback.textContent = t('settings.key_cleared');
+        }
+        setTimeout(() => { if (feedback) feedback.textContent = ''; }, 3000);
+      };
+    }
+
+    // Template Quick-Start Handler
+    const loadTplBtn = $('#load-template-btn');
+    if (loadTplBtn) {
+      loadTplBtn.onclick = async () => {
+        const origText = loadTplBtn.textContent;
+        loadTplBtn.disabled = true;
+        loadTplBtn.textContent = t('template.loading');
+        status(t('template.loading'));
+        try {
+          const res = await json('/api/templates/rap-god/load', { method: 'POST' });
+          jobId = res.jobId;
+          window.history.pushState(null, '', '/?job=' + jobId);
+
+          const badge = $('#job-info-pill');
+          if (badge) {
+            badge.textContent = 'JOB: ' + jobId.slice(0, 8);
+            badge.style.display = 'inline-block';
+            badge.onclick = () => {
+              navigator.clipboard?.writeText(jobId);
+              badge.textContent = t('status.copied');
+              setTimeout(() => { badge.textContent = 'JOB: ' + jobId.slice(0, 8); }, 1500);
+            };
+          }
+
+          if (res.default_prompt) {
+            const promptInput = document.querySelector('textarea[name="prompt"]');
+            if (promptInput) promptInput.value = res.default_prompt;
+          }
+
+          await refresh();
+          document.querySelector('#draft')?.scrollIntoView({ behavior: 'smooth' });
+          status(t('template.loaded_status'));
+        } catch (err) {
+          status(err.message, true);
+        } finally {
+          loadTplBtn.disabled = false;
+          loadTplBtn.textContent = origText;
+        }
+      };
+    }
+
+    // Load settings on startup & init key status
     loadSettings();
+    updateKeyStatusUI();

@@ -119,6 +119,28 @@
         <img class="panel-companion" src="/static/companions/cat-video.webp?v=20261011_3" alt="Cat Director" data-i18n-attr="alt:s1.companion_alt" width="44" height="44">
       </div>
 
+      <!-- Template Quick-Start Banner -->
+      <div id="template-banner" class="template-card" style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: rgba(242, 177, 52, 0.12); border: 1px solid var(--brand-amber); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+            🎤
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+              <span data-i18n="template.title">Plantilla: Rap God Challenge (Eminem)</span>
+              <span class="badge-tag" style="background: rgba(242, 177, 52, 0.15); color: var(--brand-amber); border: 1px solid var(--brand-amber); font-size: 10px; padding: 1px 6px;">15s Curado</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;" data-i18n="template.desc">
+              Video original de Eminem recortado (sin público) y optimizado para probar directo. ¡Reemplázalo con tu avatar!
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <a href="/static/templates/rap-god/eminem-clean-cut.mp4" download="eminem-clean-cut.mp4" class="btn btn-secondary" style="min-height: 32px; padding: 4px 10px; font-size: 11px; text-decoration: none;" data-i18n="template.download_btn">Descargar MP4</a>
+          <button type="button" id="load-template-btn" class="btn btn-primary" style="min-height: 32px; padding: 4px 12px; font-size: 12px; font-weight: 600;" data-i18n="template.load_btn">⚡ Usar Plantilla</button>
+        </div>
+      </div>
+
       <form id="form">
         <!-- File Dropzone -->
         <div class="field-group">
@@ -503,9 +525,36 @@
         <label class="field-label" id="provider-key-label" for="provider-key-input" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 6px;">API Key</label>
         <div style="display: flex; gap: 8px;">
           <input type="password" id="provider-key-input" style="flex: 1; font-family: var(--font-mono); font-size: 13px;" placeholder="Paste your API key or token" autocomplete="off">
-          <button type="button" class="btn btn-primary" id="save-settings-btn" style="min-height: auto; padding: 0 16px; font-size: 13px;" data-i18n="settings.save_btn">Save & Connect</button>
+          <button type="button" class="btn btn-secondary" id="save-settings-btn" style="min-height: auto; padding: 0 12px; font-size: 12px;" data-i18n="settings.save_btn">En Servidor</button>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+
+        <!-- Temporary Client-Side BYOK Option (Guest Mode) -->
+        <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border-subtle);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span style="font-size: 12px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+              <span>🔒</span> <span data-i18n="settings.client_key_title">Modo Invitado / BYOK (Clave Temporal)</span>
+            </span>
+          </div>
+          <p class="field-hint" style="margin: 0 0 10px 0; font-size: 11px;" data-i18n="settings.client_key_desc">
+            Guarda tu clave solo en este navegador con auto-destrucción por tiempo. No se almacena en el servidor.
+          </p>
+
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <label for="key-ttl-select" style="font-size: 11px; color: var(--text-secondary);" data-i18n="settings.ttl_label">Auto-eliminar en:</label>
+            <select id="key-ttl-select" style="font-size: 11px; padding: 4px 8px; background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: var(--radius-xs); color: var(--text-primary);">
+              <option value="1" data-i18n="settings.ttl_1h" selected>1 hora (Recomendado)</option>
+              <option value="6" data-i18n="settings.ttl_6h">6 horas</option>
+              <option value="24" data-i18n="settings.ttl_24h">24 horas</option>
+              <option value="0" data-i18n="settings.ttl_session">Al cerrar la pestaña (Sesión)</option>
+            </select>
+            <button type="button" class="btn btn-primary" id="save-browser-btn" style="min-height: 28px; padding: 2px 12px; font-size: 11px; font-weight: 600;" data-i18n="settings.save_browser_btn">Guardar en Navegador</button>
+            <button type="button" class="btn btn-secondary" id="clear-ephemeral-key-btn" style="min-height: 28px; padding: 2px 10px; font-size: 11px; display: none;" data-i18n="settings.clear_key_btn">🗑️ Eliminar clave</button>
+          </div>
+
+          <div id="ephemeral-key-status" style="margin-top: 8px; font-size: 11px; color: var(--brand-amber); display: none;"></div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
           <span id="settings-feedback" style="font-size: 12px; color: var(--brand-amber); font-weight: 500;"></span>
           <a id="provider-docs-link" href="#" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: var(--brand-amber); text-decoration: underline;" data-i18n="settings.get_key">Get key →</a>
         </div>

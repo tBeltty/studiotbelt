@@ -7,7 +7,9 @@ def is_fal_active():
     key = setting('FAL_KEY')
     return bool(key) and not any(x in key.lower() for x in ['your_key', 'replace_me', 'placeholder'])
 
-def submit_fal(folder, prompt, sirio, tein=None, status=print):
+def submit_fal(folder, prompt, sirio, tein=None, status=print, api_key=None):
+    if api_key:
+        os.environ['FAL_KEY'] = api_key
     import fal_client
     folder = Path(folder)
     from studiotbelt.vision.mask_review import require_approved, is_mesh
@@ -144,7 +146,7 @@ def submit_hd_fal(folder):
     (hd/'seedance-response.json').write_text(json.dumps(res_data, indent=2))
     return ident
 
-def submit_replicate(folder, prompt, sirio, tein=None, status=print):
+def submit_replicate(folder, prompt, sirio, tein=None, status=print, api_key=None):
     import replicate
     folder = Path(folder)
     from studiotbelt.vision.mask_review import require_approved, is_mesh
@@ -161,7 +163,9 @@ def submit_replicate(folder, prompt, sirio, tein=None, status=print):
 
     status('Iniciando tarea en Replicate (LivePortrait)...')
     model = setting('REPLICATE_MODEL', 'fofr/live-portrait')
-    token = os.environ.get('REPLICATE_API_TOKEN') or setting('REPLICATE_API_TOKEN')
+    token = api_key or os.environ.get('REPLICATE_API_TOKEN') or setting('REPLICATE_API_TOKEN')
+    if api_key:
+        os.environ['REPLICATE_API_TOKEN'] = api_key
     client = replicate.Client(api_token=token)
 
     with open(prepared, 'rb') as vf, open(sirio, 'rb') as imgf:
@@ -210,12 +214,12 @@ def wait_and_finish_replicate(folder, request_id, status=print):
         time.sleep(5)
     raise TimeoutError('La tarea de Replicate sigue pendiente.')
 
-def submit_enhancor(folder, prompt, sirio, tein=None, status=print):
+def submit_enhancor(folder, prompt, sirio, tein=None, status=print, api_key=None):
     folder = Path(folder)
     from studiotbelt.vision.mask_review import require_approved, is_mesh
     require_approved(folder)
     if (folder/'seedance-response.json').exists():raise ValueError('This job already has a provider response. Resume it; prepare a new job for a deliberate variation.')
-    key=credential('ENHANCOR_API_KEY')
+    key = api_key or credential('ENHANCOR_API_KEY')
     if not setting('ENHANCOR_WEBHOOK_URL'):raise ValueError('Webhook URL required. Install cloudflared and restart the app, or set ENHANCOR_WEBHOOK_URL.')
     if not (folder/'audio-manifest.json').exists():raise ValueError('Audio separation must complete before submission.')
     from studiotbelt.core.audio_workflow import prepare_seedance_video
@@ -254,22 +258,207 @@ def submit_enhancor(folder, prompt, sirio, tein=None, status=print):
     status('Seedance draft submitted: '+ident)
     return ident
 
-def submit(folder, prompt, sirio, tein=None, status=print):
+def get_openrouter_credit_stats(key=None):
+    key = key or setting('OPENROUTER_API_KEY')
+    if not key:
+        return None
+    try:
+        r = requests.get('https://openrouter.ai/api/v1/auth/key', headers={'Authorization': f'Bearer {key}'}, timeout=10)
+        if r.status_code == 200:
+            return r.json().get('data', {})
+    except Exception:
+        pass
+    return None
+
+def submit_openrouter(folder, prompt, sirio, tein=None, status=print, api_key=None):
+    folder = Path(folder)
+    from studiotbelt.vision.mask_review import require_approved, is_mesh
+    require_approved(folder)
+    if (folder/'seedance-response.json').exists():
+        raise ValueError('Este trabajo ya tiene una respuesta de proveedor registrada.')
+
+    if not (folder/'audio-manifest.json').exists():
+        raise ValueError('El aislamiento de audio debe completarse antes de enviar.')
+
+    key = api_key or setting('OPENROUTER_API_KEY')
+    if not key:
+        raise ValueError('OPENROUTER_API_KEY no está configurada en .env ni en la solicitud.')
+
+    # Registro de créditos iniciales
+    initial_credits = get_openrouter_credit_stats(key)
+    if initial_credits:
+        status(f"OpenRouter saldo/uso inicial: ${initial_credits.get('usage', 0.0):.4f} USD gastados (Límite: {initial_credits.get('limit') or 'Ilimitado'})")
+        (folder/'openrouter-credits.json').write_text(json.dumps({
+            'initial': initial_credits,
+            'timestamp_start': time.time()
+        }, indent=2))
+
+    from studiotbelt.core.audio_workflow import prepare_seedance_video
+    status('Preparando video guía con audio aislado embedido...')
+    prepared = folder/'seedance-input.mp4' if is_mesh(folder) else prepare_seedance_video(folder)
+
+    from studiotbelt.services.media_host import upload
+    status('Subiendo video y referencias para OpenRouter...')
+    video_url = upload(str(prepared))
+    ref_image_url = upload(str(sirio))
+    ref_urls = [ref_image_url]
+    if tein:
+        ref_urls.append(upload(str(tein)))
+
+    model_id = setting('OPENROUTER_MODEL', 'alibaba/wan-3.0')
+    resolution = setting('OPENROUTER_RESOLUTION', '480p')
+
+    duration = 15
+    try:
+        import av
+        with av.open(str(prepared)) as inp:
+            duration = int(round(float(inp.duration / av.time_base))) if inp.duration else 15
+    except Exception:
+        pass
+    duration = max(2, min(duration, 30))
+
+    status(f'Enviando a OpenRouter ({model_id} @ {resolution}, {duration}s)...')
+
+    full_prompt = prompt
+    if is_mesh(folder):
+        mesh_mode = json.loads((folder/'workflow-mode.json').read_text()).get('mode')
+        desc = 'depth composite with face mesh overlay' if mesh_mode == 'depth_mesh' else 'original video with face mesh overlay'
+        full_prompt = full_prompt + f' Remove all face mesh lines and any tracking overlays from output. Replace character identity with the reference. Match dialogue timing exactly.'
+
+    input_references = [
+        {'type': 'image_url', 'image_url': {'url': ref_image_url}},
+        {'type': 'video_url', 'video_url': {'url': video_url}}
+    ]
+    if tein:
+        input_references.append({'type': 'image_url', 'image_url': {'url': upload(str(tein))}})
+
+    if '@Image1' not in full_prompt and '@Video1' not in full_prompt:
+        full_prompt = f"Using character reference in @Image1, follow the motion, timing, and depth guidance in @Video1. {full_prompt}"
+
+    payload = {
+        'model': model_id,
+        'prompt': full_prompt,
+        'duration': duration,
+        'resolution': resolution,
+        'aspect_ratio': '16:9',
+        'input_references': input_references
+    }
+
+    headers = {
+        'Authorization': f'Bearer {key}',
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://github.com/tBeltty/studiotbelt',
+        'X-Title': 'tBelt Studio'
+    }
+
+    r = requests.post('https://openrouter.ai/api/v1/videos', json=payload, headers=headers, timeout=60)
+    if r.status_code not in [200, 201, 202]:
+        (folder/'submission-error.json').write_text(r.text)
+        raise RuntimeError(f'Error al enviar tarea a OpenRouter ({r.status_code}): {r.text[:500]}')
+
+    res = r.json()
+    ident = res.get('id')
+    polling_url = res.get('polling_url') or f'https://openrouter.ai/api/v1/videos/{ident}'
+
+    req_data = {'provider': 'openrouter', 'model': model_id, 'arguments': payload, 'prompt': full_prompt, 'is_draft': True, 'api_key': key}
+    (folder/'seedance-request.json').write_text(json.dumps(req_data, indent=2))
+    res_data = {'requestId': ident, 'provider': 'openrouter', 'model': model_id, 'polling_url': polling_url}
+    (folder/'seedance-response.json').write_text(json.dumps(res_data, indent=2))
+    (folder/'generation.json').write_text(json.dumps({
+        'request_id': ident,
+        'prompt': full_prompt,
+        'video': 'seedance-result.mp4',
+        'provider': 'openrouter',
+        'model': model_id
+    }, indent=2))
+
+    status(f'Tarea en OpenRouter encolada: {ident}')
+    return ident
+
+def wait_and_finish_openrouter(folder, request_id, status=print):
+    folder = Path(folder)
+    req_file = folder/'seedance-request.json'
+    key = None
+    if req_file.exists():
+        try: key = json.loads(req_file.read_text()).get('api_key')
+        except Exception: pass
+    key = key or setting('OPENROUTER_API_KEY')
+    resp_file = folder/'seedance-response.json'
+    polling_url = f'https://openrouter.ai/api/v1/videos/{request_id}'
+    if resp_file.exists():
+        polling_url = json.loads(resp_file.read_text()).get('polling_url', polling_url)
+
+    headers = {
+        'Authorization': f'Bearer {key}',
+        'HTTP-Referer': 'https://github.com/tBeltty/studiotbelt',
+        'X-Title': 'tBelt Studio'
+    }
+
+    status('Renderizando video en OpenRouter…')
+    for _ in range(180):
+        r = requests.get(polling_url, headers=headers, timeout=30)
+        if r.status_code == 200:
+            data = r.json()
+            st = data.get('status', 'processing')
+            (folder/'provider-status.json').write_text(json.dumps(data, indent=2))
+            status(f'OpenRouter estado: {st}')
+
+            if st in ['completed', 'succeeded', 'COMPLETED']:
+                status('Descargando resultado de OpenRouter...')
+                urls = data.get('urls') or data.get('unsigned_urls') or []
+                video_url = urls[0] if urls else data.get('result') or data.get('video_url')
+                if not video_url:
+                    raise ValueError(f'No se encontró URL de video en la respuesta: {data}')
+
+                vr = requests.get(video_url, headers=headers if ('unsigned' in str(video_url) or 'openrouter.ai' in str(video_url)) else {}, timeout=180)
+                vr.raise_for_status()
+                (folder/'seedance-result.mp4').write_bytes(vr.content)
+
+                status('Restaurando audio original...')
+                finish_preview(folder/'seedance-result.mp4', folder)
+
+                final_credits = get_openrouter_credit_stats(key)
+                credits_file = folder/'openrouter-credits.json'
+                credits_data = {}
+                if credits_file.exists():
+                    try: credits_data = json.loads(credits_file.read_text())
+                    except Exception: pass
+                if final_credits:
+                    init_usage = credits_data.get('initial', {}).get('usage', 0.0)
+                    fin_usage = final_credits.get('usage', 0.0)
+                    diff = max(0.0, fin_usage - init_usage)
+                    credits_data['final'] = final_credits
+                    credits_data['cost_usd'] = diff
+                    credits_file.write_text(json.dumps(credits_data, indent=2))
+                    status(f"OpenRouter: Tarea completada. Costo exacto registrado: ${diff:.4f} USD.")
+                return
+
+            if st in ['failed', 'FAILED', 'error']:
+                raise RuntimeError(f"OpenRouter falló: {data.get('error') or st}")
+
+        time.sleep(5)
+    raise TimeoutError('La tarea de OpenRouter sigue pendiente.')
+
+def submit(folder, prompt, sirio, tein=None, status=print, override_key=None, override_provider=None):
     from studiotbelt.services.providers import get_active_provider, is_provider_configured
-    active = get_active_provider()
-    if active == 'replicate':
-        return submit_replicate(folder, prompt, sirio, tein, status)
+    active = override_provider or get_active_provider()
+    if active == 'openrouter':
+        return submit_openrouter(folder, prompt, sirio, tein, status, api_key=override_key)
+    elif active == 'replicate':
+        return submit_replicate(folder, prompt, sirio, tein, status, api_key=override_key)
     elif active == 'enhancor':
-        return submit_enhancor(folder, prompt, sirio, tein, status)
+        return submit_enhancor(folder, prompt, sirio, tein, status, api_key=override_key)
     elif active in ['fal', 'fal.ai']:
-        return submit_fal(folder, prompt, sirio, tein, status)
+        return submit_fal(folder, prompt, sirio, tein, status, api_key=override_key)
     elif active == 'comfy':
         raise NotImplementedError("ComfyUI local integration is not yet connected to the backend. Please select fal.ai, Enhancor, or Replicate.")
     else:
-        for p, fn in [('replicate', submit_replicate), ('enhancor', submit_enhancor), ('fal', submit_fal)]:
+        if override_key:
+            return submit_openrouter(folder, prompt, sirio, tein, status, api_key=override_key)
+        for p, fn in [('openrouter', submit_openrouter), ('replicate', submit_replicate), ('enhancor', submit_enhancor), ('fal', submit_fal)]:
             if is_provider_configured(p):
                 return fn(folder, prompt, sirio, tein, status)
-        raise ValueError("No generative AI provider configured. Please configure an API key for Enhancor, Replicate, or fal.ai in Settings or .env.")
+        raise ValueError("No generative AI provider configured. Please configure an API key for OpenRouter, Enhancor, Replicate, or fal.ai in Settings or .env.")
 
 def wait_and_finish_enhancor(folder, request_id, status=print):
     folder = Path(folder)
@@ -312,7 +501,9 @@ def wait_and_finish(folder, request_id, status=print):
         from studiotbelt.services.providers import get_active_provider
         provider = get_active_provider()
 
-    if provider == 'replicate':
+    if provider == 'openrouter':
+        return wait_and_finish_openrouter(folder, request_id, status)
+    elif provider == 'replicate':
         return wait_and_finish_replicate(folder, request_id, status)
     elif provider in ['fal.ai', 'fal']:
         return wait_and_finish_fal(folder, request_id, status)
