@@ -6,13 +6,29 @@ Templates allow users and automated pipelines to evaluate character replacement 
 
 ---
 
+## In-App User Experience
+
+The tBelt Studio Web UI provides instant one-click loading of pre-computed motion templates:
+
+### 1. Template Selection Gallery (Step 01)
+Users switch between **Custom Video** and **Template Gallery**. The card displays a studio-lit keyframe thumbnail, duration, frame rate, tags, and an instant load action:
+
+![Template Selection Tab](assets/templates/ui-template-tab.png)
+
+### 2. Loaded Template Session & Character Recast (Step 03)
+Loading a template instantly provisions an isolated session in `runs/<id>/` with pre-computed depth maps, SAM 3 silhouette masks, and pitch-modulated vocal stems, jumping directly to character identity selection:
+
+![Loaded Session and Recast Workspace](assets/templates/ui-full-workflow.png)
+
+---
+
 ## Visual Demonstration
 
 The goal of a curated motion template is to transfer complex human choreography, facial expressions, and rapid speech onto an arbitrary character identity while maintaining 100% audio timing and visual coherence.
 
 | Source Footage (Eminem) | Character Reference (`vc-chicken`) | Recast Output (Motion Transfer) |
 |:---:|:---:|:---:|
-| <img src="assets/templates/step1_source.webp" width="280" alt="Source Footage"> | <img src="assets/templates/character_reference.webp" width="160" alt="vc-chicken Reference"> | <img src="assets/templates/step5_recast_result.webp" width="280" alt="Recast Output"> |
+| <img src="assets/templates/step1_source.png" width="280" alt="Source Footage"> | <img src="assets/templates/character_reference.png" width="160" alt="vc-chicken Reference"> | <img src="assets/templates/step5_recast_result.png" width="280" alt="Recast Output"> |
 | *Original 640×360 24fps clip* | *Target identity reference* | *Wan 3.0 / Seedance output* |
 
 ---
@@ -43,13 +59,13 @@ The original music video contains rapid scene transitions, background dancers, C
 
 | Scene | Timing | Keyframe Preview | Evaluation Focus |
 |---|---|:---:|---|
-| **1. CRT Monitors** | 0.00s – 3.08s | <img src="assets/templates/scenes/scene_1_crt.webp" width="210" alt="CRT Monitors"> | Multi-face detection across sub-displays without landmark loss. |
-| **2. Neon Grid Intro** | 3.08s – 5.63s | <img src="assets/templates/scenes/scene_2_neon.webp" width="210" alt="Neon Grid Intro"> | Retro grid edge adherence and depth contrast against black background. |
-| **3. Cyber Lab Chair** | 5.63s – 9.43s | <img src="assets/templates/scenes/scene_3_chair.webp" width="210" alt="Cyber Lab Chair"> | Studio lighting, clean side profile, and headrest mechanical interaction. |
-| **4. Front Chair Rap** | 9.43s – 10.87s | <img src="assets/templates/scenes/scene_4_front.webp" width="210" alt="Front Chair Rap"> | Direct camera gaze, eye tracking, and high-frequency phoneme lip sync. |
-| **5. Max Headroom Neon** | 10.87s – 12.07s | <img src="assets/templates/scenes/scene_5_headroom.webp" width="210" alt="Max Headroom Neon"> | Rapid head shaking and stylized neon lighting response. |
-| **6. Laser Climax** | 12.07s – 13.47s | <img src="assets/templates/scenes/scene_6_lasers.webp" width="210" alt="Laser Climax"> | Peak vocal cadence, particle lighting, and supersonic speech timing. |
-| **7. Front Chair Finale** | 13.47s – 15.00s | <img src="assets/templates/scenes/scene_7_finale.webp" width="210" alt="Front Chair Finale"> | Motion cadence resolution and final frame stability. |
+| **1. CRT Monitors** | 0.00s – 3.08s | <img src="assets/templates/scenes/scene_1_crt.png" width="210" alt="CRT Monitors"> | Multi-face detection across sub-displays without landmark loss. |
+| **2. Neon Grid Intro** | 3.08s – 5.63s | <img src="assets/templates/scenes/scene_2_neon.png" width="210" alt="Neon Grid Intro"> | Retro grid edge adherence and depth contrast against black background. |
+| **3. Cyber Lab Chair** | 5.63s – 9.43s | <img src="assets/templates/scenes/scene_3_chair.png" width="210" alt="Cyber Lab Chair"> | Studio lighting, clean side profile, and headrest mechanical interaction. |
+| **4. Front Chair Rap** | 9.43s – 10.87s | <img src="assets/templates/scenes/scene_4_front.png" width="210" alt="Front Chair Rap"> | Direct camera gaze, eye tracking, and high-frequency phoneme lip sync. |
+| **5. Max Headroom Neon** | 10.87s – 12.07s | <img src="assets/templates/scenes/scene_5_headroom.png" width="210" alt="Max Headroom Neon"> | Rapid head shaking and stylized neon lighting response. |
+| **6. Laser Climax** | 12.07s – 13.47s | <img src="assets/templates/scenes/scene_6_lasers.png" width="210" alt="Laser Climax"> | Peak vocal cadence, particle lighting, and supersonic speech timing. |
+| **7. Front Chair Finale** | 13.47s – 15.00s | <img src="assets/templates/scenes/scene_7_finale.png" width="210" alt="Front Chair Finale"> | Motion cadence resolution and final frame stability. |
 
 ---
 
@@ -59,7 +75,7 @@ Before a template is packaged, the footage is decomposed into multi-layer volume
 
 | 1. Normalized Source | 2. Volumetric Depth | 3. SAM 3 Binary Mask | 4. Guidance Composite |
 |:---:|:---:|:---:|:---:|
-| <img src="assets/templates/step1_source.webp" width="180" alt="Normalized Source"> | <img src="assets/templates/step2_depth.webp" width="180" alt="Volumetric Depth"> | <img src="assets/templates/step3_mask.webp" width="180" alt="SAM 3 Mask"> | <img src="assets/templates/step4_composite.webp" width="180" alt="Guidance Composite"> |
+| <img src="assets/templates/step1_source.png" width="180" alt="Normalized Source"> | <img src="assets/templates/step2_depth.png" width="180" alt="Volumetric Depth"> | <img src="assets/templates/step3_mask.png" width="180" alt="SAM 3 Mask"> | <img src="assets/templates/step4_composite.png" width="180" alt="Guidance Composite"> |
 | *C-filter normalized (640×360 · 24fps)* | *Depth Anything metric surface* | *Semantic actor segmentation* | *Target guidance composite* |
 
 - **Step 1 — Normalization**: Enforces strict 24 fps, non-variable PTS timestamps, and standardized 640×360 resolution via FFmpeg C-filters.

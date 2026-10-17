@@ -14,48 +14,79 @@
 
 The entire source audio (dialogue, music bed, sound effects) is preserved and remuxed into the final export, while actor movement, facial expression, and lip-sync are transferred onto a new identity.
 
+<p align="center">
+  <img src="docs/assets/templates/ui-template-tab.png" alt="tBelt Studio Interface - Template Gallery" width="850">
+</p>
+
+---
+
+## Quick Navigation
+
+- [Curated Motion Templates (Zero-Wait Testing)](#curated-motion-templates-zero-wait-testing)
+- [Bring Your Own Token (BYOK & Guest Mode)](#bring-your-own-token-byok--byot--guest-mode)
+- [Model Requirements & Provider Matrix](#model-requirements--provider-matrix)
+- [Workflow Architecture](#workflow-architecture)
+- [Resource & Performance Profile](#resource--performance-profile)
+- [Local Installation & Launch](#installation)
+- [Cloud & Web-Only Deployment](#web--cloud-deployment)
+- [Command Line Interface (CLI)](#command-line-interface-cli)
+- [Web UI Walkthrough](#step-by-step-usage-web-ui)
+
 ---
 
 ## Core Engineering Highlights
 
-**tBelt Studio** combines lightweight local signal processing with flexible cloud and local neural diffusion models:
+tBelt Studio combines lightweight local signal processing with cloud and local neural diffusion engines:
 
-1. **Multi-Engine Freedom & Zero Subscription Lock-in**:
-   - Dispatch generation across **OpenRouter** (Alibaba Wan 3.0 / Wan 2.1 & Seedance 2.5), **fal.ai** (Wan 2.2 & MiniMax H3 Max Recast), **Replicate** (serverless GPU-seconds), **ComfyUI** (100% offline self-hosted open weights), or **Enhancor** (Seedance 2.5).
-   - Generates without upfront monthly subscription commitments; configure credentials and switch backends directly inside the in-app Settings modal.
+### Curated Motion Templates (Zero-Wait Testing)
 
-2. **Curated Motion Templates & Instant Prototyping**:
-   - Pre-computed, crowd-free motion templates (such as the 15-second **Rap God Challenge**) allow testing character transfer instantly (<50ms) without manual video cuts or segmentation waiting.
-   - Includes demonstration media featuring reference character **`vc-chicken`**. See the [Template Curation & Engineering Guide](docs/TEMPLATES.md) for scene selection principles and audio copyright protection protocols.
+Templates allow testing character recasting in under 50 milliseconds without waiting for video normalization, SAM 3 depth extraction, or Demucs vocal isolation.
 
-3. **Guest Mode & Ephemeral Client-Side BYOK Security**:
-   - Zero-trust token model: users and collaborators can input their own provider keys directly in their browser.
-   - Keys are stored strictly in client-side `localStorage` or `sessionStorage` with configurable auto-expiration TTL (1h, 6h, 24h, or tab close).
-   - Guest keys are passed per-request via `X-AI-Key` headers and executed purely in memory, never written to server disk or `.env`.
+- **How to access in the UI**: In **Step 01**, click the **Template** tab (or **Plantilla** in Spanish) alongside "Upload Video".
+- **Instant load card**: Click anywhere on the *Eminem — Rap God Challenge* card to provision an active session in `runs/<id>/`.
+- **Pre-computed asset set**:
+  - 15 seconds across 7 curated scenes, optimized for motion transfer and rapid speech articulation.
+  - Isolated vocal stems modulated by +3 semitones to clear commercial Content ID audio filters.
+  - Pre-approved SAM 3 depth and silhouette guidance masks.
+  - Target identity reference: demo character `vc-chicken` with full comparison output.
+- **Engineering documentation**: Read the [Motion Curation & Template Engineering Guide](docs/TEMPLATES.md) for scene selection rules and metadata specifications.
 
-4. **Dual-Mode Signal Engine (Hybrid Local-First or Cloud-Only)**:
-   - **Local CPU Mode (Zero-Cost Prep)**: All high-latency preparation stages run locally on consumer CPU hardware (benchmarked on 8 GB Apple Silicon Mac mini). Video normalization runs via hardware-accelerated FFmpeg C-filters in under 3 seconds, Demucs (`htdemucs`) separates vocal stems locally, and MediaPipe processes 3D landmarks in real time with ~1.1 GB RAM footprint and zero preparation API billing.
-   - **Web-Only / Cloud-Only Mode**: When deployed via Docker to cloud PaaS or free Hugging Face Spaces, preparation gracefully offloads audio isolation to Replicate's Demucs API and volumetric segmentation to Hugging Face ZeroGPU or fal.ai SAM 3, enabling pure browser access without local Python or FFmpeg installation.
+### Bring Your Own Token (BYOK / BYOT) & Guest Mode
 
-5. **Fault-Tolerant Motion & Facial Guidance**:
+tBelt Studio operates on an ephemeral, zero-trust credential model. Users connect directly to wholesale provider APIs without subscription lock-in or sharing credentials with the server host.
+
+- **How to access in the UI**: Click the **Settings** button in the top navigation bar or click the **Connect API Key** badge.
+- **Zero disk persistence**: Keys entered in the Settings modal remain in browser storage (`sessionStorage` or `localStorage`) and travel per-request via `X-AI-Key` HTTP headers directly into backend RAM. They are never written to `.env`, disk files, or database rows.
+- **Configurable TTL**: Choose between **Session Only** (purged when the tab closes), **1 Hour**, **6 Hours**, or **24 Hours**.
+- **Pure Guest Mode**: When hosted without keys in `.env`, any visitor or team member can run generations by supplying their own token at zero cost to the server host.
+- **Supported engines**: OpenRouter (Alibaba Wan 3.0 / Wan 2.1 & ByteDance Seedance 2.5), fal.ai (Wan 2.2 & MiniMax Recast), Replicate, and local ComfyUI.
+- **Architecture documentation**: Read the [BYOK Security Architecture Specification](docs/ARCHITECTURE.md#5-security-architecture-bring-your-own-token-byok--byot) for the wire protocol, sequence diagram, and credential hierarchy.
+
+### Core Architecture & Signal Highlights
+
+1. **Dual-Mode Signal Engine (Hybrid Local-First or Cloud-Only)**:
+   - **Local CPU Mode**: Preparation runs locally on consumer CPU hardware (benchmarked on 8 GB Apple Silicon Mac mini). Video normalization runs via FFmpeg C-filters in under 3 seconds, Demucs (`htdemucs`) separates vocal stems locally, and MediaPipe processes 3D landmarks in real time with ~1.1 GB RAM footprint and zero preparation API billing.
+   - **Web-Only / Cloud-Only Mode**: When deployed via Docker to cloud PaaS or free Hugging Face Spaces, preparation offloads audio isolation to Replicate's Demucs API and volumetric segmentation to Hugging Face ZeroGPU or fal.ai SAM 3, running in the browser without local Python or FFmpeg installation.
+
+2. **Fault-Tolerant Motion & Facial Guidance**:
    - **Adaptive Multi-Face Tracking**: MediaPipe tracking calibrated for up to 4 simultaneous faces, stabilizing multi-monitor setups (e.g. CRT video walls) without dropping subjects.
-   - **Temporal Occlusion Smoothing**: Interpolates landmark matrices across rapid head turns, yaw rotations, and temporary occlusions, guaranteeing continuous tracking without dropping frames.
+   - **Temporal Occlusion Smoothing**: Interpolates landmark matrices across rapid head turns, yaw rotations, and temporary occlusions, guaranteeing continuous tracking without dropped frames.
 
-6. **Studio-Grade Audio Engineering**:
-   - Demucs isolates speech and music beds into clean uncompressed PCM stems.
+3. **Studio-Grade Audio Engineering**:
+   - Demucs isolates speech and music beds into uncompressed PCM stems.
    - Isolated dialogue is frequency-modulated by +3 semitones with duration locking via Rubber Band to eliminate vocal identity bleed while keeping syllable timing and lip-sync intact.
-   - Synthesis guidance embeds the modulated audio directly, and the final 1080p master export restores the complete original source mix (dialogue, score, sound effects).
+   - Guidance video embeds the modulated audio directly, and the final 1080p master export restores the complete original source mix (dialogue, score, sound effects).
 
-7. **Production SPA & Operator Ergonomics**:
+4. **Production SPA & Operator Ergonomics**:
    - Asynchronous upload telemetry via `XMLHttpRequest` with exact byte counts and percentage indicators (`X.X MB / Y.Y MB`).
    - Active session stopwatch (`mm:ss`) and 4-phase milestone tracking (Normalization, Mesh/Depth, Audio Separation, Review Gate).
    - In-memory artifact manifest (`Set.has()`) for O(1) artifact existence verification, eliminating blind HTTP 404 network probing.
    - Bilingual UI with one-click toggling between Spanish (`es`) and English (`en`).
 
-8. **Daemon & Security Hardening**:
-   - Thread-safe background execution managed by `concurrent.futures.ThreadPoolExecutor` with graceful lifecycle cleanup.
-   - Centralized binary resolution (`find_binary`) automatically locates FFmpeg and Rubber Band paths across macOS `launchd` and Linux `systemd` daemon environments.
-   - Strict credential encapsulation: API endpoints mask secrets, and configuration is persisted with `chmod 600` access controls.
+5. **Daemon & Security Hardening**:
+   - Thread-safe background execution managed by `concurrent.futures.ThreadPoolExecutor` with clean lifecycle cleanup.
+   - Centralized binary resolution (`find_binary`) automatically locates FFmpeg and Rubber Band paths across macOS `launchd` and Linux `systemd` environments.
+   - Host credentials isolated in `.env` with `chmod 600` access controls; settings API returns boolean presence masks instead of plain-text tokens.
 
 ---
 
@@ -226,21 +257,21 @@ python -m studiotbelt.core.workflow resume <JOB_ID> --hd
 ## Step-by-Step Usage (Web UI)
 
 1. **Step 01 — Choose Source Video or Template**:
-   - **Upload your own video**: Drag and drop your original video clip (up to 30 seconds). Click **Prepare Video** to run normalization, depth/mesh tracking, and Demucs vocal isolation.
-   - **Or use Curated Templates**: Switch to the **Plantilla** tab to test immediately without preprocessing. Browse interactive cards (e.g. *Eminem — Rap God Challenge*, 15s cyber-chair cut with Demucs vocals pitched +3st and pre-approved SAM 3 depth masks). Click the card to load it directly into the panel.
+   - **Custom Video Upload**: Drag and drop your source video clip (up to 30 seconds). Click **Prepare Video** to run normalization, depth/mesh tracking, and Demucs vocal isolation.
+   - **Instant Curated Templates**: Switch to the **Template** tab (or **Plantilla** in Spanish) to test character transfer immediately without preparation wait times. Click the *Eminem — Rap God Challenge* card to load pre-calculated SAM 3 masks and +3st pitched vocals directly into your session in <50ms.
 2. **Step 02 — Verification & Review Gate**:
-   - Review the prepared motion guide with isolated vocal tracks (+3st pitch to bypass automated copyright blocks).
-   - Inspect and download isolated audio stems (`vocals.wav`, `vocals-plus3.wav`, `music.wav`).
+   - Inspect the volumetric depth guide and isolated vocal stem (+3 semitones modulation to clear automated Content ID screening).
+   - Verify or download isolated audio stems (`vocals.wav`, `vocals-plus3.wav`, `music.wav`).
    - Click **Approve & Continue to Character**.
-3. **Step 03 — Character Synthesis**:
-   - Upload the reference photo of the new character (e.g. `vc-chicken`).
-   - Verify prompt synthesis instructions.
-   - Select your active generative engine (OpenRouter Wan 3.0, Replicate, Enhancor, ComfyUI, or fal.ai).
-   - Configure credentials in Settings (supports Guest Mode / Client-side BYOK with auto-expiring TTL).
+3. **Step 03 — Character Synthesis & BYOK Credentials**:
+   - Upload the target character reference image (such as the included `vc-chicken` avatar).
+   - Enter your synthesis prompt describing character motion and lighting.
+   - Select your generative engine (OpenRouter Wan 3.0 / Wan 2.1, fal.ai, Replicate, or local ComfyUI).
+   - **Bring Your Own Key (BYOK)**: Click the **Settings** button or the top-bar **Connect API Key** badge to paste your personal API token with auto-expiring TTL (1h, 6h, 24h, or Session-only). The server executes the run in memory and never writes your key to disk.
    - Click **Generate Character** to dispatch draft generation.
 4. **Step 04 — Master Export**:
-   - Inspect the draft preview with pristine original source audio restored.
-   - Approve 1080p high-definition upgrade when satisfied.
+   - Play the synthetic preview with original uncompressed master audio restored.
+   - Review and trigger 1080p high-definition export when approved.
 
 ---
 

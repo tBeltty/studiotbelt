@@ -32,7 +32,7 @@ Images should be actual decodable PNG/JPEG/WebP bytes, not an HTML download page
 Body: `{"request_id":"PROVIDER_ID"}`.
 The collector polls every 10 seconds, for up to 360 attempts. It reads `status`, saves `provider-status.json`, downloads the HTTPS `result` on `COMPLETED`, and reports `FAILED`/`CANCELED` with the provider error. A timeout leaves request IDs saved; resume collection, do not requeue automatically. Transport errors also preserve the ID for recovery.
 
-Live testing confirmed that webhook_url is required: an empty value returns HTTP 400. Set your own HTTPS receiver or install cloudflared and use launch.py, which starts webhook.py behind a temporary Quick Tunnel. The receiver accepts callbacks but never mutates jobs; polling remains authoritative. The receiver exposes no files or UI. Avoid using unverified or external callback endpoints. Keep the tunnel alive while generation runs; its URL changes on restart.
+Live testing confirmed that `webhook_url` is required: an empty value returns HTTP 400. Set your own HTTPS receiver or install `cloudflared` and launch via `bash start.sh`, which starts the background callback receiver behind a temporary Quick Tunnel. The receiver accepts callbacks without mutating jobs directly; polling remains authoritative. The receiver exposes no files or UI. Keep the tunnel alive while generation runs; its URL changes on restart.
 
 ## Complete an approved draft — POST /queue
 

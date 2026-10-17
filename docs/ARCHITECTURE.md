@@ -121,7 +121,105 @@ To prevent browser console pollution (404 errors), the backend `/jobs/{id}` resp
 
 ---
 
-## 5. Security & Daemon Management
+## 5. Security Architecture: Bring Your Own Token (BYOK / BYOT)
 
-- **Zero Plain-Text Exposure:** API credentials (`FAL_KEY`, `ENHANCOR_API_KEY`, `REPLICATE_API_TOKEN`) are never exposed via client JSON payloads. The settings API exposes only a Boolean configuration status, and values are persisted locally in `.env` with strict `chmod 600` access controls.
-- **Persistent Service Architecture:** The API server (`uvicorn`) and secure Cloudflare Tunnel (`cloudflared`) run as isolated macOS `LaunchAgents`, decoupled from terminal shells.
+**tBelt Studio** introduces an ephemeral, zero-trust credential model called **Bring Your Own Token (BYOT / BYOK)**. It is designed to solve the two biggest friction points in generative AI tooling: **predatory subscription lock-in** and **credential exposure on shared servers**.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User / Guest Browser
+    participant Storage as Browser Storage (TTL)
+    participant API as tBelt Studio Backend (FastAPI)
+    participant RAM as In-Memory Bridge (RAM Only)
+    participant Provider as Remote AI Engine (OpenRouter / fal.ai / Replicate)
+
+    Note over User,Storage: 1. Setup in Settings Modal
+    User->>Storage: Store Token + Provider + TTL (1h, 6h, 24h, or Session)
+    
+    Note over User,API: 2. Dispatch Motion Transfer (Step 03)
+    User->>Storage: getStoredAIKey() (verify TTL expiration)
+    Storage-->>User: Active Key Payload
+    User->>API: POST /jobs/{id}/seedance<br/>Header: X-AI-Key: sk-or-...<br/>Header: X-AI-Provider: openrouter
+    
+    Note over API,RAM: 3. Ephemeral Execution (Zero Disk Persistence)
+    API->>RAM: Inject as override_key in memory
+    Note right of API: NEVER written to .env<br/>NEVER written to status.json<br/>NEVER logged to disk
+    
+    RAM->>Provider: Authenticated API Call with User's Token
+    Provider-->>RAM: Video Stream / Rendered Result
+    RAM-->>API: Synthesized Frames
+    API-->>User: Final Master Export
+    
+    Note over Storage: 4. Automatic Garbage Collection
+    Storage-xStorage: Expired automatically after TTL or tab close
+```
+
+### 1. The Core Philosophy ("What is Behind It")
+
+1. **Eliminating the SaaS Subscription Tax**:
+   - Traditional AI video tools force users into recurring \$20–\$50/month subscription tiers with artificial credit limits, markups of 200%–500% over raw inference costs, and monthly reset traps.
+   - BYOT connects directly to wholesale developer APIs (OpenRouter, fal.ai, Replicate, Enhancor). A 15-second Wan 2.1/3.0 motion transfer costs **\$0.20 – \$0.50 USD** in actual GPU-seconds, billed directly to the user's existing developer account with zero intermediary markup.
+
+2. **Zero-Trust Multi-Tenant & Guest Sharing**:
+   - In agency, studio, or team environments, tBelt Studio is often hosted on a shared local network, VPS, or cloud container.
+   - If a host had to save user keys in the server's `.env` or disk database, guest users would risk their funded API credits being captured or misused by the server admin.
+   - BYOT ensures that **no guest key is ever persisted to server storage**. The host machine operates purely as a compute router for free preprocessing (FFmpeg normalization, Demucs stem isolation, MediaPipe face tracking), while the guest's own account finances the neural synthesis.
+
+---
+
+### 2. The Wire Protocol & Execution Lifecycle
+
+1. **Client-Side Key Vault & TTL Isolation**:
+   - The user inputs their API token into the **Settings** modal, selecting a Time-To-Live (TTL):
+     - **Session Only (`0h`)**: Written to `sessionStorage`. Key is purged the instant the browser tab is closed.
+     - **Configured Duration (`1h`, `6h`, `24h`)**: Written to `localStorage` with a timestamp `expiresAt: Date.now() + hours * 3600000`.
+   - On every client action, `getStoredAIKey()` validates `Date.now() > expiresAt`. Expired keys are instantly removed from browser storage before any network request occurs.
+
+2. **Per-Request Header Injection**:
+   - When submitting Step 03 character synthesis, `static/js/app.js` extracts the unmasked active key and transmits it over HTTPS:
+     ```http
+     POST /jobs/{ident}/seedance HTTP/1.1
+     Host: studio.tbelt.online
+     X-AI-Key: sk-or-v1-xxxxxxxxxxxxxxxxxxxx
+     X-AI-Provider: openrouter
+     Content-Type: multipart/form-data
+     ```
+
+3. **In-Memory Injection on Backend**:
+   - FastAPI parses the headers via declarative parameter injection:
+     ```python
+     @app.post('/jobs/{ident}/seedance')
+     def seedance(
+         ident: str,
+         prompt: str = Form(...),
+         x_ai_key: str | None = Header(None, alias="X-AI-Key"),
+         x_ai_provider: str | None = Header(None, alias="X-AI-Provider"),
+     ):
+         ...
+         submit(folder, prompt, *paths, override_key=x_ai_key, override_provider=x_ai_provider)
+     ```
+   - The key exists solely as an ephemeral Python function argument in memory (`override_key`).
+   - The key is **strictly barred from disk serialization**: neither `status.json`, `generation.json`, nor log files record the credential. Once the HTTP request to the external provider is initiated, the memory reference falls out of scope.
+
+---
+
+### 3. Server Configuration Hierarchy
+
+When a job is dispatched, `src/studiotbelt/services/seedance_bridge.py` evaluates credentials in strict order of precedence:
+
+| Priority | Source | Scope | Persistence | Best For |
+|:---:|---|---|---|---|
+| **1 (Highest)** | Client `X-AI-Key` Header | Single Request | Ephemeral (RAM only) | Guests, collaborators, per-job testing |
+| **2** | Host `.env` (`OPENROUTER_API_KEY`, etc.) | Instance-wide | Local disk (`chmod 600`) | Dedicated server owners |
+| **3 (Fallback)** | ComfyUI Local Instance | Offline LAN | None required | 100% private zero-cost open weights |
+
+If the server host has no keys configured in `.env`, the instance operates in **Pure Guest Mode**, fully usable by anyone who provides their own API token without incurring costs for the server maintainer.
+
+---
+
+## 6. Infrastructure & Daemon Management
+
+- **Zero Plain-Text Exposure:** Host credentials (`FAL_KEY`, `ENHANCOR_API_KEY`, `REPLICATE_API_TOKEN`, `OPENROUTER_API_KEY`) are protected under `chmod 600`. The `/api/settings` endpoint never exposes raw secret values over JSON, returning only boolean presence masks.
+- **Dedicated Runtime Isolation:** All server and tunnel logs are directed to `logs/` (`logs/server.log`, `logs/tunnel.log`), strictly isolated from the repository root and ignored by version control.
+- **Persistent Service Architecture:** The API server (`studiotbelt.cli.launch`) and secure Cloudflare Tunnel (`cloudflared`) run as isolated macOS `LaunchAgents` (`online.tbelt.studio-server` and `online.tbelt.studio-tunnel`), ensuring seamless background uptime and automatic recovery after system reboots.
