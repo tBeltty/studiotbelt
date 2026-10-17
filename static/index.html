@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700;800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="stylesheet" href="/static/css/styles.css?v=20261017_3">
 </head>
 <body>
   <div class="app-container">
@@ -119,28 +119,48 @@
         <img class="panel-companion" src="/static/companions/cat-video.webp?v=20261011_3" alt="Cat Director" data-i18n-attr="alt:s1.companion_alt" width="44" height="44">
       </div>
 
-      <!-- Template Quick-Start Banner -->
-      <div id="template-banner" class="template-card" style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 14px;">
-          <div style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: rgba(242, 177, 52, 0.12); border: 1px solid var(--brand-amber); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
-            🎤
-          </div>
-          <div>
-            <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
-              <span data-i18n="template.title">Plantilla: Rap God Challenge (Eminem)</span>
-              <span class="badge-tag" style="background: rgba(242, 177, 52, 0.15); color: var(--brand-amber); border: 1px solid var(--brand-amber); font-size: 10px; padding: 1px 6px;">15s Curado</span>
+      <!-- Source Selector Tabs: Upload vs Template -->
+      <div class="tab-nav" role="tablist" style="margin-bottom: 16px;">
+        <button type="button" class="tab-btn active" id="tab-source-upload" role="tab" aria-selected="true" data-i18n="s1.tab_upload">📁 Subir Video</button>
+        <button type="button" class="tab-btn" id="tab-source-template" role="tab" aria-selected="false" data-i18n="s1.tab_template">🎬 Plantilla</button>
+      </div>
+
+      <!-- Tab View 2: Template Showcase & Gallery (Shown when clicking "Plantilla") -->
+      <div id="view-source-template" style="display: none;">
+        <div class="template-interactive-card" id="template-card-rap-god" role="button" tabindex="0" title="Haz clic para cargar esta plantilla en el panel" data-i18n-attr="title:template.click_hint">
+          <div class="template-card-thumb-wrap">
+            <img src="/static/templates/rap-god/thumbnail.webp" alt="Eminem in Chair" loading="lazy">
+            <span class="template-badge-pill" data-i18n="template.tag_duration">15s Curado</span>
+            <div class="template-play-overlay">
+              <span class="template-play-btn" aria-hidden="true">▶</span>
             </div>
-            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;" data-i18n="template.desc">
-              Video original de Eminem recortado (sin público) y optimizado para probar directo. ¡Reemplázalo con tu avatar!
+          </div>
+          <div class="template-card-body">
+            <div>
+              <div class="template-card-header">
+                <h3 class="template-card-title">
+                  <span data-i18n="template.title">Eminem — Rap God Challenge</span>
+                </h3>
+              </div>
+              <p class="template-card-desc" data-i18n="template.desc">
+                Video original de Eminem en la silla del laboratorio, recortado sin público ni artefactos. Incluye audio aislado (+3st) y máscaras de profundidad SAM 3 listas para probar.
+              </p>
+              <div class="template-card-tags">
+                <span class="template-tag" data-i18n="template.tag_res">640×360 · 24fps</span>
+                <span class="template-tag" data-i18n="template.tag_audio">Voz +3 semitonos</span>
+                <span class="template-tag" data-i18n="template.tag_depth">Depth SAM 3</span>
+              </div>
+            </div>
+            <div class="template-card-actions">
+              <button type="button" id="load-template-btn" class="btn btn-primary" style="font-weight: 600;" data-i18n="template.card_cta">⚡ Cargar en el panel</button>
+              <a href="/static/templates/rap-god/eminem-clean-cut.mp4" download="eminem-clean-cut.mp4" class="btn btn-secondary" style="font-size: 12px; text-decoration: none;" onclick="event.stopPropagation();" data-i18n="template.download_btn">⬇ Descargar MP4</a>
             </div>
           </div>
-        </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <a href="/static/templates/rap-god/eminem-clean-cut.mp4" download="eminem-clean-cut.mp4" class="btn btn-secondary" style="min-height: 32px; padding: 4px 10px; font-size: 11px; text-decoration: none;" data-i18n="template.download_btn">Descargar MP4</a>
-          <button type="button" id="load-template-btn" class="btn btn-primary" style="min-height: 32px; padding: 4px 12px; font-size: 12px; font-weight: 600;" data-i18n="template.load_btn">⚡ Usar Plantilla</button>
         </div>
       </div>
 
+      <!-- Tab View 1: Direct File Upload -->
+      <div id="view-source-upload">
       <form id="form">
         <!-- File Dropzone -->
         <div class="field-group">
@@ -239,6 +259,7 @@
           </div>
         </div>
       </form>
+      </div> <!-- /view-source-upload -->
     </section>
 
     <!-- ==========================================
@@ -563,9 +584,9 @@
   </div>
 
   <!-- i18n Localization Engine -->
-  <script src="/static/i18n.js?v=20261017_1"></script>
+  <script src="/static/i18n.js?v=20261017_3"></script>
 
   <!-- Runtime Script (Preserves 100% of Backend API Contract) -->
-  <script src="/static/js/app.js?v=20261017_1"></script>
+  <script src="/static/js/app.js?v=20261017_3"></script>
 </body>
 </html>

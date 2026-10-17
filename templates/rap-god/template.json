@@ -18,7 +18,8 @@
     "audio_track": "audio.wav",
     "demo_character": "demo-character.png",
     "demo_character_name": "vc-chicken",
-    "demo_result": "demo-result.mp4"
+    "demo_result": "demo-result.mp4",
+    "thumbnail": "thumbnail.webp"
   },
   "scenes": [
     { "name": "CRT Monitors", "start": 0.00, "end": 3.08, "type": "multi_screen" },

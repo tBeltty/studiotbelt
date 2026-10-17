@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.1] - 2026-10-17
+
+### Added
+- **Interactive Template Gallery & Source Tabs (`static/index.html`, `static/js/app.js`, `static/css/styles.css`)**:
+  - Replaced immediate auto-load behavior with a dedicated two-tab source selector: "Subir Video" (direct file upload) and "Plantilla" (motion template showcase).
+  - Designed an interactive template card featuring high-resolution preview, title, metadata pills (15s Curated, 640×360, 24fps, Vocals +3st, SAM 3 Depth), and direct MP4 download link.
+  - Clicking anywhere on the card or the "⚡ Cargar en el panel" button executes the instantaneous template load workflow into the active session.
+- **Cyber-Chair Keyframe Thumbnail (`templates/rap-god/thumbnail.webp`, `static/templates/rap-god/thumbnail.webp`)**:
+  - Extracted and optimized the sharp, studio-lit front profile frame of Eminem seated in the cybernetic chair (Scene 3: Cyber Lab Chair, t=7.2s).
+  - Eliminates CRT scanline static and motion blur present in previous neon grid frames.
+- **Agnostic API Key Connect Button Default**:
+  - The top-bar API connect button defaults to agnostic "Connect API Key" / "Conectar API Key" until a provider is explicitly linked.
+
+### Changed
+- Expanded bilingual dictionaries in `static/i18n.js` with full localization keys for source tabs, template gallery tags, and card hover tooltips.
+
+---
+
 ## [1.2.0] - 2026-10-17
 
 ### Added

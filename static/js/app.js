@@ -1132,44 +1132,111 @@ const $ = s => document.querySelector(s);
       };
     }
 
-    // Template Quick-Start Handler
+    // Source Tabs: Upload vs Template
+    const tabSourceUpload = $('#tab-source-upload');
+    const tabSourceTemplate = $('#tab-source-template');
+    const viewSourceUpload = $('#view-source-upload');
+    const viewSourceTemplate = $('#view-source-template');
+
+    function switchSourceTab(target) {
+      if (target === 'template') {
+        if (tabSourceUpload) {
+          tabSourceUpload.classList.remove('active');
+          tabSourceUpload.setAttribute('aria-selected', 'false');
+        }
+        if (tabSourceTemplate) {
+          tabSourceTemplate.classList.add('active');
+          tabSourceTemplate.setAttribute('aria-selected', 'true');
+        }
+        if (viewSourceUpload) viewSourceUpload.style.display = 'none';
+        if (viewSourceTemplate) viewSourceTemplate.style.display = 'block';
+      } else {
+        if (tabSourceTemplate) {
+          tabSourceTemplate.classList.remove('active');
+          tabSourceTemplate.setAttribute('aria-selected', 'false');
+        }
+        if (tabSourceUpload) {
+          tabSourceUpload.classList.add('active');
+          tabSourceUpload.setAttribute('aria-selected', 'true');
+        }
+        if (viewSourceTemplate) viewSourceTemplate.style.display = 'none';
+        if (viewSourceUpload) viewSourceUpload.style.display = 'block';
+      }
+    }
+
+    if (tabSourceUpload) {
+      tabSourceUpload.onclick = () => switchSourceTab('upload');
+    }
+    if (tabSourceTemplate) {
+      tabSourceTemplate.onclick = () => switchSourceTab('template');
+    }
+
+    if (window.location.hash === '#template' || window.location.search.includes('tab=template')) {
+      switchSourceTab('template');
+    }
+
+    // Template Loading Action
+    let isLoadingTemplate = false;
+    async function loadTemplate(templateId = 'rap-god') {
+      if (isLoadingTemplate) return;
+      isLoadingTemplate = true;
+      const loadBtn = $('#load-template-btn');
+      const origText = loadBtn ? loadBtn.textContent : '';
+      if (loadBtn) {
+        loadBtn.disabled = true;
+        loadBtn.textContent = t('template.loading');
+      }
+      status(t('template.loading'));
+      try {
+        const res = await json(`/api/templates/${templateId}/load`, { method: 'POST' });
+        jobId = res.jobId;
+        window.history.pushState(null, '', '/?job=' + jobId);
+
+        const badge = $('#job-info-pill');
+        if (badge) {
+          badge.textContent = 'JOB: ' + jobId.slice(0, 8);
+          badge.style.display = 'inline-block';
+          badge.onclick = () => {
+            navigator.clipboard?.writeText(jobId);
+            badge.textContent = t('status.copied');
+            setTimeout(() => { badge.textContent = 'JOB: ' + jobId.slice(0, 8); }, 1500);
+          };
+        }
+
+        if (res.default_prompt) {
+          const promptInput = document.querySelector('textarea[name="prompt"]');
+          if (promptInput) promptInput.value = res.default_prompt;
+        }
+
+        await refresh();
+        document.querySelector('#draft')?.scrollIntoView({ behavior: 'smooth' });
+        status(t('template.loaded_status'));
+      } catch (err) {
+        status(err.message, true);
+      } finally {
+        isLoadingTemplate = false;
+        if (loadBtn) {
+          loadBtn.disabled = false;
+          loadBtn.textContent = origText;
+        }
+      }
+    }
+
+    const tplCard = $('#template-card-rap-god');
+    if (tplCard) {
+      tplCard.onclick = () => loadTemplate('rap-god');
+      tplCard.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          loadTemplate('rap-god');
+        }
+      };
+    }
     const loadTplBtn = $('#load-template-btn');
     if (loadTplBtn) {
-      loadTplBtn.onclick = async () => {
-        const origText = loadTplBtn.textContent;
-        loadTplBtn.disabled = true;
-        loadTplBtn.textContent = t('template.loading');
-        status(t('template.loading'));
-        try {
-          const res = await json('/api/templates/rap-god/load', { method: 'POST' });
-          jobId = res.jobId;
-          window.history.pushState(null, '', '/?job=' + jobId);
-
-          const badge = $('#job-info-pill');
-          if (badge) {
-            badge.textContent = 'JOB: ' + jobId.slice(0, 8);
-            badge.style.display = 'inline-block';
-            badge.onclick = () => {
-              navigator.clipboard?.writeText(jobId);
-              badge.textContent = t('status.copied');
-              setTimeout(() => { badge.textContent = 'JOB: ' + jobId.slice(0, 8); }, 1500);
-            };
-          }
-
-          if (res.default_prompt) {
-            const promptInput = document.querySelector('textarea[name="prompt"]');
-            if (promptInput) promptInput.value = res.default_prompt;
-          }
-
-          await refresh();
-          document.querySelector('#draft')?.scrollIntoView({ behavior: 'smooth' });
-          status(t('template.loaded_status'));
-        } catch (err) {
-          status(err.message, true);
-        } finally {
-          loadTplBtn.disabled = false;
-          loadTplBtn.textContent = origText;
-        }
+      loadTplBtn.onclick = (e) => {
+        e.stopPropagation();
+        loadTemplate('rap-god');
       };
     }
 
