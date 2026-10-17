@@ -6,6 +6,17 @@ Templates allow users and automated pipelines to evaluate character replacement 
 
 ---
 
+## Visual Demonstration
+
+The goal of a curated motion template is to transfer complex human choreography, facial expressions, and rapid speech onto an arbitrary character identity while maintaining 100% audio timing and visual coherence.
+
+| Source Footage (Eminem) | Character Reference (`vc-chicken`) | Recast Output (Motion Transfer) |
+|:---:|:---:|:---:|
+| <img src="assets/templates/step1_source.webp" width="280" alt="Source Footage"> | <img src="assets/templates/character_reference.webp" width="160" alt="vc-chicken Reference"> | <img src="assets/templates/step5_recast_result.webp" width="280" alt="Recast Output"> |
+| *Original 640×360 24fps clip* | *Target identity reference* | *Wan 3.0 / Seedance output* |
+
+---
+
 ## 1. Principles of Footage Selection
 
 Generative video-to-video diffusion models rely on optical flow, volumetric depth, and facial feature continuity. Footage that looks cinematic to humans often causes severe neural hallucinations or identity bleeding if selected poorly.
@@ -20,46 +31,63 @@ Generative video-to-video diffusion models rely on optical flow, volumetric dept
 | **Aspect Ratio & Framing** | Consistent 16:9 aspect ratio without letterbox jitter | Variable cinemascope bars (e.g. 2.39:1 letterbox shifting between cuts) | Black bars introduce non-zero gradients that corrupt boundary segmentation. |
 | **Frame Rate** | Constant 24 fps (standard film cadence) | Variable frame rate (VFR), mixed 29.97/60 fps | Timing drift between audio waveforms and video frames breaks lip synchronization. |
 
+---
+
 ### Case Study: Curation of the *Rap God* Template
 
 The original music video contains rapid scene transitions, background dancers, CRT monitors, and wide crowd shots. To produce a production-grade template (`templates/rap-god/`), we applied strict editorial filtering:
 
 1. **Discarded**: Wide concert shots and dancing extras (too noisy for single-actor replacement).
 2. **Discarded**: Extreme fast-cut flashes under 0.25 seconds (creates flicker artifacts in optical flow).
-3. **Retained (15 seconds, 7 coherent scenes)**:
-   - *CRT Monitors* (0.00s – 3.08s): Multi-screen array testing facial mesh tracking across small viewports.
-   - *Neon Grid Intro* (3.08s – 5.63s): High-contrast retro backdrop.
-   - *Cyber Lab Chair* (5.63s – 9.43s): Clean, studio-lit front profile testing eye movement and facial angles.
-   - *Front Chair Rap* (9.43s – 10.87s): Direct camera engagement for high-speed lip sync.
-   - *Max Headroom Neon* (10.87s – 12.07s): High-frequency motion transfer.
-   - *Laser Climax Fast Rap* (12.07s – 13.47s): Peak energy vocal timing.
-   - *Front Chair Finale* (13.47s – 15.00s): Natural resolution.
+3. **Retained**: 15 seconds across 7 coherent scenes, calibrated for stress-testing different model capabilities:
+
+| Scene | Timing | Keyframe Preview | Evaluation Focus |
+|---|---|:---:|---|
+| **1. CRT Monitors** | 0.00s – 3.08s | <img src="assets/templates/scenes/scene_1_crt.webp" width="210" alt="CRT Monitors"> | Multi-face detection across sub-displays without landmark loss. |
+| **2. Neon Grid Intro** | 3.08s – 5.63s | <img src="assets/templates/scenes/scene_2_neon.webp" width="210" alt="Neon Grid Intro"> | Retro grid edge adherence and depth contrast against black background. |
+| **3. Cyber Lab Chair** | 5.63s – 9.43s | <img src="assets/templates/scenes/scene_3_chair.webp" width="210" alt="Cyber Lab Chair"> | Studio lighting, clean side profile, and headrest mechanical interaction. |
+| **4. Front Chair Rap** | 9.43s – 10.87s | <img src="assets/templates/scenes/scene_4_front.webp" width="210" alt="Front Chair Rap"> | Direct camera gaze, eye tracking, and high-frequency phoneme lip sync. |
+| **5. Max Headroom Neon** | 10.87s – 12.07s | <img src="assets/templates/scenes/scene_5_headroom.webp" width="210" alt="Max Headroom Neon"> | Rapid head shaking and stylized neon lighting response. |
+| **6. Laser Climax** | 12.07s – 13.47s | <img src="assets/templates/scenes/scene_6_lasers.webp" width="210" alt="Laser Climax"> | Peak vocal cadence, particle lighting, and supersonic speech timing. |
+| **7. Front Chair Finale** | 13.47s – 15.00s | <img src="assets/templates/scenes/scene_7_finale.webp" width="210" alt="Front Chair Finale"> | Motion cadence resolution and final frame stability. |
 
 ---
 
-## 2. Audio Engineering: Circumventing Content ID
+## 2. Vision Pipeline: Asset Decomposition
+
+Before a template is packaged, the footage is decomposed into multi-layer volumetric guidance assets:
+
+| 1. Normalized Source | 2. Volumetric Depth | 3. SAM 3 Binary Mask | 4. Guidance Composite |
+|:---:|:---:|:---:|:---:|
+| <img src="assets/templates/step1_source.webp" width="180" alt="Normalized Source"> | <img src="assets/templates/step2_depth.webp" width="180" alt="Volumetric Depth"> | <img src="assets/templates/step3_mask.webp" width="180" alt="SAM 3 Mask"> | <img src="assets/templates/step4_composite.webp" width="180" alt="Guidance Composite"> |
+| *C-filter normalized (640×360 · 24fps)* | *Depth Anything metric surface* | *Semantic actor segmentation* | *Target guidance composite* |
+
+- **Step 1 — Normalization**: Enforces strict 24 fps, non-variable PTS timestamps, and standardized 640×360 resolution via FFmpeg C-filters.
+- **Step 2 — Volumetric Depth**: Depth Anything maps surface topology into a grayscale/inferno gradient, informing the neural model of 3D facial angles.
+- **Step 3 — SAM 3 Silhouette**: Isolates actor body and clothing from the static background, preventing background diffusion bleed.
+- **Step 4 — Guidance Composite**: Fuses depth maps with the untouched background scene, creating `composite-silent.mp4`.
+
+---
+
+## 3. Audio Engineering: Circumventing Content ID
 
 Commercial generative video APIs (Wan on OpenRouter, fal.ai, Seedance) enforce automated audio screening (Content ID / Shazam / fingerprinting). Submitting an iconic music track at native pitch causes immediate submission rejection.
 
-```
-+--------------------+      Demucs (htdemucs)      +--------------------+
-| Original Master    | --------------------------> | Vocals Stem        |
-| (Music + Dialogue) |                             | (vocals.wav)       |
-+--------------------+                             +--------------------+
-         |                                                   |
-         | (Kept for final master export)                    | Rubber Band
-         v                                                   | (+3 semitones)
-+--------------------+                                       v
-| original-audio.wav |                             +--------------------+
-+--------------------+                             | vocals-plus3.wav   |
-                                                   +--------------------+
-                                                             |
-                                                             | Mux with silent depth
-                                                             v
-                                                   +--------------------+
-                                                   | seedance-input.mp4 |
-                                                   | (Sent to AI model) |
-                                                   +--------------------+
+```mermaid
+flowchart TD
+    A["Master Source Audio<br/>(Music Bed + Dialogue)"] -->|Demucs htdemucs| B["Isolated Vocal Stem<br/>(vocals.wav)"]
+    A -->|Demucs htdemucs| C["Instrumental Bed<br/>(music.wav)"]
+    A -.->|Preserved for Final Export| D["original-audio.wav<br/>(Uncompressed Master Mix)"]
+    
+    B -->|Rubber Band Pitch Shift<br/>+3 Semitones| E["Modulated Vocal Stem<br/>(vocals-plus3.wav)"]
+    
+    E -->|Embedded into Silent Composite| F["Composite Guidance<br/>(seedance-input.mp4)"]
+    
+    F --> G["Generative AI Engine<br/>(Wan 3.0 / Seedance / fal.ai)"]
+    G -->|Rendered Motion Draft| H["Raw Synthetic Video"]
+    
+    D -->|Restore Master Mix| I["Master Export 1080p<br/>(Original Sound Intact)"]
+    H --> I
 ```
 
 ### The Two-Tier Audio Strategy:
@@ -83,7 +111,7 @@ Commercial generative video APIs (Wan on OpenRouter, fal.ai, Seedance) enforce a
 
 ---
 
-## 3. Pre-computation and Quality Review Gates
+## 4. Pre-computation and Quality Review Gates
 
 A template requires all vision and depth assets to be pre-calculated so the user can inspect masks and jump directly to Step 03.
 
@@ -126,7 +154,7 @@ The fingerprint verifies `FILES = ('original.mp4', 'depth.mp4', 'mask.mp4', 'com
 
 ---
 
-## 4. Metadata Schema (`template.json`)
+## 5. Metadata Schema (`template.json`)
 
 Each template must contain a `template.json` defining its configuration:
 
@@ -168,7 +196,7 @@ Each template must contain a `template.json` defining its configuration:
 
 ---
 
-## 5. Exposing Templates in the Web UI
+## 6. Exposing Templates in the Web UI
 
 To register a new template:
 
