@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Eliminates CRT scanline static and motion blur present in previous neon grid frames.
 - **Agnostic API Key Connect Button Default**:
   - The top-bar API connect button defaults to agnostic "Connect API Key" / "Conectar API Key" until a provider is explicitly linked.
+- **Template Curation & Engineering Specification (`docs/TEMPLATES.md`)**:
+  - Technical guide covering footage selection principles, edge contrast, subject occlusion, Demucs audio isolation, Rubber Band duration-locked +3st pitch modulation, and `template.json` metadata specification.
 
 ### Changed
 - Expanded bilingual dictionaries in `static/i18n.js` with full localization keys for source tabs, template gallery tags, and card hover tooltips.

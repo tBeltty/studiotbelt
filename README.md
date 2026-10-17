@@ -26,7 +26,7 @@ The entire source audio (dialogue, music bed, sound effects) is preserved and re
 
 2. **Curated Motion Templates & Instant Prototyping**:
    - Pre-computed, crowd-free motion templates (such as the 15-second **Rap God Challenge**) allow testing character transfer instantly (<50ms) without manual video cuts or segmentation waiting.
-   - Includes full demonstration media featuring reference character **`vc-chicken`**.
+   - Includes demonstration media featuring reference character **`vc-chicken`**. See the [Template Curation & Engineering Guide](docs/TEMPLATES.md) for scene selection principles and audio copyright protection protocols.
 
 3. **Guest Mode & Ephemeral Client-Side BYOK Security**:
    - Zero-trust token model: users and collaborators can input their own provider keys directly in their browser.
@@ -274,6 +274,10 @@ studiotbelt/
 ├── logs/                       # Isolated runtime log directory (server.log, tunnel.log)
 ├── tests/                      # Comprehensive test suite (all green)
 └── docs/                       # Architectural specifications & deployment guides
+    ├── ARCHITECTURE.md         # In-depth technical architecture specification
+    ├── DEPLOY-WEB.md           # Docker and cloud deployment guide (ZeroGPU, Hugging Face, VPS)
+    ├── SETUP.md                # Local environment installation walkthrough
+    └── TEMPLATES.md            # Motion curation, audio engineering & template creation guide
 ```
 
 ---
