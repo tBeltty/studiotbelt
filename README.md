@@ -65,6 +65,7 @@ Step 03 requires video-to-video character replacement models with full-body iden
 
 | Provider & Model | Pricing Structure | Estimated Cost (15s Clip) | Best For | Subscription Required? |
 |---|---|---|---|---|
+| **OpenRouter (Wan 3.0 / Wan 2.1)** | Pay-per-second / API credits | **$0.20 – $0.50 USD** | Alibaba Wan video generation & BYOK tokens | **No** (Direct API key) |
 | **Replicate (Wan 2.2 / LivePortrait)** | Serverless GPU-seconds (~$0.0005–$0.001/s) | **$0.40 – $0.90 USD** | Scalable cloud rendering & Demucs API | **No** (Pay per second) |
 | **Hugging Face Spaces (ZeroGPU)** | Free community GPU quota | **$0.00** | Free SAM 3 & Depth Anything | **No** (Free `HF_TOKEN`) |
 | **Enhancor (ByteDance Seedance 2.5)** | Subscription credits (~$0.15–$0.35/draft) | **~$0.25 USD** (in credits) | High-volume production | **Yes** ($45/mo plan) |
@@ -224,18 +225,18 @@ python -m studiotbelt.core.workflow resume <JOB_ID> --hd
 
 ## Step-by-Step Usage (Web UI)
 
-1. **Step 01 — Upload & Preparation**:
-   - Drag and drop your original video clip (up to 30 seconds).
-   - Observe instant file verification (size and filename).
-   - Click **Prepare Video**. Watch the real-time upload bar and milestone indicators progress through normalization, MediaPipe mesh tracking, and Demucs stem isolation.
-2. **Step 02 — Verification & Review**:
-   - Review the prepared motion guide with isolated vocal tracks.
-   - Inspect individual audio stems (`vocals.wav`, `vocals-plus3.wav`, `music.wav`).
+1. **Step 01 — Choose Source Video or Template**:
+   - **Upload your own video**: Drag and drop your original video clip (up to 30 seconds). Click **Prepare Video** to run normalization, depth/mesh tracking, and Demucs vocal isolation.
+   - **Or use Curated Templates**: Switch to the **Plantilla** tab to test immediately without preprocessing. Browse interactive cards (e.g. *Eminem — Rap God Challenge*, 15s cyber-chair cut with Demucs vocals pitched +3st and pre-approved SAM 3 depth masks). Click the card to load it directly into the panel.
+2. **Step 02 — Verification & Review Gate**:
+   - Review the prepared motion guide with isolated vocal tracks (+3st pitch to bypass automated copyright blocks).
+   - Inspect and download isolated audio stems (`vocals.wav`, `vocals-plus3.wav`, `music.wav`).
    - Click **Approve & Continue to Character**.
 3. **Step 03 — Character Synthesis**:
-   - Upload the reference photo of the new character (face or body).
+   - Upload the reference photo of the new character (e.g. `vc-chicken`).
    - Verify prompt synthesis instructions.
-   - Select your active generative engine (Replicate, Enhancor, ComfyUI, or fal.ai).
+   - Select your active generative engine (OpenRouter Wan 3.0, Replicate, Enhancor, ComfyUI, or fal.ai).
+   - Configure credentials in Settings (supports Guest Mode / Client-side BYOK with auto-expiring TTL).
    - Click **Generate Character** to dispatch draft generation.
 4. **Step 04 — Master Export**:
    - Inspect the draft preview with pristine original source audio restored.
@@ -252,25 +253,27 @@ studiotbelt/
 ├── start.sh                    # Host launcher script
 ├── setup.sh                    # Automated setup & diagnostic bootstrapper
 │
+├── templates/                  # Curated motion templates
+│   └── rap-god/                # 15s Eminem Rap God challenge (clean cuts, masks, audio stems)
+│
 ├── src/studiotbelt/            # Modular application package
-│   ├── api/                    # FastAPI application, routes, and webhooks
+│   ├── api/                    # FastAPI application, routes, template endpoints, and webhooks
 │   ├── core/                   # Pipeline processing, workflow engine, audio separation
-│   ├── services/               # Multi-provider routing, media hosting, synthesis bridges
+│   ├── services/               # Multi-provider routing (OpenRouter, fal, Replicate, Enhancor)
 │   ├── vision/                 # MediaPipe Face Mesh, SAM 3 masks, quality review
 │   └── cli/                    # Diagnostic doctor and studio launcher implementations
 │
 ├── static/                     # Modular client assets
-│   ├── index.html              # Lean semantic SPA markup
-│   ├── css/styles.css          # Studio dark design system tokens & surface styles
-│   ├── js/app.js               # Frontend application runtime & state machine
+│   ├── index.html              # Lean semantic SPA markup with source tabs & template gallery
+│   ├── css/styles.css          # Studio dark design system tokens, surface styles & template cards
+│   ├── js/app.js               # Frontend application runtime, state machine & BYOK storage
 │   ├── i18n.js                 # Bilingual Spanish/English translation engine
+│   ├── templates/              # Public static template assets (video cuts, thumbnails)
 │   └── favicon.svg             # Studio vector brand mark
 │
 ├── logs/                       # Isolated runtime log directory (server.log, tunnel.log)
 ├── tests/                      # Comprehensive test suite (all green)
-├── docs/                       # Architectural specifications & deployment guides
-├── pyproject.toml              # Build backend and editable package definition
-└── requirements.txt            # Python dependency manifest
+└── docs/                       # Architectural specifications & deployment guides
 ```
 
 ---
