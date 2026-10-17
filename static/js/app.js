@@ -823,18 +823,7 @@ const $ = s => document.querySelector(s);
           selectedProviderId = configured ? configured.id : Object.keys(currentSettings.providers)[0];
         }
 
-        const activeSpec = currentSettings.active_provider ? currentSettings.providers[currentSettings.active_provider] : null;
-        const activeName = activeSpec ? activeSpec.name : (currentSettings.has_any_provider ? (selectedProviderId ? currentSettings.providers[selectedProviderId].name : 'AI Engine') : (currentLang === 'es' ? 'Sin conectar' : 'Not Connected'));
-        const navBadge = $('#active-engine-badge');
-        if (navBadge) navBadge.textContent = activeName;
-        const step3Name = $('#step3-engine-name');
-        if (step3Name) step3Name.textContent = activeName;
-
-        const obBanner = $('#onboarding-banner');
-        if (obBanner) {
-          obBanner.hidden = !!currentSettings.has_any_provider;
-        }
-
+        updateEngineBadges();
         renderProviderGrid();
       } catch (err) {
         console.warn('Error loading settings:', err);
@@ -932,16 +921,10 @@ const $ = s => document.querySelector(s);
         currentSettings = data;
         selectedProviderId = currentSettings.active_provider;
 
-        const activeSpec = currentSettings.providers[selectedProviderId];
-        const activeName = activeSpec ? activeSpec.name : selectedProviderId;
-        const navBadge = $('#active-engine-badge');
-        if (navBadge) navBadge.textContent = activeName;
-        const step3Name = $('#step3-engine-name');
-        if (step3Name) step3Name.textContent = activeName;
-
-        const obBanner = $('#onboarding-banner');
-        if (obBanner) obBanner.hidden = !!currentSettings.has_any_provider;
-
+        if (keyVal) {
+          setStoredAIKey(keyVal, selectedProviderId, 24);
+        }
+        updateEngineBadges();
         renderProviderGrid();
         if (feedback) {
           feedback.style.color = 'var(--success-text)';
@@ -1051,10 +1034,47 @@ const $ = s => document.querySelector(s);
       updateKeyStatusUI();
     }
 
+    function updateEngineBadges() {
+      const clientKey = getStoredAIKey();
+      const navBadge = $('#active-engine-badge');
+      const step3Name = $('#step3-engine-name');
+      const obBanner = $('#onboarding-banner');
+
+      if (clientKey && clientKey.key) {
+        const provName = currentSettings?.providers?.[clientKey.provider]?.name || clientKey.provider.toUpperCase();
+        if (navBadge) {
+          navBadge.textContent = provName;
+          navBadge.style.color = 'var(--brand-amber)';
+        }
+        if (step3Name) {
+          step3Name.textContent = provName;
+        }
+        if (obBanner) {
+          obBanner.hidden = true;
+        }
+      } else {
+        // Agnostic default: "Connect API Key"
+        const connectText = t('settings.connect_api_key');
+        if (navBadge) {
+          navBadge.textContent = connectText;
+          navBadge.style.color = 'var(--text-secondary)';
+        }
+        if (step3Name) {
+          step3Name.textContent = connectText;
+        }
+        if (obBanner) {
+          obBanner.hidden = false;
+        }
+      }
+    }
+
+    window.addEventListener('languagechange', () => updateEngineBadges());
+
     function updateKeyStatusUI() {
       const stored = getStoredAIKey();
       const statusEl = $('#ephemeral-key-status');
       const clearBtn = $('#clear-ephemeral-key-btn');
+      updateEngineBadges();
       if (!statusEl) return;
       if (stored) {
         let expText = '';
